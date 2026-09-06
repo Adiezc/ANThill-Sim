@@ -16,6 +16,7 @@ import {
   readNumberList,
   readRange,
   readScalar,
+  readString,
   readStringList,
 } from './schema.js'
 import type { Param, RangeParam } from './schema.js'
@@ -74,6 +75,40 @@ export interface Params {
     readonly soilMoistureDiggableMax: Param<number>
     readonly soilMoistureOptimal: Param<number>
     readonly buildingPheromoneLifetimeTicks: Param<number>
+    readonly stressSensitivity: Param<number>
+    readonly spoilCueWeight: Param<number>
+    readonly collisionAgitationHalfLifeTicks: Param<number>
+    readonly collisionSaturationCount: Param<number>
+    readonly tunnelLengthFeedbackCm: Param<number>
+    readonly surfaceTemperatureDepthGainCmPerC: Param<number>
+    /**
+     * Always the string 'unknown'. Kept as a parameter so the honesty panel can read the
+     * note attached to it: shaft angle steepens with depth and branching stops below 40 cm,
+     * both observed, but no ant knows its depth and the obvious candidate mechanism was
+     * tested and falsified. See docs/SCIENCE.md section 11.
+     */
+    readonly depthCueMechanism: Param<string>
+  }
+
+  readonly soil: {
+    readonly bulkDensityKgPerM3: Param<number>
+    readonly surfaceTemperatureOffsetC: Param<number>
+    readonly infiltrationDepthCmPerMm: Param<number>
+    readonly surfaceMoistureMax: Param<number>
+    readonly deepMoisture: Param<number>
+    readonly dryingRatePerDay: Param<number>
+    readonly evaporationDepthCm: Param<number>
+    readonly archingStressGainPerVoid: Param<number>
+    readonly archingRadiusCm: Param<number>
+    readonly stressShieldBelowFactor: Param<number>
+  }
+
+  readonly discretisation: {
+    readonly nestCellSizeCm: Param<number>
+    readonly nestWidthCm: Param<number>
+    readonly nestDepthCm: Param<number>
+    readonly surfaceCellSizeM: Param<number>
+    readonly surfaceExtentM: Param<number>
   }
 
   readonly labour: {
@@ -180,6 +215,9 @@ export interface Params {
     readonly soilThermalLagDaysPerMetre: Param<number>
     readonly nuptialFlightMonths: Param<readonly number[]>
     readonly winterExcavationLull: Param<boolean>
+    readonly meanRainEventMm: Param<number>
+    readonly heavyRainMm: Param<number>
+    readonly dailyTemperaturePeakHour: Param<number>
   }
 }
 
@@ -273,6 +311,40 @@ export function buildParams(root: Raw): Params {
       soilMoistureDiggableMax: readScalar(root, 'excavation.soilMoistureDiggableMax'),
       soilMoistureOptimal: readScalar(root, 'excavation.soilMoistureOptimal'),
       buildingPheromoneLifetimeTicks: buildingLifetime,
+      stressSensitivity: readScalar(root, 'excavation.stressSensitivity'),
+      spoilCueWeight: readScalar(root, 'excavation.spoilCueWeight'),
+      collisionAgitationHalfLifeTicks: readScalar(
+        root,
+        'excavation.collisionAgitationHalfLifeTicks',
+      ),
+      collisionSaturationCount: readScalar(root, 'excavation.collisionSaturationCount'),
+      tunnelLengthFeedbackCm: readScalar(root, 'excavation.tunnelLengthFeedbackCm'),
+      surfaceTemperatureDepthGainCmPerC: readScalar(
+        root,
+        'excavation.surfaceTemperatureDepthGainCmPerC',
+      ),
+      depthCueMechanism: readString(root, 'excavation.depthCueMechanism'),
+    },
+
+    soil: {
+      bulkDensityKgPerM3: readScalar(root, 'soil.bulkDensityKgPerM3'),
+      surfaceTemperatureOffsetC: readScalar(root, 'soil.surfaceTemperatureOffsetC'),
+      infiltrationDepthCmPerMm: readScalar(root, 'soil.infiltrationDepthCmPerMm'),
+      surfaceMoistureMax: readScalar(root, 'soil.surfaceMoistureMax'),
+      deepMoisture: readScalar(root, 'soil.deepMoisture'),
+      dryingRatePerDay: readScalar(root, 'soil.dryingRatePerDay'),
+      evaporationDepthCm: readScalar(root, 'soil.evaporationDepthCm'),
+      archingStressGainPerVoid: readScalar(root, 'soil.archingStressGainPerVoid'),
+      archingRadiusCm: readScalar(root, 'soil.archingRadiusCm'),
+      stressShieldBelowFactor: readScalar(root, 'soil.stressShieldBelowFactor'),
+    },
+
+    discretisation: {
+      nestCellSizeCm: readScalar(root, 'discretisation.nestCellSizeCm'),
+      nestWidthCm: readScalar(root, 'discretisation.nestWidthCm'),
+      nestDepthCm: readScalar(root, 'discretisation.nestDepthCm'),
+      surfaceCellSizeM: readScalar(root, 'discretisation.surfaceCellSizeM'),
+      surfaceExtentM: readScalar(root, 'discretisation.surfaceExtentM'),
     },
 
     labour: {
@@ -398,6 +470,9 @@ export function buildParams(root: Raw): Params {
       soilThermalLagDaysPerMetre: readScalar(root, 'climate.soilThermalLagDaysPerMetre'),
       nuptialFlightMonths: readNumberList(root, 'climate.nuptialFlightMonths'),
       winterExcavationLull: readFlag(root, 'climate.winterExcavationLull'),
+      meanRainEventMm: readScalar(root, 'climate.meanRainEventMm'),
+      heavyRainMm: readScalar(root, 'climate.heavyRainMm'),
+      dailyTemperaturePeakHour: readScalar(root, 'climate.dailyTemperaturePeakHour'),
     },
   }
 }

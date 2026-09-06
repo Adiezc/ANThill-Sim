@@ -43,7 +43,14 @@
     "soilMoistureDiggableMin": { "value": 0.05, "tag": "B" },
     "soilMoistureDiggableMax": { "value": 0.85, "tag": "B", "note": "Cannot dig fully dry or fully saturated sand." },
     "soilMoistureOptimal": { "value": 0.35, "tag": "B", "note": "Tunnels deepest at intermediate moisture." },
-    "buildingPheromoneLifetimeTicks": { "value": 600, "tag": "C", "note": "EXPOSED AS A UI SLIDER. Khuong et al. 2016 show this parameter dominates nest form. No badius value exists." }
+    "buildingPheromoneLifetimeTicks": { "value": 600, "tag": "C", "note": "EXPOSED AS A UI SLIDER. Khuong et al. 2016 show this parameter dominates nest form. No badius value exists." },
+    "stressSensitivity": { "value": 2.0, "tag": "C", "note": "Digging probability falls as (1 - stress) raised to this power. Ants remove grains under low stress (Buarque de Macedo et al. 2021); the exponent is invented." },
+    "spoilCueWeight": { "value": 0.6, "tag": "C", "note": "How strongly accumulated fresh pellets attract the next excavator (Pielstrom and Roces 2013). Strength invented." },
+    "collisionAgitationHalfLifeTicks": { "value": 45, "tag": "C", "note": "Decay of an ant own recent-collision memory, which is what modulates its digging rate (Avinery et al. 2023). No published value." },
+    "collisionSaturationCount": { "value": 6, "tag": "C", "note": "Collisions per memory window at which digging effort has fully decayed." },
+    "tunnelLengthFeedbackCm": { "value": 40, "tag": "C", "note": "Ants dig less in a tunnel that is already long (Bruce et al. 2018). Length scale invented." },
+    "depthCueMechanism": { "value": "unknown", "tag": "C", "note": "HONESTY FLAG. Shaft angle steepens with depth and branching stops below 40 cm, both [A] observations, but no ant knows how deep it is. The CO2-gradient hypothesis was tested by venting and by reversing the gradient and was FALSIFIED (Tschinkel 2013). This simulation gives a digging ant access to its own depth as a stand-in for an unidentified local cue. It is the largest invented element in the excavation model and must be surfaced in the how-do-we-know-this panel. See docs/SCIENCE.md section 11." },
+    "surfaceTemperatureDepthGainCmPerC": { "value": 4.0, "tag": "C", "note": "Warmer surface temperatures produce deeper nests (Sankovitz and Purcell 2021). Direction is [B]; this magnitude is invented." }
   },
 
   "labour": {
@@ -124,6 +131,29 @@
     "realSecondsPerSimulatedDayAt1x": { "value": 60, "tag": "C" }
   },
 
+  "soil": {
+    "$comment": "No soil physics values are published for P. badius nests. The thermal model is derived from climate.soilThermalLagDaysPerMetre; the hydrology and stress values below are invented and exposed as sliders.",
+    "bulkDensityKgPerM3": { "value": 1600, "tag": "B", "note": "Dry well-drained sand. Sets the overburden stress profile." },
+    "surfaceTemperatureOffsetC": { "value": 2.5, "tag": "C", "note": "Bare sandhill sand runs warmer than screen air temperature. Invented." },
+    "infiltrationDepthCmPerMm": { "value": 1.0, "tag": "C", "note": "Depth of sand wetted per mm of rain, given the low water-holding capacity of sand." },
+    "surfaceMoistureMax": { "value": 0.9, "tag": "C" },
+    "deepMoisture": { "value": 0.30, "tag": "C", "note": "Stable moisture below the evaporation zone. Sits inside the diggable window, which is why deep excavation is not rain-gated." },
+    "dryingRatePerDay": { "value": 0.45, "tag": "C" },
+    "evaporationDepthCm": { "value": 25, "tag": "C", "note": "Drying falls off exponentially with this scale, so only shallow soil responds to a dry spell." },
+    "archingStressGainPerVoid": { "value": 0.18, "tag": "C", "note": "How much a void raises stress in the soil beside and above it. This is what makes force chains arch over a tunnel; no ant senses the network." },
+    "archingRadiusCm": { "value": 3.0, "tag": "C" },
+    "stressShieldBelowFactor": { "value": 0.55, "tag": "C", "note": "Soil directly beneath a void is shielded from overburden, so digging downward stays easier than digging sideways." }
+  },
+
+  "discretisation": {
+    "$comment": "NOT BIOLOGY. How the continuous world is chopped into cells. Tagged C because every value here is a modelling choice with no evidential basis, and each is exposed so a user can raise fidelity at the cost of speed. See docs/ARCHITECTURE.md.",
+    "nestCellSizeCm": { "value": 0.5, "tag": "C", "note": "A 1 cm chamber is two cells tall, so chamber height stays measurable rather than true by construction." },
+    "nestWidthCm": { "value": 200, "tag": "C" },
+    "nestDepthCm": { "value": 320, "tag": "C", "note": "Comfortably past the 250-300 cm mature depth, so the floor of the grid never constrains the nest." },
+    "surfaceCellSizeM": { "value": 0.25, "tag": "C" },
+    "surfaceExtentM": { "value": 25, "tag": "C", "note": "Half-width. Covers the 20 m foraging range with margin." }
+  },
+
   "climate": {
     "$comment": "1991-2020 US climate normals, Tallahassee, Florida. Tag A as a factual record of the study site.",
     "site": { "name": "Apalachicola National Forest, north Florida", "lat": 30.4, "lon": -84.3 },
@@ -145,6 +175,9 @@
     "soilThermalLagDaysPerMetre": { "value": 30, "tag": "B", "note": "Approximate. Damped, lagged sinusoid with depth." },
     "nuptialFlightMonths": { "value": [5, 6, 7], "tag": "A" },
     "nuptialFlightTrigger": { "value": "calm humid morning following heavy rain", "tag": "A" },
+    "meanRainEventMm": { "value": 12, "tag": "C", "note": "Monthly normals give totals, not events. Rain days are drawn so the expected monthly total matches the table." },
+    "heavyRainMm": { "value": 25, "tag": "C", "note": "Threshold for the rain that triggers a nuptial flight and that halts excavation by saturation." },
+    "dailyTemperaturePeakHour": { "value": 15, "tag": "C" },
     "winterExcavationLull": { "value": true, "tag": "A" }
   },
 

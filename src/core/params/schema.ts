@@ -98,6 +98,16 @@ export function readFlag(root: Raw, path: string): Param<boolean> {
   return { value, tag: tagOf(node, path), path, ...noteOf(node) }
 }
 
+/** Reads a tagged string. Used where the value is a declared stance rather than a number. */
+export function readString(root: Raw, path: string): Param<string> {
+  const node = at(root, path)
+  const value = (node as Raw).value
+  if (typeof value !== 'string') {
+    throw new ParamError(`Parameter "${path}" is not a string: ${JSON.stringify(value)}`)
+  }
+  return { value, tag: tagOf(node, path), path, ...noteOf(node) }
+}
+
 /** Reads a tagged `{ min, max }` pair. */
 export function readRange(root: Raw, path: string): RangeParam {
   const node = at(root, path)
