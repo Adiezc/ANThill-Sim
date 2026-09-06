@@ -101,36 +101,40 @@ function checkHardRules(params: Params): void {
 export function consistencyWarnings(params: Params): string[] {
   const warnings: string[] = []
 
-  // Chamber area falls geometrically with depth, so if each decile retains a fraction r
-  // of the one above, the shallowest quarter of the nest — two deciles and half of a
-  // third — holds (1 + r + r**2 / 2) of a total of sum(r**k, k = 0..9).
-  const topQuarterShare = (retain: number): number => {
-    let total = 0
-    let term = 1
-    for (let i = 0; i < 10; i += 1) {
-      total += term
-      term *= retain
-    }
-    return (1 + retain + (retain * retain) / 2) / total
+  // Chamber area does not fall geometrically with depth. Tschinkel 2004 regresses the
+  // decile-to-decile proportional decrease directly, and it rises with depth:
+  //
+  //   decrease(d) = slope * d + intercept
+  //
+  // running from about 10 percent between deciles 1 and 2 to about 90 percent between 9
+  // and 10. The flat "25 to 40 percent per decile" the paper's abstract gives is a
+  // compression of that line, and the two are not the same claim. See docs/DECISIONS.md D5.
+  const slope = params.nest.chamberAreaDecreaseSlope.value
+  const intercept = params.nest.chamberAreaDecreaseIntercept.value
+  const areas: number[] = [1]
+  for (let d = 2; d <= 10; d += 1) {
+    areas.push(areas[d - 2]! * (1 - (slope * d + intercept)))
   }
+  let totalArea = 0
+  for (const a of areas) totalArea += a
+  // The top quarter of the nest is two deciles and half of a third.
+  const topQuarter = (areas[0]! + areas[1]! + 0.5 * areas[2]!) / totalArea
+  const reportedTopQuarter = params.nest.topQuarterAreaFraction.value
 
-  // The decay that would actually produce the authored top-quarter share. Bisection
-  // rather than an inverse, because the share is monotonic in r and this needs no algebra
-  // for a reader to check.
-  const decay = params.nest.chamberAreaDecayPerDepthDecile
-  const target = params.nest.topQuarterAreaFraction.value
-  let lo = 0.01
-  let hi = 0.99
-  for (let i = 0; i < 60; i += 1) {
-    const mid = (lo + hi) / 2
-    if (topQuarterShare(mid) > target) lo = mid
-    else hi = mid
-  }
-  const impliedDecay = 1 - (lo + hi) / 2
-
-  if (impliedDecay < decay.min || impliedDecay > decay.max) {
+  if (Math.abs(topQuarter - reportedTopQuarter) > 0.15) {
     warnings.push(
-      `nest.topQuarterAreaFraction (${target}) implies a chamber area decay of about ${impliedDecay.toFixed(2)} per depth decile, which lies outside the authored nest.chamberAreaDecayPerDepthDecile range of ${decay.min} to ${decay.max}. Over ten deciles that range gives a top-quarter share of ${topQuarterShare(1 - decay.min).toFixed(2)} down to ${topQuarterShare(1 - decay.max).toFixed(2)}. Both values are tagged [A] and cannot both hold; the shallow end of the decay range is much the closer. See docs/DECISIONS.md D5.`,
+      `The chamber area decrease regression gives a top-quarter share of ${topQuarter.toFixed(2)}, against the reported nest.topQuarterAreaFraction of ${reportedTopQuarter}. Both come from Tschinkel 2004. See docs/DECISIONS.md D5.`,
+    )
+  }
+
+  // Tschinkel 2004 states the deep shaft angle twice and inconsistently: 45-60 degrees in
+  // the body, about 70 in the abstract. The model uses the body text. Reported rather than
+  // resolved, so that a reader can see the source disagreeing with itself.
+  const deepAngle = params.nest.shaftAngleDegDeep
+  const abstractDeepAngle = 70
+  if (abstractDeepAngle < deepAngle.min || abstractDeepAngle > deepAngle.max) {
+    warnings.push(
+      `Shaft angle below ${params.nest.shaftSteepeningDepthCm.value} cm is ${deepAngle.min}-${deepAngle.max} degrees in the body of Tschinkel 2004 and about ${abstractDeepAngle} degrees in its abstract. The model uses the body text. Both are tagged [A]. See docs/DECISIONS.md D10.`,
     )
   }
 

@@ -54,15 +54,37 @@ export interface Params {
     readonly matureDepthCm: RangeParam
     readonly matureVolumeLitres: Param<number>
     readonly shaftHelixDiameterCm: RangeParam
+    readonly shaftBoreDiameterCm: Param<number>
+    readonly shaftBoreDiameterUpperNestCm: Param<number>
+    readonly helixPitchShallowCm: RangeParam
+    readonly helixPitchDeepCm: Param<number>
+    readonly helixLeftHandedBias: Param<number>
+    /** From the body of Tschinkel 2004. Its abstract disagrees; see docs/DECISIONS.md D10. */
     readonly shaftAngleDegShallow: RangeParam
-    readonly shaftAngleDegDeep: Param<number>
+    readonly shaftAngleDegDeep: RangeParam
+    readonly shaftSteepeningDepthCm: Param<number>
     readonly chamberHeightCm: Param<number>
+    /** Superseded by the decrease regression below. Kept because the abstract says it. */
     readonly chamberAreaDecayPerDepthDecile: RangeParam
+    /** Proportional area decrease from one decile to the next is slope * decile + intercept. */
+    readonly chamberAreaDecreaseSlope: Param<number>
+    readonly chamberAreaDecreaseIntercept: Param<number>
     readonly topQuarterAreaFraction: Param<number>
+    readonly verticalSpacingShallowCm: RangeParam
+    readonly verticalSpacingDeepCm: RangeParam
+    readonly maxVerticalSpacingDecile: RangeParam
+    readonly maxVerticalSpacingAtDepthFraction: RangeParam
     readonly superficialChamberMaxDepthCm: Param<number>
     readonly shaftBranchingMaxDepthCm: Param<number>
+    readonly firstBranchDepthCm: RangeParam
+    readonly secondBranchDepthCm: RangeParam
+    readonly maxBranchesPerShaft: Param<number>
     readonly maxShaftChamberSeries: Param<number>
-    readonly maxVerticalSpacingAtDepthFraction: RangeParam
+    readonly totalAreaLogIntercept: Param<number>
+    readonly totalAreaLogSlope: Param<number>
+    readonly maxDepthLogIntercept: Param<number>
+    readonly maxDepthLogSlope: Param<number>
+    readonly colonySizeClassBounds: Param<readonly number[]>
   }
 
   readonly excavation: {
@@ -88,6 +110,19 @@ export interface Params {
      * tested and falsified. See docs/SCIENCE.md section 11.
      */
     readonly depthCueMechanism: Param<string>
+    readonly wholeNestExcavationDays: RangeParam
+    readonly chamberAreaPerOldWorkerDayCm2: Param<number>
+    readonly chamberAreaPerYoungWorkerDayCm2: Param<number>
+    readonly shaftLengthPerOldWorkerDayCm: Param<number>
+    readonly shaftLengthPerYoungWorkerDayCm: Param<number>
+    readonly diggingParticipationOld: Param<number>
+    readonly diggingParticipationMiddle: Param<number>
+    readonly diggingParticipationYoung: Param<number>
+    /**
+     * HARD RULE, true. Tschinkel 2004: a worker either digs consistently or does not dig at
+     * all. Digging is a persistent individual state, never a per-tick coin flip.
+     */
+    readonly diggingIsAPersistentTrait: Param<boolean>
   }
 
   readonly soil: {
@@ -287,15 +322,34 @@ export function buildParams(root: Raw): Params {
       matureDepthCm: readRange(root, 'nest.matureDepthCm'),
       matureVolumeLitres: readScalar(root, 'nest.matureVolumeLitres'),
       shaftHelixDiameterCm: readRange(root, 'nest.shaftHelixDiameterCm'),
+      shaftBoreDiameterCm: readScalar(root, 'nest.shaftBoreDiameterCm'),
+      shaftBoreDiameterUpperNestCm: readScalar(root, 'nest.shaftBoreDiameterUpperNestCm'),
+      helixPitchShallowCm: readRange(root, 'nest.helixPitchShallowCm'),
+      helixPitchDeepCm: readScalar(root, 'nest.helixPitchDeepCm'),
+      helixLeftHandedBias: readScalar(root, 'nest.helixLeftHandedBias'),
       shaftAngleDegShallow: readRange(root, 'nest.shaftAngleDegShallow'),
-      shaftAngleDegDeep: readScalar(root, 'nest.shaftAngleDegDeep'),
+      shaftAngleDegDeep: readRange(root, 'nest.shaftAngleDegDeep'),
+      shaftSteepeningDepthCm: readScalar(root, 'nest.shaftSteepeningDepthCm'),
       chamberHeightCm: readScalar(root, 'nest.chamberHeightCm'),
       chamberAreaDecayPerDepthDecile: readRange(root, 'nest.chamberAreaDecayPerDepthDecile'),
+      chamberAreaDecreaseSlope: readScalar(root, 'nest.chamberAreaDecreaseSlope'),
+      chamberAreaDecreaseIntercept: readScalar(root, 'nest.chamberAreaDecreaseIntercept'),
       topQuarterAreaFraction: readScalar(root, 'nest.topQuarterAreaFraction'),
+      verticalSpacingShallowCm: readRange(root, 'nest.verticalSpacingShallowCm'),
+      verticalSpacingDeepCm: readRange(root, 'nest.verticalSpacingDeepCm'),
+      maxVerticalSpacingDecile: readRange(root, 'nest.maxVerticalSpacingDecile'),
+      maxVerticalSpacingAtDepthFraction: readRange(root, 'nest.maxVerticalSpacingAtDepthFraction'),
       superficialChamberMaxDepthCm: readScalar(root, 'nest.superficialChamberMaxDepthCm'),
       shaftBranchingMaxDepthCm: readScalar(root, 'nest.shaftBranchingMaxDepthCm'),
+      firstBranchDepthCm: readRange(root, 'nest.firstBranchDepthCm'),
+      secondBranchDepthCm: readRange(root, 'nest.secondBranchDepthCm'),
+      maxBranchesPerShaft: readScalar(root, 'nest.maxBranchesPerShaft'),
       maxShaftChamberSeries: readScalar(root, 'nest.maxShaftChamberSeries'),
-      maxVerticalSpacingAtDepthFraction: readRange(root, 'nest.maxVerticalSpacingAtDepthFraction'),
+      totalAreaLogIntercept: readScalar(root, 'nest.totalAreaLogIntercept'),
+      totalAreaLogSlope: readScalar(root, 'nest.totalAreaLogSlope'),
+      maxDepthLogIntercept: readScalar(root, 'nest.maxDepthLogIntercept'),
+      maxDepthLogSlope: readScalar(root, 'nest.maxDepthLogSlope'),
+      colonySizeClassBounds: readNumberList(root, 'nest.colonySizeClassBounds'),
     },
 
     excavation: {
@@ -324,6 +378,18 @@ export function buildParams(root: Raw): Params {
         'excavation.surfaceTemperatureDepthGainCmPerC',
       ),
       depthCueMechanism: readString(root, 'excavation.depthCueMechanism'),
+      wholeNestExcavationDays: readRange(root, 'excavation.wholeNestExcavationDays'),
+      chamberAreaPerOldWorkerDayCm2: readScalar(root, 'excavation.chamberAreaPerOldWorkerDayCm2'),
+      chamberAreaPerYoungWorkerDayCm2: readScalar(
+        root,
+        'excavation.chamberAreaPerYoungWorkerDayCm2',
+      ),
+      shaftLengthPerOldWorkerDayCm: readScalar(root, 'excavation.shaftLengthPerOldWorkerDayCm'),
+      shaftLengthPerYoungWorkerDayCm: readScalar(root, 'excavation.shaftLengthPerYoungWorkerDayCm'),
+      diggingParticipationOld: readScalar(root, 'excavation.diggingParticipationOld'),
+      diggingParticipationMiddle: readScalar(root, 'excavation.diggingParticipationMiddle'),
+      diggingParticipationYoung: readScalar(root, 'excavation.diggingParticipationYoung'),
+      diggingIsAPersistentTrait: readFlag(root, 'excavation.diggingIsAPersistentTrait'),
     },
 
     soil: {

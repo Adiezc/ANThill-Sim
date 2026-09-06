@@ -90,21 +90,34 @@ lines of `SCIENCE.md` §10 — worker rank orders, male-only eggs, no recovery, 
 
 ---
 
-## D5. `chamberAreaDecayPerDepthDecile` and `topQuarterAreaFraction` are jointly
+## D5. The top-heaviness contradiction, resolved by the primary source
 
-over-constrained
+**Superseded. The conflict was an artefact of reading a secondary account.**
 
-Both are **[A]**. Over ten deciles, a 25% decay per decile puts ~0.54 of chamber area in
-the top quarter of the nest, matching `topQuarterAreaFraction: 0.5` well. A 40% decay puts
-~0.72 there, which contradicts it. The stated range 0.25–0.40 is therefore satisfiable
-only near its shallow end.
+The original problem: `chamberAreaDecayPerDepthDecile` of 0.25–0.40 and
+`topQuarterAreaFraction` of 0.5 are both **[A]** and, under a constant geometric decay,
+cannot both hold. A flat 25 percent decay puts 0.54 of chamber area in the top quarter and
+a flat 40 percent puts 0.72, so only the shallow end of the range came close.
 
-**Resolution.** The nest architecture acceptance test (see `VALIDATION.md`) targets the
-25% end and treats the 40% end as out of tolerance. Neither **[A]** value is edited;
-`SCIENCE.md` and the parameter file record what the papers say, and this file records that
-they cannot both hold.
+Reading `docs/papers/tschinkel-2004-nest-architecture.pdf` in full dissolves it. The
+decile-to-decile decrease is **not constant**. Tschinkel regresses it directly:
 
----
+> proportional decrease = 0.10 × decile − 0.12  (R² = 0.16, p < 0.01)
+
+which runs from about 10 percent between deciles 1 and 2 to about 90 percent between 9 and
+10, and averages about half. The abstract's "25 to 40 percent" is that regression
+compressed into one clause; the two were never the same claim. Applying the regression
+gives a top-quarter share of about 0.60 against a reported "about half" — a real but
+ordinary discrepancy between a fitted line and a summary statistic, not a contradiction.
+
+**Resolution.** The model uses the regression. `nest.chamberAreaDecreaseSlope` and
+`chamberAreaDecreaseIntercept` are the authored values;
+`nest.chamberAreaDecayPerDepthDecile` is retained and marked superseded, because it is what
+the abstract of the source says and deleting it would hide the discrepancy rather than
+record it. The nest signature gate in `VALIDATION.md` targets the regression.
+
+Worth stating plainly: this was found only because the paper itself was read rather than a
+summary of it. It is the argument for `docs/papers/`.
 
 ## D6. Building pheromone persistence was specified twice
 
@@ -156,3 +169,46 @@ every seasonal transition in `SCIENCE.md` §9. Introducing leap years would buy 
 would make the tick-to-date mapping non-uniform.
 
 **Tag.** Modelling choice. Not a biological claim.
+
+---
+
+## D10. Primary sources added, and sections 2 and 3 rewritten from them
+
+Five papers were added to `docs/papers/` (2026-09-06). `tschinkel-2004-nest-architecture.pdf`
+was read in full and `SCIENCE.md` sections 2 and 3 were rewritten from it. Corrections:
+
+- **Incipient nest depth is 29–37 cm, not 40–50 cm.** The larger figure came from a
+  secondary account and is wrong.
+- **Shaft angle is stated twice and inconsistently in the source.** The abstract says
+  15–20 degrees from horizontal near the surface rising to about 70 degrees; the body says
+  20–30 degrees rising to 45–60 degrees by 50 cm. The model uses the body text; both are
+  kept in the parameter file so the inconsistency stays visible instead of being silently
+  resolved.
+- **Chamber area decrease is depth-dependent, not flat.** See D5.
+- **Total area scales as a fitted law**, `log A = 0.551 + 0.873 log W`, R² 93 percent,
+  replacing "grows slightly more slowly than the worker population".
+
+New material with no previous entry: helix pitch (8–10 cm per turn shallow, 20 cm deep),
+shaft bore diameter (just under 1 cm, up to 2 cm in the upper nest), chamber–shaft
+intersection angle, chamber outline complexity, vertical spacing in centimetres, branch
+depths, per-series area contributions, depth scaling law, per-worker-day excavation rates,
+and the whole-nest excavation rate of 3 to 6 days regardless of colony size.
+
+One finding changes the shape of the excavation model rather than a number in it.
+Tschinkel's penning experiments show the difference between age groups is mostly **how many
+workers dig, not how fast each digs**, and that *"a worker either digs consistently or does
+not dig at all"*. Digging is therefore a persistent individual state in this model, set
+once and carried, never a per-tick probability. It is recorded as a HARD RULE
+(`excavation.diggingIsAPersistentTrait`).
+
+Finally, the depth cue. Tschinkel 2004 proposed a carbon dioxide gradient as the template
+for depth-dependent architecture, having measured a fivefold rise from surface to nest
+bottom that mirrors the chamber-area distribution almost exactly. Tschinkel 2013 then
+vented the gradient away and reversed it, and architecture was unchanged. So the model's
+one big invention — handing a digging ant its own depth — is standing in for a cue whose
+most plausible candidate has been tested and killed. That is now stated in
+`excavation.depthCueMechanism`, in the rule registry, and in `NOT_MODELLED`.
+
+**Licensing.** These PDFs are third-party works and are not ours to relicense. Only
+Tschinkel 2004 is certainly open access. See `docs/papers/README.md` before this repository
+is made public.

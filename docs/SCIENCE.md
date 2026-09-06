@@ -41,26 +41,53 @@ labelled as such wherever the simulator surfaces it.
 
 ## 2. Nest architecture
 
+**Rewritten from the primary source.** Everything in this section and the next now comes
+from `docs/papers/tschinkel-2004-nest-architecture.pdf`, read in full, rather than from
+secondary accounts. Rows marked **(corrected)** disagree with what this file previously
+said. The study is 33 complete excavations and plaster, zinc and aluminium casts, from 2 to
+3.02 m deep, of 5 to 150 chambers.
+
+Colony size classes used throughout are Tschinkel's: class 0, under 100 workers; class 1,
+101–800; class 2, 801–2000; class 3, 2001–4000; class 4, over 4000.
+
 | Mechanic | Rule as implemented | Tag | Source |
 |---|---|---|---|
-| Structural unit | Nest is built from one repeated unit, a near-vertical shaft bearing near-horizontal flattened chambers | **[A]** | Tschinkel 2004, 2015 |
-| Shaft geometry | Shafts form helices 4 to 6 cm in diameter, descending at 15 to 20 degrees near the surface, steepening to about 70 degrees below 50 cm | **[A]** | Tschinkel 2004 |
-| Chamber height | About 1 cm, independent of chamber area | **[A]** | Tschinkel 2004 |
-| Top-heaviness | Chamber area is greatest near the surface and falls 25 to 40 percent with each 10 percent increment of depth; about half of all chamber area sits in the top quarter of the nest | **[A]** | Tschinkel 2004 |
-| Chamber outline | Chambers begin as circular indentations on the outside of the helix and become multi-lobed as they are enlarged | **[A]** | Tschinkel 2004 |
-| Vertical spacing | Smallest near the surface, greatest at 70 to 80 percent of maximum depth | **[A]** | Tschinkel 2004 |
-| Shaft branching | Branching occurs shallow, above about 40 cm. Large colonies rarely exceed four shaft-and-chamber series, and each additional series contributes less area | **[A]** | Tschinkel 2004 |
-| Superficial chambers | Above 15 cm, distinct from deeper chambers, looping and interconnected in large nests | **[A]** | Tschinkel 2004 |
-| Mature depth | 2.5 to 3.0 m, about 8 litres of volume | **[A]** | Tschinkel 2004; Tschinkel & Seal 2015 |
-| Growth mode | Nest grows by simultaneous deepening, addition of chambers and enlargement of existing chambers, so the size-free shape stays constant at every colony size | **[A]** | Tschinkel 2004 |
-| Volume scaling | Total chamber area tracks worker number, growing slightly more slowly than the worker population | **[A]** | Tschinkel 2004 |
+| Structural unit | Two units only: descending shafts, and horizontal chambers | **[A]** | Tschinkel 2004 |
+| Shaft bore **(new)** | Shaft diameter averages a little under 1 cm and changes little with nest size. In the upper nest shafts are larger, flattened-oval, up to about 2 cm wide | **[A]** | Tschinkel 2004 |
+| Shaft helix | Shafts spiral, more often to the left than the right, forming a helix 4 to 6 cm in diameter | **[A]** | Tschinkel 2004 |
+| Helix pitch **(new)** | Shaft length per turn rises from 8 to 10 cm per turn near the surface to about 20 cm per turn deeper. This is what sets the projected zigzag in a vertical slice | **[A]** | Tschinkel 2004 |
+| Shaft angle **(corrected)** | The paper states this twice and inconsistently. Abstract: about 15–20 degrees from horizontal near the surface, rising to about 70 degrees below 50 cm. Body: about 20–30 degrees near the surface, rising to 45–60 degrees by 50 cm, with shafts overall inclined 20 to 70 degrees from the vertical. The model uses the body text and records the abstract's figures beside it | **[A]**, internally inconsistent | Tschinkel 2004 |
+| Chamber height | About 1 cm floor to ceiling, no matter what the floor area | **[A]** | Tschinkel 2004 |
+| Chamber initiation | Chambers begin as small circular flat-floored niches in the outer wall of the helix, and become increasingly lobed as workers enlarge them | **[A]** | Tschinkel 2004 |
+| Chamber complexity **(new)** | Outline complexity, measured as actual perimeter over the perimeter of a circle of equal area, runs from 1 for small chambers to 2–7 for the large chambers of the upper third | **[A]** | Tschinkel 2004 |
+| Shaft–chamber angle **(new)** | Below 15 to 20 cm, chambers are lateral horizontal-floored extensions from the outside of the descending helix, meeting it at 25 to 70 degrees | **[A]** | Tschinkel 2004 |
+| Superficial chambers | Within 10 to 15 cm of the surface, chambers are modified shafts: widened, branched, looping and interconnected, with lobes on **both** sides rather than only the outside. Mean area rises from about 26 cm² in class 0 to about 330 cm² in class 4 | **[A]** | Tschinkel 2004 |
+| Top-heaviness **(corrected)** | About half of total chamber area lies in the top quarter. The decile-to-decile decrease is **not constant**: it rises with depth as `proportional decrease = 0.10 × decile − 0.12`, from about 10 percent between deciles 1 and 2 to about 90 percent between 9 and 10, averaging about half. The previously stated flat "25 to 40 percent per decile" is the paper's own abstract summarising this regression, and the two are not equivalent | **[A]** | Tschinkel 2004 |
+| Depth–area scaling **(new)** | Log-log slope of decile area against mean decile depth is −0.59 (R² 62 percent), the same for every colony size class: a tenfold increase in decile depth gives a 75 percent decrease in that decile's area | **[A]** | Tschinkel 2004 |
+| Vertical spacing **(corrected)** | 2 to 4 cm between chambers near the surface, rising to 20 to 30 cm deeper, with the maximum in the 7th or 8th decile and a decrease again in the 10th. Spacing barely changes as the nest grows, because deepening and chamber addition happen together | **[A]** | Tschinkel 2004 |
+| Chamber size with depth **(new)** | Mean chamber area near the surface is 5 to 6 times that near the bottom | **[A]** | Tschinkel 2004 |
+| Branching | Every shaft branch begins less than 40 cm down, whatever the nest size. Rarely more than 2 branches in one shaft. Deeper nests branch closer to the surface than shallow ones | **[A]** | Tschinkel 2004 |
+| Branch depths **(new)** | Outside the largest size class the first branch appears at 12 to 17 cm and the second at 26 to 33 cm; a third begins about 35 cm. In class 4 the second branch is variable and the rest fall at 10 to 15 cm | **[A]** | Tschinkel 2004 |
+| Vertical series | 1 to 4 chamber-and-shaft series, one nest in 32 having 5. Mean worker number was 1700 with one series, 3200 with two, 4600 with three, 5000 with four | **[A]** | Tschinkel 2004 |
+| Series contribution **(new)** | Each chamber adds a mean of 98 cm² to total area in the first series, 73 in the second, 57 in the third, 43 in the fourth. Deeper branch points give fewer chambers in the series | **[A]** | Tschinkel 2004 |
+| Total area scaling **(corrected)** | `log(total chamber area) = 0.551 + 0.873 × log(dark workers)`, R² 93 percent: a tenfold increase in mature workers gives a 7.5-fold increase in area, so space per ant falls as the colony grows | **[A]** | Tschinkel 2004 |
+| Depth scaling **(new)** | `log(max depth) = 0.95 + 0.37 × log(dark workers)`, R² 72 percent: a tenfold increase in workers gives a 2.4-fold increase in depth | **[A]** | Tschinkel 2004 |
+| Top decile area **(new)** | 38, 190, 516, 1700 and 2670 cm² for size classes 0 to 4 | **[A]** | Tschinkel 2004 |
+| Incipient depth **(corrected)** | Incipient nests are **29 to 37 cm** deep. This file previously said 40 to 50 cm | **[A]** | Tschinkel 2004 |
+| Mature depth | Commonly 2.5 to 3.0 m; the deepest measured was 3.06 m | **[A]** | Tschinkel 2004 |
+| Growth mode | Deepening, chamber addition and chamber enlargement happen simultaneously, so the size-free shape is the same at every colony size. Enlargement contributes more to area than addition does | **[A]** | Tschinkel 2004; Tschinkel 1999a |
 | Mound | Flattened sand crater, no surrounding vegetation, decorated with charcoal and detritus for reasons unknown | **[A]** | AntWiki; Wikipedia species account |
-| Chamber spacing and stability | Chambers are placed so that stress zones overlap and arching is enhanced; this is modelled as a soil stress field that discourages placing chambers too close vertically | **[B]** | Belachew, Arson & Frost 2025 |
+| Chamber spacing and stability | Chambers are placed so that stress zones overlap and arching is enhanced; modelled as a soil stress field that discourages placing chambers too close vertically | **[B]** | Belachew, Arson & Frost 2025 |
 
 ## 3. Excavation
 
 | Mechanic | Rule as implemented | Tag | Source |
 |---|---|---|---|
+| Whole-nest excavation rate **(new)** | The workers of a colony can excavate a complete nest in 3 to 6 days, whatever the colony size. About 5000 workers moved roughly 20 kg of sand in 4 to 5 days | **[A]** | Tschinkel 2004 |
+| Sand moved **(new)** | About 40 g of sand in an incipient nest, up to about 40 kg in the largest. A worker shifts 300 to 400 times its own weight per day while excavating | **[A]** | Tschinkel 2004 |
+| Per-worker rate **(new)** | Older workers excavate about 0.45 cm² of chamber and 0.13 cm of shaft per worker-day; young workers about 0.15 cm² and 0.06 cm. Digging rate as plaster: 0.80, 0.41 and 0.28 g per worker-day for top, middle and bottom groups | **[A]** | Tschinkel 2004 |
+| **Participation, not pace** | The difference between age groups is mostly *how many* dig, not how fast each digs: 82 percent of old workers, 25 percent of middle and 19 percent of young were recaptured carrying sand. **"A worker either digs consistently or does not dig at all."** Digging is a persistent individual state, not a per-moment coin flip | **[A]** | Tschinkel 2004 |
+| Age and nest size | Workers taken from the top of a mature nest dug larger, more complex nests than those from the bottom: about twice the rate of the middle group and three times the bottom. All age groups nevertheless produced top-heavy nests of similar shape | **[A]** | Tschinkel 2004 |
 | Digging regulation | Digging effort is modulated by each ant's own rate of collision with nestmates, with no global control. Rate curve runs constant, then decays rapidly, then tails off | **[B]** | Avinery et al. 2023 (*Solenopsis invicta*) |
 | Excavation dynamics | Excavation is logistic: exponential growth then saturation. Total excavated volume is close to proportional to worker number | **[B]** | Buhl et al. 2005 (*Messor sancta*) |
 | Space feedback | Ants dig significantly less in a tunnel that is already long, and walking speed correlates with excavation rate | **[B]** | Bruce et al. 2018 (*Acromyrmex lundi*, *Atta colombica*) |
@@ -71,9 +98,10 @@ labelled as such wherever the simulator surfaces it.
 | Substrate limits | Ants cannot excavate fully dry or fully saturated sand. Tunnels are deepest at intermediate moisture | **[B]** | Monaenkova et al. 2015 (*Solenopsis invicta*) |
 | Granular constraints | Tunnel diameter is bounded below by grain size and by body size; the resulting topology is energy-efficient within those limits | **[B]** | Espinoza & Santamarina 2010 |
 | Stigmergic amplification | Deposition of building material is amplified where deposition has already occurred, via a building pheromone added to the material itself. **Pheromone lifetime is the dominant parameter controlling nest form** and is exposed as a slider | **[B]** | Khuong et al. 2016 (*Lasius niger*, PNAS) |
-| Body-size template | Ants use their own body size as a cue for the height at which to begin roofing over a pillar | **[B]** | Khuong et al. 2016 |
+| Body-size template | Ants use their own body size as a cue for the height at which to begin roofing over a pillar. In this model that is what makes a chamber stop growing upward at about 1 cm | **[B]** for the mechanism, **[A]** for the resulting height | Khuong et al. 2016 (**[B]**); Tschinkel 2004 (**[A]**) |
 | Temperature response | Warmer surface temperatures produce deeper nests | **[B]** | Sankovitz & Purcell 2021; García Ibarra et al. 2023 |
 | Relocation excavation rate | A full replacement nest is excavated to 2 m and about 8 L in roughly two weeks, with most progress in the first days | **[A]** | Tschinkel & Seal 2015 |
+| **The depth cue** | Shaft angle steepens with depth, branching stops below 40 cm, and chamber spacing and area vary systematically with depth — yet **no ant knows how deep it is**. Tschinkel 2004 proposed a carbon dioxide gradient as the template, having measured a fivefold rise from surface to nest bottom with the steepest part in the top half-metre, mirroring the area distribution. Tschinkel 2013 then tested it by venting the gradient away and by reversing it, and nest architecture was unchanged. **The hypothesis is dead and no replacement exists.** This simulation hands a digging ant its own depth as an admitted stand-in. It is the largest invented element in the model | **[C]** | Tschinkel 2004 proposed it; Tschinkel 2013 falsified it |
 
 ## 4. Division of labour
 

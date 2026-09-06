@@ -66,23 +66,29 @@ describe('the shipped species file', () => {
     // D3: candidate sites differ although no site property is known to explain relocation.
     expect(text).toContain('D3')
 
-    // D5: two [A] values that cannot both hold. The file is not edited to make the model
-    // comfortable — the papers say what they say — so the tension is reported instead.
-    expect(text).toContain('D5')
-    expect(text).toMatch(/decay of about 0\.22 per depth decile/)
-    expect(text).toMatch(/top-quarter share of 0\.54 down to 0\.72/)
+    // D10: the source states shaft angle twice and inconsistently, and the model uses the
+    // body text over the abstract. The file is not edited to make the model comfortable —
+    // the paper says what it says — so the disagreement is reported instead.
+    expect(text).toContain('D10')
+    expect(text).toMatch(/body of Tschinkel 2004/)
   })
 
-  it('stops warning about D5 if the two [A] values are ever reconciled', () => {
-    // Guards the warning against becoming scenery. Set the decay range to include the
-    // decay the top-quarter share actually implies and it should fall silent.
+  it('does not warn about top-heaviness, because the regression resolves it', () => {
+    // The apparent contradiction between the 25-40% decile decay and the 0.5 top-quarter
+    // share was an artefact of a secondary account. Tschinkel 2004 regresses the decrease
+    // directly and it rises with depth, giving about 0.60 against a reported "about half".
+    // See docs/DECISIONS.md D5.
+    const { params } = loadSpecies(rawSpecies())
+    expect(consistencyWarnings(params).join('\n')).not.toContain('top-quarter share')
+  })
+
+  it('would warn if the regression drifted away from the reported top-quarter share', () => {
     const root = withEdit((r) => {
       const nest = r['nest'] as Record<string, Record<string, unknown>>
-      nest['chamberAreaDecayPerDepthDecile']!['min'] = 0.2
-      nest['chamberAreaDecayPerDepthDecile']!['max'] = 0.25
+      nest['chamberAreaDecreaseSlope']!['value'] = 0.3
     })
     const { params } = loadSpecies(root)
-    expect(consistencyWarnings(params).join('\n')).not.toContain('D5')
+    expect(consistencyWarnings(params).join('\n')).toContain('top-quarter share')
   })
 
   it('has a tick length that divides a day', () => {
