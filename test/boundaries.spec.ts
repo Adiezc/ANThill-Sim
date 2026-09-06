@@ -23,10 +23,25 @@ function sourceFiles(dir: string): string[] {
 /** Files exempt because their whole job is to build the tables the rest of core uses. */
 const EXEMPT = ['reference.ts']
 
+/**
+ * Strips comments and string literals before scanning. Without this the test fires on its
+ * own subject matter: a file that documents why it does not call Math.random contains the
+ * words "Math.random". Comments are exactly where those explanations belong, so the scan
+ * has to look at code only.
+ */
+function stripCommentsAndStrings(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/\/\/[^\n]*/g, ' ')
+    .replace(/'(?:[^'\\\n]|\\.)*'/g, "''")
+    .replace(/"(?:[^"\\\n]|\\.)*"/g, '""')
+    .replace(/`(?:[^`\\]|\\.)*`/g, '``')
+}
+
 function coreSources(): { path: string; text: string }[] {
   return sourceFiles(CORE_DIR)
     .filter((p) => !EXEMPT.some((e) => p.endsWith(e)))
-    .map((path) => ({ path, text: readFileSync(path, 'utf8') }))
+    .map((path) => ({ path, text: stripCommentsAndStrings(readFileSync(path, 'utf8')) }))
 }
 
 describe('/core purity', () => {

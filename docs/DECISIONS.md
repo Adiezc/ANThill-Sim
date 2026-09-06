@@ -141,3 +141,18 @@ cannot be built without them.
 **[B]** where a congener or a claustral-ant generality supports it and **[C]** where
 nothing does, each noted in `SCIENCE.md`. None is tagged **[A]** without a _badius_
 citation. This file records each addition as it lands.
+
+---
+
+## D9. A fixed 365-day calendar
+
+The model needs a calendar to drive the climate table, but it has no `Date` and no wall
+clock, and it must be exactly reproducible over runs spanning fifteen simulated years.
+
+**Resolution.** A fixed 365-day year with no leap days, derived entirely from the integer
+tick count. Over a fifteen-year run this puts the simulated date at most four days ahead
+of a Gregorian one, which is well inside the resolution of monthly climate normals and of
+every seasonal transition in `SCIENCE.md` §9. Introducing leap years would buy nothing and
+would make the tick-to-date mapping non-uniform.
+
+**Tag.** Modelling choice. Not a biological claim.
