@@ -1,0 +1,7 @@
+dist/
+coverage/
+node_modules/
+
+# Authored specification and data. Not the formatter's to own.
+docs/
+species/

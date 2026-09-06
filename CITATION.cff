@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+title: 'Anthill Simulator: an agent-based model of Pogonomyrmex badius'
+message: 'If you use this software or its parameter data, please cite it as below.'
+type: software
+authors:
+  - given-names: Adrian
+    family-names: Diez Cuadrado
+abstract: >-
+  A browser-based, agent-based simulation of a colony of the Florida harvester ant,
+  Pogonomyrmex badius, covering claustral founding, self-organised nest excavation,
+  trunk-trail foraging, seed storage and germination, seasonal cycles and annual nest
+  relocation. Every modelled mechanic is tagged as documented for the species,
+  generalised from another ant, or invented, and is linked to its source.
+keywords:
+  - agent-based model
+  - myrmecology
+  - Pogonomyrmex badius
+  - self-organisation
+  - stigmergy
+  - nest architecture
+license: MIT

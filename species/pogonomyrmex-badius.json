@@ -1,0 +1,172 @@
+{
+  "$comment": "Parameter file for the Florida harvester ant. Every value carries a `tag` of A (documented for P. badius), B (generalised from another species) or C (invented, tuned for playability). Values tagged C are the ONLY ones free to change for feel. See docs/SCIENCE.md.",
+  "schemaVersion": 1,
+  "species": {
+    "binomial": "Pogonomyrmex badius",
+    "common": "Florida harvester ant",
+    "habitat": "Longleaf pine sandhills, Apalachicola National Forest, north Florida",
+    "soil": "Deep well-drained sand"
+  },
+
+  "colony": {
+    "queens": { "value": 1, "tag": "A", "note": "Monogynous. Mature wild colonies never truly polygynous." },
+    "sexualMaturityWorkers": { "value": 700, "tag": "A" },
+    "meanMatureWorkers": { "value": 4300, "tag": "A" },
+    "majorWorkerFraction": { "value": 0.07, "tag": "A", "note": "Independent of colony size; rises slightly midsummer." },
+    "minorWorkerLengthMm": { "value": 6.35, "tag": "A" },
+    "majorWorkerLengthMm": { "value": 9.52, "tag": "A" },
+    "queenLifespanYears": { "value": 17, "tag": "C", "note": "INVENTED. No lifespan constant appears in the cited literature, but v1 requires colony death. Applied as a per-day hazard, not a hard cap. Exposed as a slider. See docs/DECISIONS.md D4." }
+  },
+
+  "nest": {
+    "incipientDepthCm": { "min": 40, "max": 50, "tag": "A" },
+    "matureDepthCm": { "min": 250, "max": 300, "tag": "A" },
+    "matureVolumeLitres": { "value": 8, "tag": "A" },
+    "shaftHelixDiameterCm": { "min": 4, "max": 6, "tag": "A" },
+    "shaftAngleDegShallow": { "min": 15, "max": 20, "tag": "A", "note": "Near the surface." },
+    "shaftAngleDegDeep": { "value": 70, "tag": "A", "note": "Below about 50 cm." },
+    "chamberHeightCm": { "value": 1.0, "tag": "A", "note": "Independent of chamber area." },
+    "chamberAreaDecayPerDepthDecile": { "min": 0.25, "max": 0.40, "tag": "A", "note": "Each 10% depth increment has 25-40% less area than the one above." },
+    "topQuarterAreaFraction": { "value": 0.5, "tag": "A" },
+    "superficialChamberMaxDepthCm": { "value": 15, "tag": "A" },
+    "shaftBranchingMaxDepthCm": { "value": 40, "tag": "A" },
+    "maxShaftChamberSeries": { "value": 4, "tag": "A" },
+    "maxVerticalSpacingAtDepthFraction": { "min": 0.70, "max": 0.80, "tag": "A" }
+  },
+
+  "excavation": {
+    "relocationExcavationDays": { "value": 14, "tag": "A", "note": "To 2 m and 8 L; most progress in the first days." },
+    "undergroundRedepositionFraction": { "value": 0.025, "tag": "A" },
+    "pelletsPerExcavatorPerHour": { "value": 26, "tag": "B", "note": "Atta vollenweideri. No badius figure published." },
+    "digRateCollisionSensitivity": { "value": 1.0, "tag": "C", "note": "Tuned. Governs the agitation model." },
+    "digRateSaturationExponent": { "value": -0.5, "tag": "B", "note": "Long-time tunnel growth scales as t^-1/2." },
+    "soilMoistureDiggableMin": { "value": 0.05, "tag": "B" },
+    "soilMoistureDiggableMax": { "value": 0.85, "tag": "B", "note": "Cannot dig fully dry or fully saturated sand." },
+    "soilMoistureOptimal": { "value": 0.35, "tag": "B", "note": "Tunnels deepest at intermediate moisture." },
+    "buildingPheromoneLifetimeTicks": { "value": 600, "tag": "C", "note": "EXPOSED AS A UI SLIDER. Khuong et al. 2016 show this parameter dominates nest form. No badius value exists." }
+  },
+
+  "labour": {
+    "foragerDepthMaxCm": { "value": 15, "tag": "A" },
+    "foragerFractionBelow20cm": { "value": 0.05, "tag": "A" },
+    "transferWorkerFractionBelow20cm": { "value": 0.30, "tag": "A" },
+    "broodCareFractionBelow70cm": { "value": 0.90, "tag": "A" },
+    "summerForagerFraction": { "value": 0.40, "tag": "A" },
+    "summerTransferWorkerFraction": { "value": 0.25, "tag": "A" },
+    "peakForagingProportion": { "value": 0.37, "tag": "A", "note": "Peak of the annual cycle." },
+    "foragerFatThreshold": { "value": 0.10, "tag": "A", "note": "A worker becomes a forager below this fat fraction." },
+    "ageAtFirstForagingDaysSummerBorn": { "value": 43, "tag": "A" },
+    "ageAtFirstForagingDaysAutumnBorn": { "value": 200, "tag": "A" },
+    "foragerLifespanDays": { "value": 27, "tag": "A", "note": "From first foraging trip, under natural conditions." },
+    "foragerMortalityPerDay": { "min": 0.03, "max": 0.04, "tag": "A" },
+    "foragerPopulationCollapseMortality": { "value": 0.04, "tag": "A", "note": "Above this, forager population declines." },
+    "taskReversionAllowed": { "value": false, "tag": "A", "note": "HARD RULE. Foragers never revert to inside work." },
+    "backfillFromOtherCastes": { "value": false, "tag": "A", "note": "HARD RULE. Removing foragers draws no replacements. Larvae starve instead." },
+    "autumnWorkerWeightGain": { "value": 0.24, "tag": "A", "note": "Fat stored for overwintering and next year's alates." }
+  },
+
+  "foraging": {
+    "trunkTrailCount": { "min": 1, "max": 4, "tag": "A", "note": "Short trunk trails into a surrounding range." },
+    "foragingRangeMetres": { "value": 20, "tag": "B", "note": "P. barbatus." },
+    "siteFidelityRadiusMetres": { "value": 0.5, "tag": "B", "note": "P. barbatus. Forager returns to within this of its last site." },
+    "rangeActivelyDefended": { "value": false, "tag": "A", "note": "Ranges are exclusive in practice but not defended." },
+    "workerSizePredictsSeedSize": { "value": false, "tag": "A", "note": "HARD RULE. Tested and rejected (Ferster & Traniello 1995)." },
+    "workerSizePredictsForagingDistance": { "value": false, "tag": "A", "note": "HARD RULE. Tested and rejected." },
+    "maxOpenableSeedWidthMm": { "value": 1.4, "tag": "A", "note": "Maximum width a worker can OPEN. Wider seeds are still collected and stored; see seeds.largeSeedStoreFractionByWeight and docs/DECISIONS.md D2." },
+    "maxCollectableSeedWidthMm": { "value": 4.0, "tag": "C", "note": "Maximum width a worker can carry home. No published value. Tuned so that large seeds reach the observed 70% of stores by weight." }
+  },
+
+  "seeds": {
+    "seedChamberDepthCm": { "min": 20, "max": 80, "tag": "A" },
+    "largeSeedStoreFractionByWeight": { "value": 0.70, "tag": "A", "note": "Large seeds accumulate because workers cannot open them." },
+    "majorsIncreaseOpeningRate": { "value": true, "tag": "A" },
+    "majorsWidenOpenableSizeRange": { "value": false, "tag": "A", "note": "HARD RULE." },
+    "germinationDrivenBy": { "value": ["seedSpecies", "soilTemperature", "burialDepth", "elapsedTime"], "tag": "A" },
+    "germinatedSeedsFedToLarvaePreferentially": { "value": true, "tag": "A" },
+    "largeSeedNutritionalValueInSmallSeeds": { "value": 15, "tag": "A" }
+  },
+
+  "relocation": {
+    "movesPerYearMean": { "value": 1.0, "tag": "A" },
+    "movesPerYearMax": { "value": 4, "tag": "A" },
+    "seasonWindowMonths": { "value": [5, 6, 7, 8, 9, 10, 11], "tag": "A" },
+    "peakMonth": { "value": 7, "tag": "A" },
+    "peakDailyMoveProbability": { "value": 0.01, "tag": "A" },
+    "durationDays": { "min": 4, "max": 6, "tag": "A" },
+    "meanDistanceMetres": { "value": 4, "tag": "A" },
+    "maxDistanceMetres": { "value": 10, "tag": "A" },
+    "destinationConstrainedToTrunkTrail": { "value": true, "tag": "A", "note": "Moves always occur along a foraging trail, usually the main one." },
+    "burdenPriority": { "value": ["seeds", "charcoal", "brood"], "tag": "A", "note": "In descending order of frequency." },
+    "burdenedWorkerFractionRisesThroughMove": { "value": true, "tag": "A" },
+    "newNestIsReplicaOfOld": { "value": true, "tag": "A" },
+    "diurnalActivity": { "peaks": ["morning", "afternoon"], "dip": "midday", "stops": "sundown", "tag": "A" },
+    "sizeCostOfFrequentMoves": { "value": true, "tag": "A" },
+    "causeKnown": { "value": false, "tag": "A", "note": "Surface this in the UI. Cause remains unexplained." },
+    "candidateSitesDiffer": { "value": true, "tag": "C", "note": "DELIBERATE DEPARTURE FROM [A]. Tschinkel 2013, 2014 tested soil, architecture, canopy and neighbour density as explanations for relocation and found none; the replacement nest is statistically indistinguishable from the vacated one. This simulator nevertheless gives candidate sites real differences so the player's choice has consequences. Surfaced as invented wherever shown. See docs/DECISIONS.md D3." },
+    "candidateSiteCount": { "min": 2, "max": 3, "tag": "C", "note": "See candidateSitesDiffer." }
+  },
+
+  "pheromones": {
+    "$comment": "No decay or deposition constants are published for P. badius. All numeric values here are tag C and must be exposed as sliders.",
+    "recruitment": { "decayPerTick": 0.995, "diffusion": 0.02, "depositOnReturnLeg": true, "responseNonLinearity": 2.0, "tag": "C" },
+    "alarm": { "decayPerTick": 0.90, "diffusion": 0.25, "tag": "C" },
+    "necrophoric": { "decayPerTick": 0.999, "diffusion": 0.005, "tag": "C" },
+    "building": { "diffusion": 0.01, "tag": "C", "note": "Decay is DERIVED from excavation.buildingPheromoneLifetimeTicks, which is the authored value and the exposed slider. See docs/DECISIONS.md D6." },
+    "diffusionIntervalTicks": { "value": 10, "tag": "C", "note": "Diffusion is applied on this fixed sub-schedule rather than every tick. Identical at every playback speed and headless, so it does not affect reproducibility. Performance decision; see docs/ARCHITECTURE.md." },
+    "depositMoreNearFood": { "value": true, "tag": "B" },
+    "depositMoreForDistantFood": { "value": true, "tag": "B" },
+    "foragersUsePathIntegration": { "value": true, "tag": "B", "note": "Ants hold a homing vector; they do not navigate by trail alone." }
+  },
+
+  "time": {
+    "$comment": "Neither SCIENCE.md nor the build brief states a tick length, yet every decayPerTick and ...Ticks value depends on one. See docs/DECISIONS.md D7.",
+    "secondsPerTick": { "value": 60, "tag": "C", "note": "One simulated minute per tick. 1440 ticks per day, 525600 per year." },
+    "realSecondsPerSimulatedDayAt1x": { "value": 60, "tag": "C" }
+  },
+
+  "climate": {
+    "$comment": "1991-2020 US climate normals, Tallahassee, Florida. Tag A as a factual record of the study site.",
+    "site": { "name": "Apalachicola National Forest, north Florida", "lat": 30.4, "lon": -84.3 },
+    "monthly": [
+      { "month": 1,  "highC": 18, "lowC": 5,  "precipMm": 101 },
+      { "month": 2,  "highC": 20, "lowC": 6,  "precipMm": 84 },
+      { "month": 3,  "highC": 23, "lowC": 9,  "precipMm": 109 },
+      { "month": 4,  "highC": 27, "lowC": 12, "precipMm": 70 },
+      { "month": 5,  "highC": 31, "lowC": 17, "precipMm": 61 },
+      { "month": 6,  "highC": 33, "lowC": 22, "precipMm": 139 },
+      { "month": 7,  "highC": 33, "lowC": 23, "precipMm": 148 },
+      { "month": 8,  "highC": 33, "lowC": 23, "precipMm": 151 },
+      { "month": 9,  "highC": 31, "lowC": 21, "precipMm": 101 },
+      { "month": 10, "highC": 28, "lowC": 15, "precipMm": 72 },
+      { "month": 11, "highC": 23, "lowC": 9,  "precipMm": 60 },
+      { "month": 12, "highC": 19, "lowC": 6,  "precipMm": 86 }
+    ],
+    "frostPossibleMonths": [11, 12, 1, 2, 3, 4],
+    "soilThermalLagDaysPerMetre": { "value": 30, "tag": "B", "note": "Approximate. Damped, lagged sinusoid with depth." },
+    "nuptialFlightMonths": { "value": [5, 6, 7], "tag": "A" },
+    "nuptialFlightTrigger": { "value": "calm humid morning following heavy rain", "tag": "A" },
+    "winterExcavationLull": { "value": true, "tag": "A" }
+  },
+
+  "events": {
+    "$comment": "v2. Kept here so the v1 schema does not have to change.",
+    "kleptoparasiticBeetle": {
+      "species": "Hymenorus dorsalis",
+      "nestPrevalence": { "min": 0.18, "max": 0.63, "tag": "A" },
+      "meanDepthCm": { "value": 7.6, "tag": "A" },
+      "countPerNest": { "min": 0, "max": 31, "tag": "A" },
+      "insectPreyIntercepted": { "value": 0.84, "tag": "A" },
+      "smallColoniesSufferMore": { "value": true, "tag": "A" }
+    },
+    "predators": [
+      { "species": "Phrynosoma cornutum", "common": "Texas horned lizard (introduced)", "target": "foragers", "tag": "A" },
+      { "species": "Kapala floridana", "common": "parasitoid wasp", "target": "brood", "tag": "A" }
+    ],
+    "pathogens": [
+      { "species": "Myrmicinosporidium durum", "type": "fungal parasite", "tag": "A" }
+    ],
+    "competitors": [
+      { "species": "Solenopsis invicta", "common": "red imported fire ant", "tag": "A" }
+    ]
+  }
+}

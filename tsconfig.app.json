@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable", "WebWorker"],
+    "types": [],
+    "rootDir": "src",
+    "outDir": ".tsbuild/app",
+    "tsBuildInfoFile": ".tsbuild/app.tsbuildinfo"
+  },
+  "include": ["src/render/**/*.ts", "src/ui/**/*.ts", "src/worker/**/*.ts", "src/main.ts"],
+  "references": [{ "path": "./src/core" }]
+}
