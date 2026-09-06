@@ -114,13 +114,17 @@ export class AntStore {
   readonly homeVecY: Float32Array
 
   /**
-   * Whether this individual digs at all.
+   * This individual's persistent digging propensity, 0 to 255, drawn once at eclosion.
    *
-   * HARD RULE. Tschinkel 2004 penned workers from three nest levels and found the
-   * difference between them was mostly *how many* dug rather than how fast each dug — 82
-   * percent of old workers came to the surface carrying sand against 19 percent of young
-   * ones — and states it plainly: "A worker either digs consistently or does not dig at
-   * all." So this is a persistent trait fixed per individual, never re-rolled per tick.
+   * It reconciles two things Tschinkel 2004 reports together. "A worker either digs
+   * consistently or does not dig at all" — so this cannot be re-rolled, and it is not.
+   * But participation also differs sharply by age: 82 percent of old workers came to the
+   * surface carrying sand against 19 percent of young ones. So an ant digs when its fixed
+   * propensity falls under the participation rate for its age band, which means an
+   * individual can begin digging as it ages but never flips back and forth, and the
+   * population proportions come out at the measured values.
+   *
+   * HARD RULE, and `excavation.diggingIsAPersistentTrait` records it.
    * See docs/SCIENCE.md section 3.
    */
   readonly digger: Uint8Array

@@ -95,6 +95,44 @@ export class NestGrid {
     return true
   }
 
+  /**
+   * The deepest excavated cell, where a newly eclosed worker belongs.
+   *
+   * Callows eclose in the bottom chambers of the nest *as it exists*, which is not the same
+   * as the depth a mature nest will reach. Placing them at the mature depth put every new
+   * adult inside solid sand, where it could neither move nor dig, and the colony grew to
+   * five thousand workers without deepening its nest past three centimetres.
+   */
+  deepestVoid(): { col: number; row: number } {
+    for (let row = this.deepestRow; row >= 0; row -= 1) {
+      for (let col = 0; col < this.cols; col += 1) {
+        if (this.isVoid(col, row)) return { col, row }
+      }
+    }
+    return { col: this.entranceCol, row: 0 }
+  }
+
+  /**
+   * A void cell somewhere in the lower part of the nest, chosen from the seeded stream.
+   *
+   * New adults have to be spread across the deep chambers rather than stacked in one cell.
+   * Putting them all in the single deepest cell made every one of them permanently
+   * overcrowded, which through the collision rule shut digging off across the whole colony:
+   * five thousand workers and a nest three centimetres deep.
+   */
+  deepVoidNear(fraction: number, pick: number): { col: number; row: number } {
+    const lowest = this.deepestRow
+    const from = Math.floor(lowest * (1 - fraction))
+    const candidates: { col: number; row: number }[] = []
+    for (let row = lowest; row >= from && candidates.length < 256; row -= 1) {
+      for (let col = 0; col < this.cols; col += 1) {
+        if (this.isVoid(col, row)) candidates.push({ col, row })
+      }
+    }
+    if (candidates.length === 0) return { col: this.entranceCol, row: 0 }
+    return candidates[Math.min(candidates.length - 1, Math.floor(pick * candidates.length))]!
+  }
+
   /** Maximum depth of the nest in centimetres. */
   get maxDepthCm(): number {
     return this.excavatedCells === 0 ? 0 : this.depthOf(this.deepestRow)

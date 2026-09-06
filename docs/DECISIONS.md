@@ -266,3 +266,69 @@ now in the parameter file with the text's version kept alongside:
   large nest against about 35 cm² at the bottom, which is where the 5–6 fold ratio in the
   text comes from and which fixes chamber *widths*: roughly 17 cm across near the surface
   and 7 cm deep, or a width ratio of about 2.4.
+
+---
+
+## D14. The collision rule runs the other way round
+
+Avinery et al. 2023 find that an ant's own rate of collision with nestmates *drives* its
+digging: a crowded nest gets enlarged, a roomy one does not. The first implementation had
+it backwards, with crowding suppressing digging, and the consequence was not subtle — six
+nanitics excavated a two-metre nest in their first year, because nothing in the model ever
+told them they already had room.
+
+**Resolution.** Digging effort now rises with collision rate and saturates
+(`agitation / (agitation + collisionSaturationCount)`), with a small baseline so a solitary
+ant is not frozen. This is also, incidentally, the mechanism by which total chamber area
+tracks worker number without any ant knowing how many workers there are.
+
+A claustral queen is a separate case and is handled separately: she has no nestmates to
+collide with, so the collision rule correctly says she has little reason to dig, and yet
+she sinks a shaft to 29–37 cm on her own. That is a documented behaviour rather than
+something crowding produces, so founding excavation is its own rule and ends when the nest
+reaches the depth the species digs to.
+
+---
+
+## D15. Fat is the mechanism, not a second rule beside the schedule
+
+Tschinkel 1998 is unambiguous that a worker becomes a forager when its fat drops below
+about ten percent. Kwapich & Tschinkel 2013 are unambiguous that summer-born workers forage
+at 43 days and autumn-born ones at 210 to 360. Implemented as two independent rules, the
+first wins: a flat fat-burn rate put every worker past the threshold in 45 days regardless
+of when it eclosed, the autumn cohort foraged into the winter, and no colony survived its
+first year.
+
+**Resolution.** The rate at which fat falls is derived from the age the individual is due
+to forage at, so the two are one rule. What is published — the threshold, and the two
+schedules — is honoured exactly; what is not published — how fast fat falls — is what
+carries the difference between the cohorts. Autumn fat gain of about 24 percent is layered
+on top, which is what carries that cohort through to spring.
+
+---
+
+## D16. Session boundary, 2026-09-06
+
+Steps 3, 4 and 5 are committed. Where things stand:
+
+- **Step 3 (soil) complete.** Temperature, moisture and stress, all tested.
+- **Step 4 (excavation) substantially met**, 8 of 13 gate criteria, including chamber height,
+  depth and top-heaviness. Five remain, each a skipped test carrying its measured value.
+- **Step 5 (demography) working end to end.** A single queen founds, raises nanitics from her
+  own reserves, and the colony reaches sexual maturity in year 5 and about 4800 workers by
+  year 7, against a reported 4–5 years and a mean mature size of 4300.
+
+Known gaps to pick up next:
+
+1. **Peak foraging is 14–15 % against a measured 33–42 %.** The one-way progression and the
+   two birth cohorts are right; the standing stock of foragers is too low. Suspect the
+   inside-worker fat schedule, which keeps autumn-born workers inside for 210–360 days while
+   the summer cohort is short-lived.
+2. **A founding colony digs too deep**: about 170 cm in its first year against an incipient
+   29–37 cm. The queen's own founding rule is correct and bounded; it is the nanitics that
+   over-dig, because seven ants in a seventeen-cell nest read as crowded.
+3. **Excavation build time** remains an order of magnitude slow at colony scale (G1).
+4. **The simulation still runs on the main thread**, which is why the browser shell is capped
+   at 600 workers. It belongs in a Worker (step 10).
+5. **Four papers are indexed but not yet read at depth.** Worker dry mass in particular is a
+   [C] estimate that Tschinkel 1998 can replace with a measured value.

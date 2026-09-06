@@ -39,7 +39,11 @@ const EXEMPT_DIRS = [
  * temperature and a beetle count, and holds nothing else so that the exemption stays this
  * small.
  */
-const EXEMPT_FILES = ['src/core/sim/calendar.ts']
+const EXEMPT_FILES = [
+  'src/core/sim/calendar.ts',
+  // Number bases and hash constants. No ant in it.
+  'src/core/state/hash.ts',
+]
 
 /**
  * Values too common to attribute. A 1 in the source is not the queen count, and a 12 is

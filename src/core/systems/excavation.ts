@@ -24,7 +24,7 @@
  */
 
 import { exp, pow } from '../math/approx.js'
-import { cosTurns, sinTurns } from '../math/trig.js'
+import { DEGREES_PER_TURN, cosTurns, sinTurns } from '../math/trig.js'
 import { RULE } from '../provenance/rules.js'
 import { Burden, Caste, Domain, Task } from '../state/ants.js'
 import type { Simulation } from '../sim/simulation.js'
@@ -43,6 +43,16 @@ export interface ExcavationState {
   /** Pellets dropped underground rather than carried out. About one in forty. */
   redepositedPellets: number
   /**
+   * While a colony is founding, the depth its queen is digging to, in centimetres, or 0.
+   *
+   * A claustral queen sinks a shaft and one chamber to 29-37 cm on her own and then stops.
+   * That is a documented behaviour rather than something crowding produces — she has no
+   * nestmates to collide with, and the collision rule correctly says a solitary ant has
+   * little reason to dig. So founding excavation is its own rule, and it ends when the
+   * nest reaches the depth the species digs to.
+   */
+  foundingTargetDepthCm: number
+  /**
    * Per-cell ant counts, reused every tick. Allocated once: the hot path must not allocate,
    * and a Map here would also put host hashing between the simulation and its own results.
    */
@@ -50,25 +60,30 @@ export interface ExcavationState {
 }
 
 /**
- * Decides once, for an individual, whether it is a digger.
+ * Draws an individual's permanent digging propensity. Called once, at eclosion.
  *
- * HARD RULE: this is persistent. Tschinkel found a worker either digs consistently or does
- * not dig at all, and that the difference between age groups is mostly how many dig rather
- * than how fast each digs. Participation rises with age because older workers are the ones
- * near the top of the nest, so it is read from the three measured participation rates.
+ * See `AntStore.digger`. The value never changes; what changes is the participation rate it
+ * is compared against, which rises with age.
  */
-export function assignDiggerTrait(ants: AntStore, slot: number, params: Params, prng: Prng): void {
+export function assignDiggerTrait(ants: AntStore, slot: number, prng: Prng): void {
+  ants.digger[slot] = prng.nextInt(256)
+}
+
+/** The fraction of workers of this age that dig, from the penning experiments. */
+function participationForAge(sim: Simulation, slot: number): number {
+  const { params, ants, clock } = sim
   const p = params.excavation
-  const ageDays = ants.ageTicks[slot]! / (86400 / params.time.secondsPerTick.value)
-  const young = params.labour.ageAtFirstForagingDaysSummerBorn.value / 3
+  const ageDays = ants.ageTicks[slot]! / clock.ticksPerDay
   const old = params.labour.ageAtFirstForagingDaysSummerBorn.value
-  const participation =
-    ageDays >= old
-      ? p.diggingParticipationOld.value
-      : ageDays >= young
-        ? p.diggingParticipationMiddle.value
-        : p.diggingParticipationYoung.value
-  ants.digger[slot] = prng.chance(participation) ? 1 : 0
+  const young = old / 3
+  if (ageDays >= old) return p.diggingParticipationOld.value
+  if (ageDays >= young) return p.diggingParticipationMiddle.value
+  return p.diggingParticipationYoung.value
+}
+
+/** Whether this ant digs at all, right now. Persistent draw, age-dependent threshold. */
+export function isDigging(sim: Simulation, slot: number): boolean {
+  return sim.ants.digger[slot]! / 256 < participationForAge(sim, slot)
 }
 
 /**
@@ -88,7 +103,7 @@ function descentTurnsAtDepth(depthCm: number, params: Params, prng: Prng): numbe
   const lo = shallow.min + (deep.min - shallow.min) * t
   const hi = shallow.max + (deep.max - shallow.max) * t
   const degrees = prng.nextRange(lo, hi)
-  return degrees / 360
+  return degrees / DEGREES_PER_TURN
 }
 
 /** Turns of helix per centimetre of shaft dug, from the measured pitch. */
@@ -190,10 +205,22 @@ function digWillingness(
   const stress = soil.stressAt(nest, col, row)
   const easeOfRemoval = pow(Math.max(0, 1 - stress), params.excavation.stressSensitivity.value)
 
-  // Each ant modulates its own effort by how often it has just collided with a nestmate.
-  // There is no global regulation of digging anywhere in this model.
-  const agitation = ants.agitation[slot]!
-  const crowding = 1 / (1 + agitation / params.excavation.collisionSaturationCount.value)
+  // A founding queen digs at full effort until her nest is the depth an incipient nest is.
+  if (state.foundingTargetDepthCm > 0 && ants.caste[slot] === Caste.Queen) {
+    return nest.maxDepthCm < state.foundingTargetDepthCm ? workability * easeOfRemoval : 0
+  }
+
+  // Each ant modulates its own effort by how often it has just collided with a nestmate,
+  // and there is no global regulation of digging anywhere in this model.
+  //
+  // The direction matters and is easy to get backwards. Avinery et al. found that
+  // collisions *agitate* ants into digging: a crowded nest gets enlarged, a roomy one does
+  // not. Implementing it the other way round — crowding suppressing digging — let six
+  // nanitics excavate a two-metre nest in their first year, because nothing was telling
+  // them they already had room. This is also what makes total chamber area track worker
+  // number without any ant knowing how many workers there are.
+  const agitation = ants.agitation[slot]! + params.excavation.collisionDigBaseline.value
+  const crowding = agitation / (agitation + params.excavation.collisionSaturationCount.value)
 
   // Ants dig less in a tunnel that is already long.
   const lengthFeedback = exp(
@@ -661,9 +688,15 @@ export function makeExcavationSystem(state: ExcavationState) {
       // tens of thousands within a day and shut digging off entirely.
       ants.agitation[i] = ants.agitation[i]! * decay + (here - 1) * (1 - decay)
 
-      if (ants.digger[i] !== 1) continue
-      if (ants.caste[i] === Caste.Queen) continue
-      ants.task[i] = Task.Excavator
+      // Foragers are outside. Everyone else who digs, digs.
+      if (ants.task[i] === Task.Forager) continue
+      if (ants.caste[i] !== Caste.Queen && !isDigging(sim, i)) continue
+
+      // Digging does not overwrite the ant's task. Task is its place in the one-way
+      // age progression — brood care, transfer work, foraging — and excavation is something
+      // workers of every age do; Tschinkel measured it across all three groups. Setting
+      // task to Excavator here clobbered the demographic role every tick, which among other
+      // things made the forager count read a third of its true value.
       stepExcavator(sim, state, i)
     }
 

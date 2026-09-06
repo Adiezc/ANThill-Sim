@@ -78,6 +78,9 @@ export function cosTurns(t: number): number {
  * makes the lookup table the natural representation and what keeps heading arithmetic
  * exact. A power of two so that wrapping is a mask.
  */
+/** Degrees in a full turn. A unit conversion, not a parameter. */
+export const DEGREES_PER_TURN = 360
+
 export const HEADING_STEPS = 4096
 const HEADING_MASK = HEADING_STEPS - 1
 

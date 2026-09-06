@@ -57,6 +57,7 @@ export function createNestHarness(options: HarnessOptions): NestHarness {
     soil,
     surfacePellets: 0,
     redepositedPellets: 0,
+    foundingTargetDepthCm: 0,
     occupants: new Uint16Array(nest.cols * nest.rows),
   }
 
@@ -99,7 +100,7 @@ export function createNestHarness(options: HarnessOptions): NestHarness {
       sim.ants.caste[slot] === Caste.MajorWorker
         ? params.colony.majorWorkerLengthMm.value
         : params.colony.minorWorkerLengthMm.value
-    assignDiggerTrait(sim.ants, slot, params, sim.prng)
+    assignDiggerTrait(sim.ants, slot, sim.prng)
   }
 
   // Prime the weather before the first tick so the first dig sees real soil.

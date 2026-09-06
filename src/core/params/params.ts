@@ -43,6 +43,12 @@ export interface Params {
     readonly queens: Param<number>
     readonly sexualMaturityWorkers: Param<number>
     readonly meanMatureWorkers: Param<number>
+    readonly maxWorkers: Param<number>
+    readonly activeMonths: Param<readonly number[]>
+    readonly daysFirstForagingToLarvae: RangeParam
+    readonly daysFirstForagingToPupae: RangeParam
+    readonly daysFirstForagingToCallows: RangeParam
+    readonly daysFirstForagingToMatingFlight: RangeParam
     readonly majorWorkerFraction: Param<number>
     readonly minorWorkerLengthMm: Param<number>
     readonly majorWorkerLengthMm: Param<number>
@@ -54,6 +60,7 @@ export interface Params {
   readonly nest: {
     readonly incipientDepthCm: RangeParam
     readonly matureDepthCm: RangeParam
+    readonly meanDepthAcrossColoniesCm: Param<number>
     readonly maxRecordedDepthCm: Param<number>
     readonly matureVolumeLitres: Param<number>
     readonly shaftHelixDiameterCm: RangeParam
@@ -110,6 +117,7 @@ export interface Params {
     readonly spoilCueWeight: Param<number>
     readonly collisionAgitationHalfLifeTicks: Param<number>
     readonly collisionSaturationCount: Param<number>
+    readonly collisionDigBaseline: Param<number>
     readonly tunnelLengthFeedbackCm: Param<number>
     readonly surfaceTemperatureDepthGainCmPerC: Param<number>
     /**
@@ -178,6 +186,17 @@ export interface Params {
     readonly foragerFatThreshold: Param<number>
     readonly ageAtFirstForagingDaysSummerBorn: Param<number>
     readonly ageAtFirstForagingDaysAutumnBorn: Param<number>
+    readonly ageAtFirstForagingDaysAutumnBornRange: RangeParam
+    readonly ageAtFirstForagingSummerBornSd: Param<number>
+    readonly maxProportionForaging: RangeParam
+    readonly proportionForagingMatureMean: Param<number>
+    readonly proportionForagingImmatureMean: Param<number>
+    readonly foragersPerLarva: Param<number>
+    readonly foragerLeadsLarvaeDays: RangeParam
+    readonly foragerObservedMaxDepthCm: Param<number>
+    readonly callowFractionBeforeWinter: Param<number>
+    readonly midcolouredFractionBeforeWinter: Param<number>
+    readonly midcolouredFractionEarlySpring: Param<number>
     readonly foragerLifespanDays: Param<number>
     readonly foragerMortalityPerDay: RangeParam
     readonly foragerPopulationCollapseMortality: Param<number>
@@ -199,6 +218,37 @@ export interface Params {
     readonly workerSizePredictsForagingDistance: Param<boolean>
     readonly maxOpenableSeedWidthMm: Param<number>
     readonly maxCollectableSeedWidthMm: Param<number>
+  }
+
+  readonly brood: {
+    readonly eggDurationDays: Param<number>
+    readonly larvaDurationDays: Param<number>
+    readonly pupaDurationDays: Param<number>
+    readonly callowDurationDays: Param<number>
+    /** HARD RULE, true. Colonies do not overwinter with brood. */
+    readonly noOverwinteringBrood: Param<boolean>
+    readonly latestPupalEclosionMonth: Param<number>
+    readonly eggMortalityPerDay: Param<number>
+    readonly larvaMortalityPerDay: Param<number>
+    readonly pupaMortalityPerDay: Param<number>
+    readonly queenEggsPerDayMature: Param<number>
+    readonly queenEggsPerDayFounding: Param<number>
+    readonly queenEggsPerWorkerPerDay: Param<number>
+    readonly nanaticsForageImmediately: Param<boolean>
+    readonly starvationForagerRatioTolerance: Param<number>
+    readonly starvationSeverityPerDay: Param<number>
+    readonly alateShareBalanced: Param<number>
+    readonly alateShareWorkerBias: Param<number>
+    readonly alateShareAlateBias: Param<number>
+    readonly alateBroodMonths: Param<readonly number[]>
+    readonly eclosionDepthBand: Param<number>
+    readonly transferFractionOfForagingAge: Param<number>
+    readonly insideWorkerLifespanDays: Param<number>
+    readonly insideWorkerMortalityPerDay: Param<number>
+    readonly autumnFatGainMonths: Param<readonly number[]>
+    readonly nanaticCount: RangeParam
+    readonly queenFoundingFatReserve: Param<number>
+    readonly queenFoundingFatPerEgg: Param<number>
   }
 
   readonly seeds: {
@@ -332,6 +382,12 @@ export function buildParams(root: Raw): Params {
       queens: readScalar(root, 'colony.queens'),
       sexualMaturityWorkers: readScalar(root, 'colony.sexualMaturityWorkers'),
       meanMatureWorkers: readScalar(root, 'colony.meanMatureWorkers'),
+      maxWorkers: readScalar(root, 'colony.maxWorkers'),
+      activeMonths: readNumberList(root, 'colony.activeMonths'),
+      daysFirstForagingToLarvae: readRange(root, 'colony.daysFirstForagingToLarvae'),
+      daysFirstForagingToPupae: readRange(root, 'colony.daysFirstForagingToPupae'),
+      daysFirstForagingToCallows: readRange(root, 'colony.daysFirstForagingToCallows'),
+      daysFirstForagingToMatingFlight: readRange(root, 'colony.daysFirstForagingToMatingFlight'),
       majorWorkerFraction: readScalar(root, 'colony.majorWorkerFraction'),
       minorWorkerLengthMm: readScalar(root, 'colony.minorWorkerLengthMm'),
       majorWorkerLengthMm: readScalar(root, 'colony.majorWorkerLengthMm'),
@@ -343,6 +399,7 @@ export function buildParams(root: Raw): Params {
     nest: {
       incipientDepthCm: readRange(root, 'nest.incipientDepthCm'),
       matureDepthCm: readRange(root, 'nest.matureDepthCm'),
+      meanDepthAcrossColoniesCm: readScalar(root, 'nest.meanDepthAcrossColoniesCm'),
       maxRecordedDepthCm: readScalar(root, 'nest.maxRecordedDepthCm'),
       matureVolumeLitres: readScalar(root, 'nest.matureVolumeLitres'),
       shaftHelixDiameterCm: readRange(root, 'nest.shaftHelixDiameterCm'),
@@ -401,6 +458,7 @@ export function buildParams(root: Raw): Params {
         'excavation.collisionAgitationHalfLifeTicks',
       ),
       collisionSaturationCount: readScalar(root, 'excavation.collisionSaturationCount'),
+      collisionDigBaseline: readScalar(root, 'excavation.collisionDigBaseline'),
       tunnelLengthFeedbackCm: readScalar(root, 'excavation.tunnelLengthFeedbackCm'),
       surfaceTemperatureDepthGainCmPerC: readScalar(
         root,
@@ -465,6 +523,20 @@ export function buildParams(root: Raw): Params {
       foragerFatThreshold: readScalar(root, 'labour.foragerFatThreshold'),
       ageAtFirstForagingDaysSummerBorn: readScalar(root, 'labour.ageAtFirstForagingDaysSummerBorn'),
       ageAtFirstForagingDaysAutumnBorn: readScalar(root, 'labour.ageAtFirstForagingDaysAutumnBorn'),
+      ageAtFirstForagingDaysAutumnBornRange: readRange(
+        root,
+        'labour.ageAtFirstForagingDaysAutumnBornRange',
+      ),
+      ageAtFirstForagingSummerBornSd: readScalar(root, 'labour.ageAtFirstForagingSummerBornSd'),
+      maxProportionForaging: readRange(root, 'labour.maxProportionForaging'),
+      proportionForagingMatureMean: readScalar(root, 'labour.proportionForagingMatureMean'),
+      proportionForagingImmatureMean: readScalar(root, 'labour.proportionForagingImmatureMean'),
+      foragersPerLarva: readScalar(root, 'labour.foragersPerLarva'),
+      foragerLeadsLarvaeDays: readRange(root, 'labour.foragerLeadsLarvaeDays'),
+      foragerObservedMaxDepthCm: readScalar(root, 'labour.foragerObservedMaxDepthCm'),
+      callowFractionBeforeWinter: readScalar(root, 'labour.callowFractionBeforeWinter'),
+      midcolouredFractionBeforeWinter: readScalar(root, 'labour.midcolouredFractionBeforeWinter'),
+      midcolouredFractionEarlySpring: readScalar(root, 'labour.midcolouredFractionEarlySpring'),
       foragerLifespanDays: readScalar(root, 'labour.foragerLifespanDays'),
       foragerMortalityPerDay: readRange(root, 'labour.foragerMortalityPerDay'),
       foragerPopulationCollapseMortality: readScalar(
@@ -488,6 +560,36 @@ export function buildParams(root: Raw): Params {
       ),
       maxOpenableSeedWidthMm: readScalar(root, 'foraging.maxOpenableSeedWidthMm'),
       maxCollectableSeedWidthMm: readScalar(root, 'foraging.maxCollectableSeedWidthMm'),
+    },
+
+    brood: {
+      eggDurationDays: readScalar(root, 'brood.eggDurationDays'),
+      larvaDurationDays: readScalar(root, 'brood.larvaDurationDays'),
+      pupaDurationDays: readScalar(root, 'brood.pupaDurationDays'),
+      callowDurationDays: readScalar(root, 'brood.callowDurationDays'),
+      noOverwinteringBrood: readFlag(root, 'brood.noOverwinteringBrood'),
+      latestPupalEclosionMonth: readScalar(root, 'brood.latestPupalEclosionMonth'),
+      eggMortalityPerDay: readScalar(root, 'brood.eggMortalityPerDay'),
+      larvaMortalityPerDay: readScalar(root, 'brood.larvaMortalityPerDay'),
+      pupaMortalityPerDay: readScalar(root, 'brood.pupaMortalityPerDay'),
+      queenEggsPerDayMature: readScalar(root, 'brood.queenEggsPerDayMature'),
+      queenEggsPerDayFounding: readScalar(root, 'brood.queenEggsPerDayFounding'),
+      queenEggsPerWorkerPerDay: readScalar(root, 'brood.queenEggsPerWorkerPerDay'),
+      nanaticsForageImmediately: readFlag(root, 'brood.nanaticsForageImmediately'),
+      starvationForagerRatioTolerance: readScalar(root, 'brood.starvationForagerRatioTolerance'),
+      starvationSeverityPerDay: readScalar(root, 'brood.starvationSeverityPerDay'),
+      alateShareBalanced: readScalar(root, 'brood.alateShareBalanced'),
+      alateShareWorkerBias: readScalar(root, 'brood.alateShareWorkerBias'),
+      alateShareAlateBias: readScalar(root, 'brood.alateShareAlateBias'),
+      alateBroodMonths: readNumberList(root, 'brood.alateBroodMonths'),
+      eclosionDepthBand: readScalar(root, 'brood.eclosionDepthBand'),
+      transferFractionOfForagingAge: readScalar(root, 'brood.transferFractionOfForagingAge'),
+      insideWorkerLifespanDays: readScalar(root, 'brood.insideWorkerLifespanDays'),
+      insideWorkerMortalityPerDay: readScalar(root, 'brood.insideWorkerMortalityPerDay'),
+      autumnFatGainMonths: readNumberList(root, 'brood.autumnFatGainMonths'),
+      nanaticCount: readRange(root, 'brood.nanaticCount'),
+      queenFoundingFatReserve: readScalar(root, 'brood.queenFoundingFatReserve'),
+      queenFoundingFatPerEgg: readScalar(root, 'brood.queenFoundingFatPerEgg'),
     },
 
     seeds: {

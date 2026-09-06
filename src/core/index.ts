@@ -36,7 +36,19 @@ export type { NestMeasurement } from './state/nest.js'
 export { SoilModel, dampingDepthCm } from './systems/soil.js'
 export { ClimateModel } from './systems/climate.js'
 export type { Weather } from './systems/climate.js'
-export { makeExcavationSystem, assignDiggerTrait } from './systems/excavation.js'
+export { makeExcavationSystem, assignDiggerTrait, isDigging } from './systems/excavation.js'
 export type { ExcavationState } from './systems/excavation.js'
 export { createNestHarness } from './sim/nest-harness.js'
 export type { NestHarness, HarnessOptions } from './sim/nest-harness.js'
+export { BroodStore, BroodFate } from './state/brood.js'
+export type { BroodFateValue } from './state/brood.js'
+export {
+  makeDemographySystem,
+  createDemographyState,
+  countWorkers,
+  countForagers,
+  BroodInvestment,
+} from './systems/demography.js'
+export type { DemographyState, ColonyPhase, BroodInvestmentValue } from './systems/demography.js'
+export { Colony } from './sim/colony.js'
+export type { ColonyOptions, ColonySummary } from './sim/colony.js'
