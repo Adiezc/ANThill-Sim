@@ -1,0 +1,141 @@
+:root {
+  --ink: #1b1512;
+  --paper: #f2ece2;
+  --panel: #17110d;
+  --panel-ink: #e9dfd0;
+  --muted: #a3948181;
+  --warn: #c26a3a;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font:
+    14px/1.5 ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  height: 100vh;
+}
+
+@media (max-width: 760px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr auto;
+  }
+}
+
+.stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#slice {
+  flex: 1;
+  width: 100%;
+  display: block;
+}
+
+.slice-note {
+  margin: 0;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: #6b5c4c;
+  background: #e6ddcf;
+  border-top: 1px solid #d6cab8;
+}
+
+.panel {
+  background: var(--panel);
+  color: var(--panel-ink);
+  padding: 20px 18px;
+  overflow-y: auto;
+}
+
+.panel h1 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  font-weight: 600;
+}
+.subtitle {
+  margin: 2px 0 14px;
+  font-size: 12px;
+  color: #a9998a;
+}
+.date {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #d8c7b0;
+}
+
+.hud-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 10px;
+  padding: 7px 0;
+  border-top: 1px solid #2b211a;
+}
+
+.hud-label {
+  font-size: 12px;
+  color: #a9998a;
+}
+.hud-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  text-align: right;
+}
+.hud-expected {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  color: #7d6f62;
+}
+.hud-row--out .hud-value {
+  color: var(--warn);
+}
+
+.provenance {
+  margin: 16px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #7d6f62;
+  border-top: 1px solid #2b211a;
+  padding-top: 12px;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.controls button {
+  flex: 1;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--panel-ink);
+  background: #241b14;
+  border: 1px solid #3a2c21;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.controls button:hover {
+  background: #2f241a;
+}

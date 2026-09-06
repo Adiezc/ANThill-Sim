@@ -117,13 +117,29 @@ export class NestGrid {
     return count * this.cellSizeCm
   }
 
-  /** Length in centimetres of the contiguous horizontal run of void through a cell. */
-  horizontalRunCm(col: number, row: number): number {
+  /**
+   * Length in centimetres of the contiguous horizontal run of void through a cell.
+   *
+   * `limitCm` stops the scan early. Callers that only need to know whether a run exceeds a
+   * threshold should pass it: this sits on the hottest path in the model and an unbounded
+   * scan is O(chamber width) on every ant on every tick.
+   */
+  horizontalRunCm(col: number, row: number, limitCm = Infinity): number {
     if (!this.isVoid(col, row)) return 0
+    const limit = limitCm === Infinity ? this.cols : Math.ceil(limitCm / this.cellSizeCm) + 1
     let count = 1
-    for (let c = col - 1; c >= 0 && this.isVoid(c, row); c -= 1) count += 1
-    for (let c = col + 1; c < this.cols && this.isVoid(c, row); c += 1) count += 1
+    for (let c = col - 1; c >= 0 && count <= limit && this.isVoid(c, row); c -= 1) count += 1
+    for (let c = col + 1; c < this.cols && count <= limit && this.isVoid(c, row); c += 1) count += 1
     return count * this.cellSizeCm
+  }
+
+  /**
+   * Whether this cell belongs to a chamber rather than a shaft: its horizontal run is wider
+   * than `thresholdCm`. Tschinkel's own distinction, and cheap because the scan stops as
+   * soon as the answer is known.
+   */
+  isChamberCell(col: number, row: number, thresholdCm: number): boolean {
+    return this.horizontalRunCm(col, row, thresholdCm + this.cellSizeCm) > thresholdCm
   }
 
   /**
@@ -296,7 +312,7 @@ function measureSpacing(
   for (let row = 0; row < nest.rows; row += 1) {
     let found = false
     for (let col = 0; col < nest.cols && !found; col += 1) {
-      if (nest.isVoid(col, row) && nest.horizontalRunCm(col, row) > threshold) found = true
+      if (nest.isChamberCell(col, row, threshold)) found = true
     }
     chamberRow.push(found)
   }
@@ -343,24 +359,35 @@ function countShaftSeries(nest: NestGrid, params: Params): number {
   return series
 }
 
-/** Depths at which the number of separate voids in a row increases: where shafts split. */
+/**
+ * Depths at which a shaft splits into two shafts.
+ *
+ * Counting every increase in the number of separate voids per row does not measure this: a
+ * chamber opening beside a shaft also adds a void group, and doing it that way reported 39
+ * branches in a nest whose species rarely has more than two per shaft. A branch is counted
+ * only where the number of *shaft-width* groups increases — narrow runs, chambers excluded.
+ */
 function findBranchDepths(nest: NestGrid, params: Params): number[] {
+  const threshold = chamberThresholdCm(params)
   const depths: number[] = []
   let previous = 0
+
   const limitRow = Math.min(
     nest.rows,
-    nest.rowOfDepth(params.nest.shaftBranchingMaxDepthCm.value * 2),
+    nest.rowOfDepth(params.excavation.seriesCountProbeDepthCm.value),
   )
+
   for (let row = 0; row < limitRow; row += 1) {
-    let groups = 0
-    let inVoid = false
+    let shafts = 0
+    let inShaft = false
     for (let col = 0; col < nest.cols; col += 1) {
-      const isVoid = nest.isVoid(col, row)
-      if (isVoid && !inVoid) groups += 1
-      inVoid = isVoid
+      // A cell belongs to a shaft when it is void and its horizontal run is narrow.
+      const isShaft = nest.isVoid(col, row) && !nest.isChamberCell(col, row, threshold)
+      if (isShaft && !inShaft) shafts += 1
+      inShaft = isShaft
     }
-    if (groups > previous && previous > 0) depths.push(nest.depthOf(row))
-    previous = groups
+    if (shafts > previous && previous > 0) depths.push(nest.depthOf(row))
+    previous = shafts
   }
   return depths
 }

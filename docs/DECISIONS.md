@@ -212,3 +212,57 @@ most plausible candidate has been tested and killed. That is now stated in
 **Licensing.** These PDFs are third-party works and are not ours to relicense. Only
 Tschinkel 2004 is certainly open access. See `docs/papers/README.md` before this repository
 is made public.
+
+---
+
+## D11. A vertical slice needs an out-of-plane thickness
+
+A slice has two dimensions, but excavation rates are volumes — cubic centimetres of sand per
+worker-day — and chamber areas are areas. Neither can be used at all without saying what
+volume a slice cell stands for.
+
+**Resolution.** `discretisation.sliceThicknessCm`, tagged **[C]**, set to the shaft bore of
+0.9 cm. A shaft cell is then about the right volume. A chamber cell is understated, because
+chambers are wider out of the plane than in it — a 220 cm² chamber is roughly 17 cm across
+in both directions, not 17 by 0.9. Chamber areas reported by the model are therefore low,
+and `VALIDATION.md` says so rather than scaling them up with a second invented factor.
+
+---
+
+## D12. Excavation rate: the papers give two, and only one is a per-ant rate
+
+Tschinkel 2004 reports 0.45 cm² of chamber and 0.13 cm of shaft per old worker-day. Those
+are averages over every penned worker across four to seven days, and the same paper reports
+that only 82 percent of old workers and 19 percent of young ones ever came to the surface
+carrying sand — so the average already includes the workers who were not digging at that
+moment.
+
+Applying it as the rate for an ant *standing at a face* counts that dilution twice. It did:
+the model sat at 21 cm after forty simulated days, against a species that builds three
+metres, and no amount of tuning the invented parameters moved it, because the error was in
+how an **[A]** number was being used rather than in a **[C]** value.
+
+**Resolution.** The rate for an ant at a face is the physical one, also from Tschinkel 2004:
+a worker moves 300 to 400 times its own weight in sand per day while excavating. With a
+worker mass, the bulk density of sand and the slice thickness from D11, that is a number of
+cells per tick. The colony-average figures stay as the check on the outcome, in G1.
+
+Worker dry mass is not yet a measured value here — `colony.minorWorkerDryMassMg` is a **[C]**
+estimate of 1.7 mg. Tschinkel 1998 weighed workers individually and should replace it when
+that paper is read at depth, at step 5.
+
+---
+
+## D13. The figures disagree with the text, twice
+
+Reading Tschinkel 2004's figures rather than only its prose produced two corrections, both
+now in the parameter file with the text's version kept alongside:
+
+- **Vertical chamber spacing.** The body says 2–4 cm near the surface rising to 20–30 cm
+  deeper. Figure 10 shows the maximum at about 12 cm, in the 7th or 8th decile, decreasing
+  again in the 10th; only one outlying class-2 nest approaches 20. `verticalSpacingByDecileCm`
+  is read from the figure and supersedes `verticalSpacingDeepCm`.
+- **Chamber area with depth.** Figure 9B gives about 220 cm² in the uppermost deciles of a
+  large nest against about 35 cm² at the bottom, which is where the 5–6 fold ratio in the
+  text comes from and which fixes chamber *widths*: roughly 17 cm across near the surface
+  and 7 cm deep, or a width ratio of about 2.4.

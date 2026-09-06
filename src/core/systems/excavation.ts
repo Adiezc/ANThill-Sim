@@ -28,7 +28,7 @@ import { cosTurns, sinTurns } from '../math/trig.js'
 import { RULE } from '../provenance/rules.js'
 import { Burden, Caste, Domain, Task } from '../state/ants.js'
 import type { Simulation } from '../sim/simulation.js'
-import type { NestGrid } from '../state/nest.js'
+import { type NestGrid } from '../state/nest.js'
 import type { SoilModel } from './soil.js'
 import type { Params } from '../params/params.js'
 import type { Prng } from '../math/prng.js'
@@ -99,6 +99,71 @@ function helixTurnsPerCm(depthCm: number, params: Params): number {
   const t = Math.min(1, depthCm / steepenAt)
   const pitch = shallow + (deep - shallow) * t
   return 1 / pitch
+}
+
+/**
+ * Vertical spacing between chambers at a given depth, in centimetres.
+ *
+ * Read from Figure 10 of Tschinkel 2004: about 3.5 cm between chambers in the first decile,
+ * rising to a maximum near 12 cm in the seventh or eighth, then decreasing again in the
+ * tenth. The body text of the same paper says 20 to 30 cm deep, which the figure does not
+ * support except for one outlying nest, so the figure is used and the parameter file records
+ * both.
+ *
+ * The ant is given its depth as a fraction of mature nest depth, which is a double
+ * invention: no ant knows its depth, and none knows how deep the nest will end up. See the
+ * note at the top of this file.
+ */
+function chamberSpacingAtDepth(depthCm: number, params: Params): number {
+  const byDecile = params.nest.verticalSpacingByDecileCm.value
+  const matureDepth = params.nest.matureDepthCm.max
+  // Clamped just inside the last decile so the interpolation never indexes past the end.
+  const fraction = Math.min(depthCm / matureDepth, (byDecile.length - 1) / byDecile.length)
+  const position = fraction * byDecile.length
+  const i = Math.floor(position)
+  const t = position - i
+  const a = byDecile[i] ?? byDecile[byDecile.length - 1]!
+  const b = byDecile[i + 1] ?? a
+  return a + (b - a) * t
+}
+
+/**
+ * The widest a chamber gets at a given depth, in centimetres of horizontal run.
+ *
+ * Figure 9B gives mean chamber *area*: about 220 cm² in the uppermost deciles of a large
+ * nest, falling to about 35 cm² at the bottom — the 5 to 6 fold ratio the text reports. A
+ * chamber is roughly circular when small and lobed when large, so the width of an
+ * equivalent circle, 2 sqrt(A / pi), is what a vertical slice through it would show: about
+ * 17 cm near the surface and 7 cm deep.
+ */
+function maxChamberRunAtDepth(depthCm: number, params: Params): number {
+  const shallow = params.nest.meanChamberAreaShallowCm2.value
+  const deep = params.nest.meanChamberAreaDeepCm2.value
+  const matureDepth = params.nest.matureDepthCm.max
+  const t = Math.min(1, depthCm / matureDepth)
+  const area = shallow + (deep - shallow) * t
+  return 2 * Math.sqrt(area / Math.PI)
+}
+
+/** True when a chamber already sits within the spacing for this depth, above or below. */
+function chamberNearby(
+  nest: NestGrid,
+  col: number,
+  row: number,
+  spacingCm: number,
+  chamberThresholdCm: number,
+): boolean {
+  const reach = Math.round(spacingCm / nest.cellSizeCm)
+  for (let dRow = -reach; dRow <= reach; dRow += 1) {
+    if (dRow === 0) continue
+    const r = row + dRow
+    if (!nest.inBounds(col, r)) continue
+    for (let dCol = -2; dCol <= 2; dCol += 1) {
+      const c = col + dCol
+      if (nest.isChamberCell(c, r, chamberThresholdCm)) return true
+    }
+  }
+  return false
 }
 
 /**
@@ -197,27 +262,40 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
 
   const phase = ants.helixPhase[slot]!
   const lateralPreference = Math.abs(cosTurns(phase))
-
-  // Chambers begin on the outside of the helix, which in the slice is where the projected
-  // lateral component is greatest. Superficial chambers, in the top 10-15 cm, are modified
-  // shafts and spread on both sides, so the preference is relaxed there.
+  const chamberThreshold = params.nest.shaftBoreDiameterCm.value * 2
+  const maxRunHere = maxChamberRunAtDepth(depthCm, params)
+  const runHere = nest.horizontalRunCm(col, row, maxRunHere + nest.cellSizeCm)
   const superficial = depthCm <= params.nest.superficialChamberMaxDepthCm.value
-  const chamberChance = superficial
-    ? params.excavation.superficialChamberChance.value
-    : lateralPreference * lateralPreference
 
   let dCol = 0
   let dRow = 0
   let ratePerTick = 0
-  if (prng.chance(chamberChance) && clearance <= roofHeight) {
-    // Lateral: widen a chamber.
+
+  // Is this stretch of wall worth opening a chamber in? A chamber begins where there is not
+  // already one within the spacing for this depth. That single rule is what turns a bare
+  // shaft into a shaft with chambers along its whole length — and with it, into a nest with
+  // hundreds of working faces rather than one at the tip. Without it the colony can never
+  // reach the excavation rate Tschinkel measured, because almost nobody can get to work.
+  const spacing = chamberSpacingAtDepth(depthCm, params)
+  const maxRun = maxRunHere
+  const onBareWall = runHere <= chamberThreshold
+  const roomForChamber = onBareWall && !chamberNearby(nest, col, row, spacing, chamberThreshold)
+
+  const wantsChamber = superficial
+    ? prng.chance(params.excavation.superficialChamberChance.value)
+    : roomForChamber
+      ? prng.chance(params.excavation.chamberInitiationChance.value * lateralPreference)
+      : runHere > chamberThreshold && runHere < maxRun && prng.chance(lateralPreference)
+
+  if (wantsChamber && clearance <= roofHeight) {
+    // Lateral: open or widen a chamber. Chambers begin on the outside of the helix, which
+    // in a vertical slice is the side the projected lateral component points to.
     dCol = cosTurns(phase) >= 0 ? 1 : -1
-    dRow = 0
-    ratePerTick = chamberCellsPerTick(sim, slot)
-    ants.ruleId[slot] = RULE.digBodySizeTemplate
+    ratePerTick = cellsPerTickAtFace(sim, slot)
+    ants.ruleId[slot] = roomForChamber ? RULE.digBodySizeTemplate : RULE.digBuildingPheromone
   } else if (canGrowUpward && prng.chance(params.excavation.ceilingRaiseChance.value)) {
     dRow = -1
-    ratePerTick = chamberCellsPerTick(sim, slot)
+    ratePerTick = cellsPerTickAtFace(sim, slot)
     ants.ruleId[slot] = RULE.digBodySizeTemplate
   } else {
     // Descend, at the angle for this depth, spiralling as it goes.
@@ -227,7 +305,7 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
     dRow = prng.chance(Math.abs(down)) ? 1 : 0
     dCol = prng.chance(Math.abs(along)) ? (along >= 0 ? 1 : -1) : 0
     if (dRow === 0 && dCol === 0) dRow = 1
-    ratePerTick = shaftCellsPerTick(sim, slot)
+    ratePerTick = cellsPerTickAtFace(sim, slot)
     ants.ruleId[slot] = RULE.digShaftDescent
     ants.helixPhase[slot] = phase + helixTurnsPerCm(depthCm, params) * nest.cellSizeCm
   }
@@ -255,7 +333,7 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
     // thrown away against the roof rule, and the nest could not deepen past 8 cm.
     dCol = 0
     dRow = 1
-    ratePerTick = shaftCellsPerTick(sim, slot)
+    ratePerTick = cellsPerTickAtFace(sim, slot)
     ants.ruleId[slot] = RULE.digShaftDescent
     if (!nest.isSoil(col, row + 1)) {
       walkInVoid(sim, state, slot, col, row)
@@ -314,33 +392,49 @@ function digCell(
 }
 
 /**
- * Cells of chamber this ant excavates per tick, from the measured per-worker-day rates.
+ * Cells this ant removes per tick, while it is actually standing at a face.
  *
- * Tschinkel 2004 measured 0.45 cm² of chamber and 0.13 cm of shaft per worker-day for old
- * workers, and 0.15 cm² and 0.06 cm for young ones. Divided by the area of a grid cell and
- * by the ticks in a day, that is the probability an ant at a face removes the grain in
- * front of it on any given tick.
+ * This is not the per-worker-day figure from the penning experiments, and the difference
+ * matters. Tschinkel's 0.45 cm² of chamber and 0.13 cm of shaft per worker-day are averages
+ * over every penned worker, most of whom were not at a face at any given moment — the same
+ * paper reports that only 82 percent of old workers and 19 percent of young ones ever came
+ * up carrying sand. Applying that average to an ant that *is* at a face counts the queueing
+ * twice. Doing exactly that is why the first version of this model reached 21 cm in forty
+ * simulated days against a species that builds three metres.
+ *
+ * The physical rate is in the same paper: a worker moves 300 to 400 times its own weight in
+ * sand per day while excavating. With a worker mass and the bulk density of sand that is a
+ * volume, and with a slice thickness it is a number of cells.
+ *
+ * The colony-average figures are still the right check on the *result*, and G1 in
+ * docs/VALIDATION.md holds the model to them.
  */
-function chamberCellsPerTick(sim: Simulation, slot: number): number {
+function cellsPerTickAtFace(sim: Simulation, slot: number): number {
   const { params, ants, clock } = sim
-  const cellArea = params.discretisation.nestCellSizeCm.value ** 2
-  const perDay = isOldWorker(sim, slot)
-    ? params.excavation.chamberAreaPerOldWorkerDayCm2.value
-    : params.excavation.chamberAreaPerYoungWorkerDayCm2.value
-  // Majors are larger but the source measures rates by age, not by size, and worker size
-  // predicts neither seed size nor foraging distance in this species. No size term here.
-  void ants
-  return perDay / cellArea / clock.ticksPerDay
-}
+  const bodyWeights =
+    (params.excavation.sandPerWorkerPerDayBodyWeights.min +
+      params.excavation.sandPerWorkerPerDayBodyWeights.max) /
+    2
+  const massMg =
+    ants.caste[slot] === Caste.MajorWorker
+      ? params.colony.majorWorkerDryMassMg.value
+      : params.colony.minorWorkerDryMassMg.value
 
-/** Cells of shaft this ant excavates per tick. See chamberCellsPerTick. */
-function shaftCellsPerTick(sim: Simulation, slot: number): number {
-  const { params, clock } = sim
-  const cellLength = params.discretisation.nestCellSizeCm.value
-  const perDay = isOldWorker(sim, slot)
-    ? params.excavation.shaftLengthPerOldWorkerDayCm.value
-    : params.excavation.shaftLengthPerYoungWorkerDayCm.value
-  return perDay / cellLength / clock.ticksPerDay
+  // Milligrams of sand per day, to cubic centimetres. Bulk density is kg per cubic metre,
+  // which is the same number as grams per litre, so mg / density gives cm3 directly.
+  const sandCm3PerDay = (bodyWeights * massMg) / params.soil.bulkDensityKgPerM3.value
+
+  const cell = params.discretisation.nestCellSizeCm.value
+  const cellVolumeCm3 = cell * cell * params.discretisation.sliceThicknessCm.value
+
+  // Young workers dig at about a third the rate of old ones, in the same proportion the
+  // penning experiment found between age groups.
+  const ageScale = isOldWorker(sim, slot)
+    ? 1
+    : params.excavation.chamberAreaPerYoungWorkerDayCm2.value /
+      params.excavation.chamberAreaPerOldWorkerDayCm2.value
+
+  return (sandCm3PerDay / cellVolumeCm3 / clock.ticksPerDay) * ageScale
 }
 
 function isOldWorker(sim: Simulation, slot: number): boolean {

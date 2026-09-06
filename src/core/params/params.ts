@@ -46,12 +46,15 @@ export interface Params {
     readonly majorWorkerFraction: Param<number>
     readonly minorWorkerLengthMm: Param<number>
     readonly majorWorkerLengthMm: Param<number>
+    readonly minorWorkerDryMassMg: Param<number>
+    readonly majorWorkerDryMassMg: Param<number>
     readonly queenLifespanYears: Param<number>
   }
 
   readonly nest: {
     readonly incipientDepthCm: RangeParam
     readonly matureDepthCm: RangeParam
+    readonly maxRecordedDepthCm: Param<number>
     readonly matureVolumeLitres: Param<number>
     readonly shaftHelixDiameterCm: RangeParam
     readonly shaftBoreDiameterCm: Param<number>
@@ -72,6 +75,12 @@ export interface Params {
     readonly topQuarterAreaFraction: Param<number>
     readonly verticalSpacingShallowCm: RangeParam
     readonly verticalSpacingDeepCm: RangeParam
+    /** Figure 10 of Tschinkel 2004. Supersedes verticalSpacingDeepCm, which overstates it. */
+    readonly verticalSpacingByDecileCm: Param<readonly number[]>
+    readonly meanChamberAreaShallowCm2: Param<number>
+    readonly meanChamberAreaDeepCm2: Param<number>
+    readonly chambersPerDecileShallow: Param<number>
+    readonly chambersPerDecileDeep: Param<number>
     readonly maxVerticalSpacingDecile: RangeParam
     readonly maxVerticalSpacingAtDepthFraction: RangeParam
     readonly superficialChamberMaxDepthCm: Param<number>
@@ -111,6 +120,7 @@ export interface Params {
      */
     readonly depthCueMechanism: Param<string>
     readonly wholeNestExcavationDays: RangeParam
+    readonly sandPerWorkerPerDayBodyWeights: RangeParam
     readonly chamberAreaPerOldWorkerDayCm2: Param<number>
     readonly chamberAreaPerYoungWorkerDayCm2: Param<number>
     readonly shaftLengthPerOldWorkerDayCm: Param<number>
@@ -131,6 +141,7 @@ export interface Params {
     readonly crowdAvoidance: Param<number>
     readonly relayDistanceCm: Param<number>
     readonly relayPickUpChance: Param<number>
+    readonly chamberInitiationChance: Param<number>
     readonly seriesCountProbeDepthCm: Param<number>
   }
 
@@ -153,6 +164,7 @@ export interface Params {
     readonly nestDepthCm: Param<number>
     readonly surfaceCellSizeM: Param<number>
     readonly surfaceExtentM: Param<number>
+    readonly sliceThicknessCm: Param<number>
   }
 
   readonly labour: {
@@ -323,12 +335,15 @@ export function buildParams(root: Raw): Params {
       majorWorkerFraction: readScalar(root, 'colony.majorWorkerFraction'),
       minorWorkerLengthMm: readScalar(root, 'colony.minorWorkerLengthMm'),
       majorWorkerLengthMm: readScalar(root, 'colony.majorWorkerLengthMm'),
+      minorWorkerDryMassMg: readScalar(root, 'colony.minorWorkerDryMassMg'),
+      majorWorkerDryMassMg: readScalar(root, 'colony.majorWorkerDryMassMg'),
       queenLifespanYears: readScalar(root, 'colony.queenLifespanYears'),
     },
 
     nest: {
       incipientDepthCm: readRange(root, 'nest.incipientDepthCm'),
       matureDepthCm: readRange(root, 'nest.matureDepthCm'),
+      maxRecordedDepthCm: readScalar(root, 'nest.maxRecordedDepthCm'),
       matureVolumeLitres: readScalar(root, 'nest.matureVolumeLitres'),
       shaftHelixDiameterCm: readRange(root, 'nest.shaftHelixDiameterCm'),
       shaftBoreDiameterCm: readScalar(root, 'nest.shaftBoreDiameterCm'),
@@ -346,6 +361,11 @@ export function buildParams(root: Raw): Params {
       topQuarterAreaFraction: readScalar(root, 'nest.topQuarterAreaFraction'),
       verticalSpacingShallowCm: readRange(root, 'nest.verticalSpacingShallowCm'),
       verticalSpacingDeepCm: readRange(root, 'nest.verticalSpacingDeepCm'),
+      verticalSpacingByDecileCm: readNumberList(root, 'nest.verticalSpacingByDecileCm'),
+      meanChamberAreaShallowCm2: readScalar(root, 'nest.meanChamberAreaShallowCm2'),
+      meanChamberAreaDeepCm2: readScalar(root, 'nest.meanChamberAreaDeepCm2'),
+      chambersPerDecileShallow: readScalar(root, 'nest.chambersPerDecileShallow'),
+      chambersPerDecileDeep: readScalar(root, 'nest.chambersPerDecileDeep'),
       maxVerticalSpacingDecile: readRange(root, 'nest.maxVerticalSpacingDecile'),
       maxVerticalSpacingAtDepthFraction: readRange(root, 'nest.maxVerticalSpacingAtDepthFraction'),
       superficialChamberMaxDepthCm: readScalar(root, 'nest.superficialChamberMaxDepthCm'),
@@ -388,6 +408,7 @@ export function buildParams(root: Raw): Params {
       ),
       depthCueMechanism: readString(root, 'excavation.depthCueMechanism'),
       wholeNestExcavationDays: readRange(root, 'excavation.wholeNestExcavationDays'),
+      sandPerWorkerPerDayBodyWeights: readRange(root, 'excavation.sandPerWorkerPerDayBodyWeights'),
       chamberAreaPerOldWorkerDayCm2: readScalar(root, 'excavation.chamberAreaPerOldWorkerDayCm2'),
       chamberAreaPerYoungWorkerDayCm2: readScalar(
         root,
@@ -407,6 +428,7 @@ export function buildParams(root: Raw): Params {
       crowdAvoidance: readScalar(root, 'excavation.crowdAvoidance'),
       relayDistanceCm: readScalar(root, 'excavation.relayDistanceCm'),
       relayPickUpChance: readScalar(root, 'excavation.relayPickUpChance'),
+      chamberInitiationChance: readScalar(root, 'excavation.chamberInitiationChance'),
       seriesCountProbeDepthCm: readScalar(root, 'excavation.seriesCountProbeDepthCm'),
     },
 
@@ -429,6 +451,7 @@ export function buildParams(root: Raw): Params {
       nestDepthCm: readScalar(root, 'discretisation.nestDepthCm'),
       surfaceCellSizeM: readScalar(root, 'discretisation.surfaceCellSizeM'),
       surfaceExtentM: readScalar(root, 'discretisation.surfaceExtentM'),
+      sliceThicknessCm: readScalar(root, 'discretisation.sliceThicknessCm'),
     },
 
     labour: {

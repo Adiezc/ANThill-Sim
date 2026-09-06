@@ -22,7 +22,17 @@ const SPECIES = join(ROOT, 'species', 'pogonomyrmex-badius.json')
  * Directories exempt because their numbers are mathematical rather than biological: series
  * coefficients, a calendar, bit masks. They contain no ant.
  */
-const EXEMPT_DIRS = ['src/core/math', 'src/core/params']
+const EXEMPT_DIRS = [
+  'src/core/math',
+  'src/core/params',
+  // The renderer and the UI display the model; they do not model. Their numbers are ruler
+  // tick steps, gutter widths and colour stops, and several collide with biological values
+  // by coincidence — a 20 cm ruler step is not the foraging range. Every biological
+  // quantity they show is read from the parameters and passed in.
+  'src/render',
+  'src/ui',
+  'src/main.ts',
+]
 
 /**
  * The one exempt file. It holds the Gregorian month lengths, which collide with a summer

@@ -15,6 +15,8 @@
     "majorWorkerFraction": { "value": 0.07, "tag": "A", "note": "Independent of colony size; rises slightly midsummer." },
     "minorWorkerLengthMm": { "value": 6.35, "tag": "A" },
     "majorWorkerLengthMm": { "value": 9.52, "tag": "A" },
+    "minorWorkerDryMassMg": { "value": 1.7, "tag": "C", "note": "ESTIMATE. Tschinkel 1998 weighed workers individually and its figures should replace this when that paper is read at depth. Used with sandPerWorkerPerDayBodyWeights to get the rate at which an ant actually at a face moves sand." },
+    "majorWorkerDryMassMg": { "value": 5.0, "tag": "C", "note": "ESTIMATE. See minorWorkerDryMassMg." },
     "queenLifespanYears": { "value": 17, "tag": "C", "note": "INVENTED. No lifespan constant appears in the cited literature, but v1 requires colony death. Applied as a per-day hazard, not a hard cap. Exposed as a slider. See docs/DECISIONS.md D4." }
   },
 
@@ -46,7 +48,12 @@
     "chamberPerimeterRatioLargeUpper": { "min": 2, "max": 7, "tag": "A", "note": "Large chambers of the upper third are strongly lobed." },
     "chamberShaftIntersectAngleDeg": { "min": 25, "max": 70, "tag": "A" },
     "verticalSpacingShallowCm": { "min": 2, "max": 4, "tag": "A", "note": "Between chambers near the surface." },
-    "verticalSpacingDeepCm": { "min": 20, "max": 30, "tag": "A" },
+    "verticalSpacingDeepCm": { "min": 20, "max": 30, "tag": "A", "note": "From the body text of Tschinkel 2004. SUPERSEDED by verticalSpacingByDecileCm below, which is read off Figure 10 of the same paper and peaks near 12 cm, not 20-30. The text appears to quote the class-2 outlier nest. Kept so the disagreement stays visible." },
+    "verticalSpacingByDecileCm": { "value": [3.5, 4.0, 7.0, 8.0, 10.0, 12.0, 12.5, 12.0, 8.0, 6.0], "tag": "A", "note": "Read from Figure 10 of Tschinkel 2004: depth increments between chambers, by decile, pooled across size classes. Rises to a maximum in the 7th or 8th decile then decreases again. This is the measured relationship; verticalSpacingDeepCm is the text's summary of it and overstates the maximum." },
+    "meanChamberAreaShallowCm2": { "value": 220, "tag": "A", "note": "Figure 9B of Tschinkel 2004, uppermost deciles of the larger size classes." },
+    "meanChamberAreaDeepCm2": { "value": 35, "tag": "A", "note": "Figure 9B, deepest deciles. The 5 to 6 fold surface-to-bottom ratio in the text follows from these two." },
+    "chambersPerDecileShallow": { "value": 15, "tag": "A", "note": "Figure 9A, uppermost decile, largest size class." },
+    "chambersPerDecileDeep": { "value": 3, "tag": "A", "note": "Figure 9A, deepest decile." },
     "maxVerticalSpacingDecile": { "min": 7, "max": 8, "tag": "A", "note": "Spacing peaks here and decreases again in the 10th decile." },
     "maxVerticalSpacingAtDepthFraction": { "min": 0.70, "max": 0.80, "tag": "A" },
     "superficialChamberMaxDepthCm": { "value": 15, "tag": "A", "note": "Within 10 to 15 cm. Modified shafts, lobed on both sides, looping and interconnected in large nests." },
@@ -91,6 +98,7 @@
     "crowdAvoidance": { "value": 0.12, "tag": "C", "note": "How strongly an ant avoids a space that already holds nestmates. Set too high the shaft tip admits one ant and the nest takes a simulated year to reach a metre; set to zero the colony packs into ten cells and nothing can dig. Invented, and one of the values tuned against the architectural signature." },
     "relayDistanceCm": { "value": 12, "tag": "C", "note": "How far one carrier takes a pellet before putting it down for the next. Staged transport is documented for this species (Tschinkel and Seal 2015) but no leg length is published." },
     "relayPickUpChance": { "value": 0.35, "tag": "C", "note": "Chance an unburdened ant standing on a relay drop takes it on. Below 1 so the colony is not all carriers and no diggers. Invented." },
+    "chamberInitiationChance": { "value": 0.35, "tag": "C", "note": "Chance an ant standing on a bare stretch of shaft wall starts a new chamber there, when no chamber lies within the spacing for that depth. This is what opens faces along the whole shaft rather than only at its tip, and without it the colony cannot realise the excavation rate the papers report. Invented." },
     "seriesCountProbeDepthCm": { "value": 60, "tag": "C", "note": "Depth at which the validation harness counts separate shaft series. Below shaftBranchingMaxDepthCm so no new branch can start there. A measurement choice, not a behaviour." },
     "undergroundRedepositionFraction": { "value": 0.025, "tag": "A" },
     "pelletsPerExcavatorPerHour": { "value": 26, "tag": "B", "note": "Atta vollenweideri. No badius figure published." },
@@ -207,7 +215,8 @@
     "nestWidthCm": { "value": 200, "tag": "C" },
     "nestDepthCm": { "value": 320, "tag": "C", "note": "Comfortably past the 250-300 cm mature depth, so the floor of the grid never constrains the nest." },
     "surfaceCellSizeM": { "value": 0.25, "tag": "C" },
-    "surfaceExtentM": { "value": 25, "tag": "C", "note": "Half-width. Covers the 20 m foraging range with margin." }
+    "surfaceExtentM": { "value": 25, "tag": "C", "note": "Half-width. Covers the 20 m foraging range with margin." },
+    "sliceThicknessCm": { "value": 0.9, "tag": "C", "note": "The out-of-plane depth a slice cell stands for, taken as the shaft bore. A vertical slice has no third dimension, but a volume of sand has to be attributed to a cell somewhere or excavation rates in cm3 per worker-day cannot be used at all. Chambers are wider than this out of plane, so cell volume is understated for chambers and about right for shafts. See docs/DECISIONS.md D11." }
   },
 
   "climate": {
