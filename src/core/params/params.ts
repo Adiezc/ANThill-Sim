@@ -123,6 +123,15 @@ export interface Params {
      * all. Digging is a persistent individual state, never a per-tick coin flip.
      */
     readonly diggingIsAPersistentTrait: Param<boolean>
+    readonly superficialChamberChance: Param<number>
+    readonly ceilingRaiseChance: Param<number>
+    readonly geotaxisWeight: Param<number>
+    readonly digFaceAttraction: Param<number>
+    readonly walkNoise: Param<number>
+    readonly crowdAvoidance: Param<number>
+    readonly relayDistanceCm: Param<number>
+    readonly relayPickUpChance: Param<number>
+    readonly seriesCountProbeDepthCm: Param<number>
   }
 
   readonly soil: {
@@ -390,6 +399,15 @@ export function buildParams(root: Raw): Params {
       diggingParticipationMiddle: readScalar(root, 'excavation.diggingParticipationMiddle'),
       diggingParticipationYoung: readScalar(root, 'excavation.diggingParticipationYoung'),
       diggingIsAPersistentTrait: readFlag(root, 'excavation.diggingIsAPersistentTrait'),
+      superficialChamberChance: readScalar(root, 'excavation.superficialChamberChance'),
+      ceilingRaiseChance: readScalar(root, 'excavation.ceilingRaiseChance'),
+      geotaxisWeight: readScalar(root, 'excavation.geotaxisWeight'),
+      digFaceAttraction: readScalar(root, 'excavation.digFaceAttraction'),
+      walkNoise: readScalar(root, 'excavation.walkNoise'),
+      crowdAvoidance: readScalar(root, 'excavation.crowdAvoidance'),
+      relayDistanceCm: readScalar(root, 'excavation.relayDistanceCm'),
+      relayPickUpChance: readScalar(root, 'excavation.relayPickUpChance'),
+      seriesCountProbeDepthCm: readScalar(root, 'excavation.seriesCountProbeDepthCm'),
     },
 
     soil: {

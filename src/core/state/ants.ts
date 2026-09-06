@@ -114,6 +114,44 @@ export class AntStore {
   readonly homeVecY: Float32Array
 
   /**
+   * Whether this individual digs at all.
+   *
+   * HARD RULE. Tschinkel 2004 penned workers from three nest levels and found the
+   * difference between them was mostly *how many* dug rather than how fast each dug — 82
+   * percent of old workers came to the surface carrying sand against 19 percent of young
+   * ones — and states it plainly: "A worker either digs consistently or does not dig at
+   * all." So this is a persistent trait fixed per individual, never re-rolled per tick.
+   * See docs/SCIENCE.md section 3.
+   */
+  readonly digger: Uint8Array
+
+  /**
+   * Recent collisions with nestmates, decayed each tick. This is the only thing regulating
+   * an ant's digging effort; there is no global control. See docs/SCIENCE.md section 3.
+   */
+  readonly agitation: Float32Array
+
+  /**
+   * Turns of the shaft helix this ant has traversed, which is what makes a shaft a helix.
+   * An excavator turns steadily as it descends, so the spiral is a property of the digger
+   * rather than of a plan. Projected into the vertical slice it becomes the zigzag.
+   */
+  readonly helixPhase: Float32Array
+
+  /**
+   * Distance in centimetres from this ant's dig face back to open space, used for the
+   * feedback that makes ants dig less in a tunnel that is already long.
+   */
+  readonly tunnelLengthCm: Float32Array
+
+  /**
+   * Centimetres this ant has carried its current burden. Sand moves up through the nest in
+   * stages rather than one ant hauling it from the face to the surface, so a carrier puts
+   * its pellet down after a short leg and someone else takes it on.
+   */
+  readonly carriedCm: Float32Array
+
+  /**
    * Id of the rule the ant is currently following, for the inspector's citation line.
    * See core/provenance. This is the entire educational payload of the project, so it is
    * first-class state rather than a debug field.
@@ -141,6 +179,11 @@ export class AntStore {
     this.lengthMm = new Float32Array(capacity)
     this.homeVecX = new Float32Array(capacity)
     this.homeVecY = new Float32Array(capacity)
+    this.digger = new Uint8Array(capacity)
+    this.agitation = new Float32Array(capacity)
+    this.helixPhase = new Float32Array(capacity)
+    this.tunnelLengthCm = new Float32Array(capacity)
+    this.carriedCm = new Float32Array(capacity)
     this.ruleId = new Uint16Array(capacity)
   }
 
@@ -172,6 +215,11 @@ export class AntStore {
     this.lengthMm[slot] = 0
     this.homeVecX[slot] = 0
     this.homeVecY[slot] = 0
+    this.digger[slot] = 0
+    this.agitation[slot] = 0
+    this.helixPhase[slot] = 0
+    this.tunnelLengthCm[slot] = 0
+    this.carriedCm[slot] = 0
     this.ruleId[slot] = 0
     return slot
   }
@@ -213,6 +261,11 @@ export class AntStore {
       this.lengthMm,
       this.homeVecX,
       this.homeVecY,
+      this.digger,
+      this.agitation,
+      this.helixPhase,
+      this.tunnelLengthCm,
+      this.carriedCm,
       this.ruleId,
     ]
   }

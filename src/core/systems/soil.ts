@@ -22,6 +22,14 @@ import type { Params } from '../params/params.js'
 import type { ClimateModel } from './climate.js'
 
 /**
+ * The part of the nest the soil model needs: which cells are void. Declared structurally
+ * so that soil does not depend on the nest module, only on the question it asks of it.
+ */
+export interface NestOccupancy {
+  isVoid(col: number, row: number): boolean
+}
+
+/**
  * Damping depth of the annual soil temperature wave, in centimetres, derived from the
  * thermal lag in the parameter file rather than authored separately.
  *
@@ -175,21 +183,34 @@ export class SoilModel {
   }
 
   /**
-   * Records that a cell has become a void, and arches the load around it.
+   * Vertical load on the grain at a cell, in [0, 1].
    *
-   * Soil beside and above the new void takes up the load it can no longer carry, which is
-   * what makes those cells harder to remove next; soil directly beneath it is shielded,
-   * which is what makes downward digging stay easier than sideways digging and is a large
-   * part of why a shaft is a shaft. The ant does none of this reasoning. It only ever
-   * chooses a grain that is currently under low load.
+   * Overburden rises with depth. A void changes how that load is carried around it: soil
+   * directly above and below is shielded, because the column of sand over it now ends at
+   * the roof of the void rather than continuing to the surface, while soil to the side
+   * takes up what the void can no longer carry. That is arching, and it is why a tunnel
+   * stays open.
+   *
+   * This is computed on demand from the void configuration nearby, not accumulated as
+   * cells are dug. Accumulating was the obvious implementation and it was wrong: each void
+   * added load to its neighbours with nothing taking it away, so after a few dozen cells
+   * every grain around the nest was at maximum load and no ant could remove anything. Load
+   * is redistributed by a void, not created by one.
+   *
+   * No ant senses any of this. An ant only ever finds that some grains come away easily.
    */
-  applyVoid(col: number, row: number): void {
-    const soil = this.params.soil
-    const radius = Math.max(1, Math.round(soil.archingRadiusCm.value / this.stress.cellSize))
-    const gain = soil.archingStressGainPerVoid.value
-    const shield = soil.stressShieldBelowFactor.value
+  stressAt(nest: NestOccupancy, col: number, row: number): number {
+    if (!this.stress.inBounds(col, row)) return 1
+    const base = this.overburden[row * this.stress.width + col]!
+    const radius = Math.max(
+      1,
+      Math.round(this.params.soil.archingRadiusCm.value / this.stress.cellSize),
+    )
 
-    this.stress.set(col, row, 0)
+    let shieldedAbove = 0
+    let aboveCells = 0
+    let sideVoids = 0
+    let sideCells = 0
 
     for (let dRow = -radius; dRow <= radius; dRow += 1) {
       for (let dCol = -radius; dCol <= radius; dCol += 1) {
@@ -199,16 +220,45 @@ export class SoilModel {
         if (!this.stress.inBounds(c, r)) continue
         const distance = Math.sqrt(dCol * dCol + dRow * dRow)
         if (distance > radius) continue
-        const falloff = 1 - distance / radius
 
-        const current = this.stress.get(c, r)
-        if (dRow > 0) {
-          // Below the void: shielded from the load above it.
-          this.stress.set(c, r, current * (1 - shield * falloff))
-        } else {
-          // Beside and above: carrying what the void no longer can.
-          this.stress.set(c, r, Math.min(1, current + gain * falloff))
+        // A void within the cone above this cell interrupts the column of sand over it.
+        if (dRow < 0 && Math.abs(dCol) <= -dRow) {
+          aboveCells += 1
+          if (nest.isVoid(c, r)) shieldedAbove += 1
+        } else if (dRow >= 0 || Math.abs(dCol) > -dRow) {
+          sideCells += 1
+          if (nest.isVoid(c, r)) sideVoids += 1
         }
+      }
+    }
+
+    const shield =
+      aboveCells === 0
+        ? 0
+        : (shieldedAbove / aboveCells) * this.params.soil.stressShieldBelowFactor.value
+    const arch =
+      sideCells === 0
+        ? 0
+        : (sideVoids / sideCells) * this.params.soil.archingStressGainPerVoid.value * radius
+
+    const value = base * (1 - shield) * (1 + arch)
+    return value < 0 ? 0 : value > 1 ? 1 : value
+  }
+
+  /**
+   * Refreshes the cached stress layer around a cell that has just become a void. The cache
+   * exists for the renderer and for measurement; the digging rules call `stressAt` so they
+   * never read a stale value.
+   */
+  applyVoid(nest: NestOccupancy, col: number, row: number): void {
+    const radius = Math.max(
+      1,
+      Math.round(this.params.soil.archingRadiusCm.value / this.stress.cellSize),
+    )
+    for (let r = row - radius; r <= row + radius; r += 1) {
+      for (let c = col - radius; c <= col + radius; c += 1) {
+        if (!this.stress.inBounds(c, r)) continue
+        this.stress.set(c, r, nest.isVoid(c, r) ? 0 : this.stressAt(nest, c, r))
       }
     }
   }

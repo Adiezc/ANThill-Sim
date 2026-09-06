@@ -214,10 +214,19 @@ describe('soil moisture', () => {
 })
 
 describe('soil stress and arching', () => {
-  it('rises with depth', () => {
+  /** A stand-in nest: the set of cells that have been dug. */
+  function voids(cells: readonly [number, number][]): {
+    isVoid: (c: number, r: number) => boolean
+  } {
+    const keys = new Set(cells.map(([c, r]) => `${c},${r}`))
+    return { isVoid: (c, r) => keys.has(`${c},${r}`) }
+  }
+
+  it('rises with depth in undisturbed soil', () => {
     const soil = new SoilModel(PARAMS)
-    expect(soil.stress.get(10, soil.stress.rowOf(10))).toBeLessThan(
-      soil.stress.get(10, soil.stress.rowOf(200)),
+    const none = voids([])
+    expect(soil.stressAt(none, 10, soil.stress.rowOf(10))).toBeLessThan(
+      soil.stressAt(none, 10, soil.stress.rowOf(200)),
     )
   })
 
@@ -225,33 +234,58 @@ describe('soil stress and arching', () => {
     const soil = new SoilModel(PARAMS)
     const col = 100
     const row = soil.stress.rowOf(100)
-    const besideBefore = soil.stress.get(col + 3, row)
-    const belowBefore = soil.stress.get(col, row + 3)
+    const none = voids([])
 
-    soil.applyVoid(col, row)
+    // A short horizontal tunnel.
+    const tunnel: [number, number][] = []
+    for (let c = col - 2; c <= col + 2; c += 1) tunnel.push([c, row])
+    const dug = voids(tunnel)
 
-    // The void itself carries nothing.
-    expect(soil.stress.get(col, row)).toBe(0)
-    // Soil beside it takes up what the void can no longer carry: harder to remove next.
-    expect(soil.stress.get(col + 3, row)).toBeGreaterThan(besideBefore)
-    // Soil beneath it is shielded: which is much of why a shaft is a shaft.
-    expect(soil.stress.get(col, row + 3)).toBeLessThan(belowBefore)
+    // Soil beside the tunnel carries what the void no longer can: harder to remove next.
+    expect(soil.stressAt(dug, col + 4, row)).toBeGreaterThan(soil.stressAt(none, col + 4, row))
+    // Soil beneath it is shielded, which is much of why a shaft is a shaft.
+    expect(soil.stressAt(dug, col, row + 2)).toBeLessThan(soil.stressAt(none, col, row + 2))
   })
 
   it('leaves distant soil untouched', () => {
     const soil = new SoilModel(PARAMS)
     const row = soil.stress.rowOf(100)
-    const far = soil.stress.get(150, row)
-    soil.applyVoid(50, row)
-    expect(soil.stress.get(150, row)).toBe(far)
+    const none = voids([])
+    const dug = voids([[50, row]])
+    expect(soil.stressAt(dug, 150, row)).toBe(soil.stressAt(none, 150, row))
   })
 
-  it('never lets arching push a cell outside [0, 1]', () => {
+  it('does not saturate as a nest is dug out', () => {
+    // This is the failure that stalled the first excavation run at 2 cm depth. Arching was
+    // implemented as an accumulation — every new void added load to its neighbours and
+    // nothing ever removed any — so within a few dozen cells every grain around the nest
+    // was at maximum load and no ant could take anything. A void redistributes load; it
+    // does not create it. Stress is therefore computed from the void configuration rather
+    // than accumulated, and this test pins that.
+    const soil = new SoilModel(PARAMS)
+    const row = soil.stress.rowOf(150)
+    const chamber: [number, number][] = []
+    for (let c = 60; c < 140; c += 1) {
+      for (let r = row - 1; r <= row + 1; r += 1) chamber.push([c, r])
+    }
+    const dug = voids(chamber)
+
+    // Soil just below a wide chamber must stay workable, or the nest can never deepen.
+    const below = soil.stressAt(dug, 100, row + 2)
+    expect(below).toBeLessThan(0.9)
+    expect(below).toBeLessThan(soil.stressAt(voids([]), 100, row + 2))
+  })
+
+  it('never leaves [0, 1]', () => {
     const soil = new SoilModel(PARAMS)
     const row = soil.stress.rowOf(250)
-    for (let i = 0; i < 200; i += 1) soil.applyVoid(100, row)
-    for (let c = 90; c < 110; c += 1) {
-      const v = soil.stress.get(c, row)
+    const all: [number, number][] = []
+    for (let c = 80; c < 120; c += 1) {
+      for (let r = row - 10; r <= row + 10; r += 1) all.push([c, r])
+    }
+    const dug = voids(all)
+    for (let c = 70; c < 130; c += 1) {
+      const v = soil.stressAt(dug, c, row + 12)
       expect(v).toBeGreaterThanOrEqual(0)
       expect(v).toBeLessThanOrEqual(1)
     }

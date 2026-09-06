@@ -171,6 +171,6 @@ describe('determinism', () => {
      */
     const sim = build(20240607)
     sim.run(10000)
-    expect(sim.digest()).toBe('9cb034695128630b')
+    expect(sim.digest()).toBe('5b0d3c6947024b0b')
   })
 })
