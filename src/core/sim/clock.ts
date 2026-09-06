@@ -9,20 +9,7 @@
  * count, which is also what makes the calendar exactly reproducible.
  */
 
-/** Days per month in a fixed 365-day year. See docs/DECISIONS.md D9. */
-const DAYS_IN_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] as const
-const DAYS_IN_YEAR = 365
-
-/** First day-of-year, zero-based, for each month. Derived, not authored. */
-const MONTH_START: readonly number[] = (() => {
-  const starts: number[] = []
-  let acc = 0
-  for (const days of DAYS_IN_MONTH) {
-    starts.push(acc)
-    acc += days
-  }
-  return starts
-})()
+import { DAYS_IN_YEAR, MONTH_START } from './calendar.js'
 
 export interface CalendarDate {
   /** Whole years since the nuptial flight that founded this colony. */
