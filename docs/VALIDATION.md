@@ -21,48 +21,67 @@ value the model produces, so the gap stays visible in the suite.
 
 | Property | Target | Status |
 |---|---|---|
-| Chamber height | ~1 cm, independent of area | **Met.** 1.20 cm, and shallow and deep chambers agree to within 0.3 cm. No rule sets a height; an ant refuses to raise a ceiling already a body height above the floor |
-| Nest depth | 250–300 cm mature, 306 cm deepest recorded | **Met.** 200–240 cm — the right order, and far past the 29–37 cm of an incipient nest |
-| Top-heaviness | ~0.5 of chamber area in the top quarter | **Met.** 0.51–0.55. The last signature to appear, and it only did once chambers could open along the whole length of a shaft instead of only at its tip |
+| Chamber spacing | 3.5 cm decile 1 rising to ~12 cm at decile 7-8 (Fig. 10) | **Met.** 2.9 cm shallow and 10.9 cm deep. Both ends, for the first time |
+| Build time | Most of a nest inside the first week | **Met.** 166 cm by day 6 at 600 workers, against about 70 days before |
+| Top-heaviness | ~0.5 of chamber area in the top quarter | **Met.** 0.63 |
 | Decile ordering | First decile holds more area than the last | **Met** |
-| Spacing widens with depth | 3.5 cm decile 1 → ~12 cm decile 7–8 (Fig. 10) | **Partly met.** 2.9 → 6.4 cm: shallow figure right, direction right, deep figure about half |
-| Series count | 1–4 | **Met at 600 workers** (4). Exceeded at 1200 (6) |
-| Branch depth | All branches above 40 cm | **Not met.** Deepest branch 41.75 cm. Nothing constrains branch depth in the model; it lands within 2 cm of a categorical boundary, on the wrong side |
-| Surface:bottom chamber width | ~2.4× (from the 5–6× area ratio, Fig. 9B) | **Not met.** 1.47× |
-| Build time | Complete nest in 3–6 days regardless of colony size | **Not met.** About 70 days at 600 workers |
+| Chamber height | ~1 cm | **Met, barely.** 1.55 cm, against 1.20 before the excavation rate was corrected |
+| Series count | 1-4 | **Met.** 4 |
+| Reproducibility | Same seed, same nest | **Met** |
+| Depth reached | Deep, emergent, no ant knowing the shape | **Met** in the weak sense that it happens; see below for why the strong version does not |
+| **Nest size tracks worker number** | `log(depth) = 0.95 + 0.37 log(workers)` | **Not met.** Digs to the grid floor at every colony size. The central open problem — see below |
+| Max depth | Within the 306 cm deepest ever measured | **Not met.** 320 cm, which is the grid floor |
+| Height independent of depth | ~1 cm whatever the area | **Not met.** 1.71 cm shallow against 0.99 cm deep |
+| Branch depth | All branches above 40 cm | **Not met.** Deepest branch 59 cm, worse than the 41.75 cm before faster digging |
+| Surface:bottom chamber width | ~2.4x | **Not met.** 1.20x |
 
 ### What changed to get here
 
-Three things, in order of how much they mattered.
+Four things, in order of how much they mattered.
 
-**Chambers open along the whole shaft, not only at its tip.** An ant on a bare stretch of
-shaft wall starts a chamber where there is not already one within the spacing for that
-depth. That one rule turned a nest with a single working face into one with hundreds, and
-it is what produced the top-heavy distribution — which had been stuck at 0.19 — as a side
-effect rather than as a target.
+**Crowding is measured over a neighbourhood, not over a grid cell.** A cell is 5 mm across
+and a minor worker is 6.35 mm long, so two ants in adjacent cells are touching: counting
+co-occupancy of one cell is not a collision rate, it is a rounding artefact, and it reports
+every narrow shaft as permanently packed. Measuring ants per unit of open space over a 4 cm
+neighbourhood instead took the whole-nest build time from about seventy days to six — the
+figure the species is reported to manage — and made chamber spacing widen with depth
+properly for the first time.
 
 **The excavation rate was the wrong number.** Tschinkel's 0.45 cm² of chamber and 0.13 cm
 of shaft per worker-day are averages over every penned worker, most of whom were not at a
-face at any moment; the same paper reports only 82 percent of old workers and 19 percent of
-young ones ever surfaced carrying sand. Applying that average to an ant that *is* at a face
-counts the queueing twice, and doing so held the model at 21 cm after forty simulated days.
-The physical rate is in the same paper — a worker moves 300 to 400 times its own weight in
-sand per day while excavating — and with a worker mass, the bulk density of sand and a slice
-thickness that becomes a number of cells. The colony-average figures remain the check on the
-result.
+face at any moment. Applying that average to an ant that *is* at a face counts the queueing
+twice. The physical rate is in the same paper — 300 to 400 times body weight in sand per day
+while excavating — and worker mass came from Tschinkel 1998's Figure 5 rather than from the
+estimate of 1.7 mg used before, which was wrong by nearly a factor of two.
 
-**The figures, not just the text.** Figure 10 gives vertical spacing by decile, peaking near
-12 cm in the 7th or 8th — the body text's "20 to 30 cm deeper" is not supported by the
-figure except for one outlying nest. Figure 9B gives mean chamber area by depth, 220 cm²
-shallow to 35 cm² deep, which is where the chamber-width targets come from. Both are now
-parameters, and both disagreements with the text are recorded.
+**Chambers open along the whole shaft, not only at its tip.** One rule turned a nest with a
+single working face into one with hundreds, and produced the top-heavy distribution — stuck
+at 0.19 — as a side effect rather than as a target.
 
-### Build time is the honest remaining gap
+**The figures, not just the text.** Figure 10 gives spacing by decile peaking near 12 cm,
+against the body text's 20-30. Figure 9B gives chamber area by depth, which fixes widths.
 
-The model needs an order of magnitude longer than the species does. Fewer of its ants are
-ever at a working face than the real arithmetic implies, and the fix is more faces — denser
-superficial chambers in the top 10–15 cm, which the casts show as looping and interconnected
-and the model renders as sparse. No **[A]** value will be scaled to close this.
+### The central unsolved problem: nothing stops the digging
+
+Tschinkel's nests obey a law. Total chamber area tracks worker number and depth goes with
+it, `log(depth) = 0.95 + 0.37 log(workers)`, so 600 workers predicts a nest about 96 cm
+deep. **The model digs until it runs out of grid** — 320 cm, whatever the colony size.
+
+This was tested against a linear crowding response and a Hill-shaped one, against collision
+memories from 45 ticks to three days, and against crowd-avoidance weights spanning an order
+of magnitude. The depth came out at the grid floor every time.
+
+The reason is structural rather than a matter of tuning. Crowding at a working face never
+falls, because ants gather where digging is happening, so the one signal the model has for
+"we have enough room now" is measured in the one place that is always busy. The same failure
+is what makes a founding colony of eleven nanitics excavate a 2.5 m nest in its first year
+against an incipient 29-37 cm.
+
+A colony-level regulator — stop when volume per worker passes some ratio — would fix both in
+an afternoon, and would also contradict the premise the project exists to demonstrate: that
+no ant knows anything about the nest as a whole. Deriving the area-worker law from local
+rules alone is an open problem in this literature, not an oversight here. It is recorded as
+a skipped test rather than closed with a global rule.
 
 ### 2D mapping
 

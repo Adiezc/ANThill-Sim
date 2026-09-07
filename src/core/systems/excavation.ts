@@ -57,6 +57,8 @@ export interface ExcavationState {
    * and a Map here would also put host hashing between the simulation and its own results.
    */
   readonly occupants: Uint16Array
+  /** Ants per density block, reused every tick. See NestGrid.blockVoidCount. */
+  readonly blockAnts: Uint16Array
 }
 
 /**
@@ -219,8 +221,17 @@ function digWillingness(
   // nanitics excavate a two-metre nest in their first year, because nothing was telling
   // them they already had room. This is also what makes total chamber area track worker
   // number without any ant knowing how many workers there are.
+  // The response is non-linear, which matters more than it sounds. Avinery et al. describe
+  // a curve that runs constant, then decays rapidly, then tails off — a threshold, not a
+  // proportion. With a linear response, eleven nanitics at 1.4 percent occupancy still dug
+  // enough over a year to sink a 2.3 m shaft, because 5 percent of a large number is a
+  // large number. A Hill response separates a colony of eleven from one of four thousand
+  // the way the nests themselves are separated.
   const agitation = ants.agitation[slot]! + params.excavation.collisionDigBaseline.value
-  const crowding = agitation / (agitation + params.excavation.collisionSaturationCount.value)
+  const n = params.excavation.collisionResponseExponent.value
+  const half = params.excavation.collisionSaturationCount.value
+  const a = pow(agitation, n)
+  const crowding = a / (a + pow(half, n))
 
   // Ants dig less in a tunnel that is already long.
   const lengthFeedback = exp(
@@ -353,7 +364,17 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
   // raise a ceiling past about a body height above the floor. Shafts are exempt: a
   // descending shaft is a tall void by definition. This is what holds chamber height near
   // 1 cm however wide the floor becomes.
-  if (dRow <= 0 && nest.clearanceIfExcavatedCm(targetCol, targetRow, roofHeight) > roofHeight) {
+  // Descent is exempt only from a shaft tip. An ant standing on a chamber floor is not
+  // sinking a shaft, it is deepening a chamber, and the template applies: a chamber is a
+  // centimetre high whatever its floor area. Exempting every downward dig let chambers at
+  // adjacent depths merge vertically and pushed the measured height to 1.7 cm.
+  const inChamber = runHere > chamberThreshold
+  const templateApplies = dRow <= 0 || inChamber
+
+  if (
+    templateApplies &&
+    nest.clearanceIfExcavatedCm(targetCol, targetRow, roofHeight) > roofHeight
+  ) {
     // The ceiling here is already a body height up, so this ant will not raise it. It does
     // not stand idle: it turns to the shaft instead. Returning here was a real defect —
     // four dig opportunities in five were chosen laterally in the superficial zone and then
@@ -665,28 +686,36 @@ export function makeExcavationSystem(state: ExcavationState) {
 
     // Count how many ants occupy each cell, so collisions are a consequence of where ants
     // actually are rather than a global density term.
-    const { occupants } = state
+    const { occupants, blockAnts } = state
     occupants.fill(0)
+    blockAnts.fill(0)
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
       const col = nest.colOfOffset(ants.x[i]!)
       const row = nest.rowOfDepth(ants.y[i]!)
       if (!nest.inBounds(col, row)) continue
       occupants[nest.index(col, row)]! += 1
+      blockAnts[nest.blockIndex(col, row)]! += 1
     }
 
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
       const col = nest.colOfOffset(ants.x[i]!)
       const row = nest.rowOfDepth(ants.y[i]!)
-      // The surface is open ground, not a cell, so nobody collides there. Underground, an
-      // ant's collision rate is how many nestmates share the space it is standing in.
-      const here = nest.inBounds(col, row) && row > 0 ? occupants[nest.index(col, row)]! : 1
+      // How crowded it is around this ant: nestmates per unit of open space, over a
+      // neighbourhood a few centimetres across rather than over one grid cell. A cell is
+      // smaller than an ant, so cell co-occupancy is a rounding artefact and reports every
+      // narrow shaft as packed. The surface is open ground and nobody is crowded there.
+      let density = 0
+      if (nest.inBounds(col, row) && row > 0) {
+        const block = nest.blockIndex(col, row)
+        const space = nest.blockVoidCount[block]!
+        if (space > 0) density = (blockAnts[block]! - 1) / space
+      }
 
-      // An exponential moving average, so this is a *rate* of collision and settles at the
-      // number of nestmates actually present. Accumulating instead made agitation run to
-      // tens of thousands within a day and shut digging off entirely.
-      ants.agitation[i] = ants.agitation[i]! * decay + (here - 1) * (1 - decay)
+      // An exponential moving average, so this is a rate rather than a running total.
+      // Accumulating instead made agitation reach tens of thousands within a day.
+      ants.agitation[i] = ants.agitation[i]! * decay + density * (1 - decay)
 
       // Foragers are outside. Everyone else who digs, digs.
       if (ants.task[i] === Task.Forager) continue

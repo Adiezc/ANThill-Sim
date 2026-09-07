@@ -37,6 +37,20 @@ export class NestGrid {
   /** Deepest excavated row reached, so depth does not need a scan. */
   deepestRow = 0
 
+  /**
+   * Void cells per density block, maintained incrementally as cells are excavated.
+   *
+   * Crowding has to be measured over a neighbourhood an ant could actually walk, not over a
+   * single grid cell: a cell is 5 mm across and a minor worker is 6.35 mm long, so two ants
+   * in adjacent cells are touching. Counting co-occupancy of one cell reports a narrow
+   * shaft as permanently crowded, which through the collision rule tells the colony to keep
+   * digging — a runaway that had seven nanitics excavating a 2.7 m nest in their first year.
+   */
+  readonly blockVoidCount: Uint16Array
+  readonly blockCols: number
+  readonly blockRows: number
+  readonly blockSize: number
+
   private readonly scratch: Float32Array
 
   constructor(params: Params) {
@@ -49,6 +63,10 @@ export class NestGrid {
     this.spoil = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.building = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.entranceCol = Math.floor(this.cols / 2)
+    this.blockSize = Math.max(1, Math.round(params.excavation.crowdingRadiusCm.value / cell))
+    this.blockCols = Math.ceil(this.cols / this.blockSize)
+    this.blockRows = Math.ceil(this.rows / this.blockSize)
+    this.blockVoidCount = new Uint16Array(this.blockCols * this.blockRows)
     this.scratch = new Float32Array(this.cols * this.rows)
   }
 
@@ -91,8 +109,14 @@ export class NestGrid {
     if (!this.isSoil(col, row)) return false
     this.occupancy[row * this.cols + col] = VOID
     this.excavatedCells += 1
+    this.blockVoidCount[this.blockIndex(col, row)]! += 1
     if (row > this.deepestRow) this.deepestRow = row
     return true
+  }
+
+  /** Index of the density block a cell belongs to. */
+  blockIndex(col: number, row: number): number {
+    return Math.floor(row / this.blockSize) * this.blockCols + Math.floor(col / this.blockSize)
   }
 
   /**

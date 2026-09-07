@@ -53,7 +53,16 @@ export interface Params {
     readonly minorWorkerLengthMm: Param<number>
     readonly majorWorkerLengthMm: Param<number>
     readonly minorWorkerDryMassMg: Param<number>
+    readonly minorWorkerDryMassJulyMg: Param<number>
+    readonly minorWorkerDryMassJanuaryMg: Param<number>
+    readonly minorWorkerLeanMassMg: Param<number>
     readonly majorWorkerDryMassMg: Param<number>
+    readonly minorHeadwidthInterceptMm: Param<number>
+    readonly minorHeadwidthSlopeMm: Param<number>
+    /** HARD RULE that this does not scale with colony size. Minors grow; majors do not. */
+    readonly majorHeadwidthMm: RangeParam
+    readonly firstMajorAppearsAtWorkers: RangeParam
+    readonly majorWorkerFractionBySeason: Param<readonly number[]>
     readonly queenLifespanYears: Param<number>
   }
 
@@ -116,7 +125,9 @@ export interface Params {
     readonly stressSensitivity: Param<number>
     readonly spoilCueWeight: Param<number>
     readonly collisionAgitationHalfLifeTicks: Param<number>
+    readonly crowdingRadiusCm: Param<number>
     readonly collisionSaturationCount: Param<number>
+    readonly collisionResponseExponent: Param<number>
     readonly collisionDigBaseline: Param<number>
     readonly tunnelLengthFeedbackCm: Param<number>
     readonly surfaceTemperatureDepthGainCmPerC: Param<number>
@@ -184,6 +195,8 @@ export interface Params {
     readonly summerTransferWorkerFraction: Param<number>
     readonly peakForagingProportion: Param<number>
     readonly foragerFatThreshold: Param<number>
+    readonly workerFatFractionByDepthThird: Param<readonly number[]>
+    readonly workerFatFractionBySeason: Param<readonly number[]>
     readonly ageAtFirstForagingDaysSummerBorn: Param<number>
     readonly ageAtFirstForagingDaysAutumnBorn: Param<number>
     readonly ageAtFirstForagingDaysAutumnBornRange: RangeParam
@@ -204,6 +217,10 @@ export interface Params {
     readonly taskReversionAllowed: Param<boolean>
     /** HARD RULE, false. Losing foragers draws no replacements; larvae starve instead. */
     readonly backfillFromOtherCastes: Param<boolean>
+    readonly foragingSeasonMonths: Param<readonly number[]>
+    readonly foragingOnsetSoilTempC: Param<number>
+    readonly foragingOnsetTempSpanC: Param<number>
+    readonly winterWorkerMortalityPerDay: Param<number>
     readonly autumnWorkerWeightGain: Param<number>
   }
 
@@ -392,7 +409,15 @@ export function buildParams(root: Raw): Params {
       minorWorkerLengthMm: readScalar(root, 'colony.minorWorkerLengthMm'),
       majorWorkerLengthMm: readScalar(root, 'colony.majorWorkerLengthMm'),
       minorWorkerDryMassMg: readScalar(root, 'colony.minorWorkerDryMassMg'),
+      minorWorkerDryMassJulyMg: readScalar(root, 'colony.minorWorkerDryMassJulyMg'),
+      minorWorkerDryMassJanuaryMg: readScalar(root, 'colony.minorWorkerDryMassJanuaryMg'),
+      minorWorkerLeanMassMg: readScalar(root, 'colony.minorWorkerLeanMassMg'),
       majorWorkerDryMassMg: readScalar(root, 'colony.majorWorkerDryMassMg'),
+      minorHeadwidthInterceptMm: readScalar(root, 'colony.minorHeadwidthInterceptMm'),
+      minorHeadwidthSlopeMm: readScalar(root, 'colony.minorHeadwidthSlopeMm'),
+      majorHeadwidthMm: readRange(root, 'colony.majorHeadwidthMm'),
+      firstMajorAppearsAtWorkers: readRange(root, 'colony.firstMajorAppearsAtWorkers'),
+      majorWorkerFractionBySeason: readNumberList(root, 'colony.majorWorkerFractionBySeason'),
       queenLifespanYears: readScalar(root, 'colony.queenLifespanYears'),
     },
 
@@ -457,7 +482,9 @@ export function buildParams(root: Raw): Params {
         root,
         'excavation.collisionAgitationHalfLifeTicks',
       ),
+      crowdingRadiusCm: readScalar(root, 'excavation.crowdingRadiusCm'),
       collisionSaturationCount: readScalar(root, 'excavation.collisionSaturationCount'),
+      collisionResponseExponent: readScalar(root, 'excavation.collisionResponseExponent'),
       collisionDigBaseline: readScalar(root, 'excavation.collisionDigBaseline'),
       tunnelLengthFeedbackCm: readScalar(root, 'excavation.tunnelLengthFeedbackCm'),
       surfaceTemperatureDepthGainCmPerC: readScalar(
@@ -521,6 +548,8 @@ export function buildParams(root: Raw): Params {
       summerTransferWorkerFraction: readScalar(root, 'labour.summerTransferWorkerFraction'),
       peakForagingProportion: readScalar(root, 'labour.peakForagingProportion'),
       foragerFatThreshold: readScalar(root, 'labour.foragerFatThreshold'),
+      workerFatFractionByDepthThird: readNumberList(root, 'labour.workerFatFractionByDepthThird'),
+      workerFatFractionBySeason: readNumberList(root, 'labour.workerFatFractionBySeason'),
       ageAtFirstForagingDaysSummerBorn: readScalar(root, 'labour.ageAtFirstForagingDaysSummerBorn'),
       ageAtFirstForagingDaysAutumnBorn: readScalar(root, 'labour.ageAtFirstForagingDaysAutumnBorn'),
       ageAtFirstForagingDaysAutumnBornRange: readRange(
@@ -545,6 +574,10 @@ export function buildParams(root: Raw): Params {
       ),
       taskReversionAllowed: readFlag(root, 'labour.taskReversionAllowed'),
       backfillFromOtherCastes: readFlag(root, 'labour.backfillFromOtherCastes'),
+      foragingSeasonMonths: readNumberList(root, 'labour.foragingSeasonMonths'),
+      foragingOnsetSoilTempC: readScalar(root, 'labour.foragingOnsetSoilTempC'),
+      foragingOnsetTempSpanC: readScalar(root, 'labour.foragingOnsetTempSpanC'),
+      winterWorkerMortalityPerDay: readScalar(root, 'labour.winterWorkerMortalityPerDay'),
       autumnWorkerWeightGain: readScalar(root, 'labour.autumnWorkerWeightGain'),
     },
 

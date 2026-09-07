@@ -59,6 +59,7 @@ export function createNestHarness(options: HarnessOptions): NestHarness {
     redepositedPellets: 0,
     foundingTargetDepthCm: 0,
     occupants: new Uint16Array(nest.cols * nest.rows),
+    blockAnts: new Uint16Array(nest.blockCols * nest.blockRows),
   }
 
   // Open the entrance so there is somewhere to stand. One cell: everything below it is dug

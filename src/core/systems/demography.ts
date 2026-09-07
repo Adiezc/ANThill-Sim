@@ -47,6 +47,11 @@ export interface DemographyState {
   readonly brood: BroodStore
   /** Where new adults eclose. Demography needs to know how deep the nest actually is. */
   readonly nest: NestGrid
+  /**
+   * Soil temperature where foragers are, updated each day by the caller. Foraging onset in
+   * spring follows temperature rather than the calendar.
+   */
+  soilTemperatureAtForagerDepthC: number
   phase: ColonyPhase
   /** Slot of the queen in the ant store, or -1 once she is dead. */
   queenSlot: number
@@ -88,6 +93,7 @@ export function createDemographyState(
   return {
     brood,
     nest,
+    soilTemperatureAtForagerDepthC: 0,
     foundingEggsLaid: 0,
     nanaticTarget,
     eclosionCarry: [0, 0, 0],
@@ -325,7 +331,7 @@ function runDay(sim: Simulation, state: DemographyState): void {
 
   // ---- Adults: task progression and death ----
   progressTasks(sim, state, date.dayOfYear)
-  applyMortality(sim, state)
+  applyMortality(sim, state, date.dayOfYear)
 
   // ---- Phase ----
   if (state.phase === 'founding' && workers > 0) state.phase = 'growing'
@@ -400,12 +406,32 @@ function eclose(
  * moves on when it is old enough, or when its fat has fallen below the threshold — never
  * because the colony is short of anything, and never backwards.
  */
+function clamp01(x: number): number {
+  return x < 0 ? 0 : x > 1 ? 1 : x
+}
+
 function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: number): void {
   const { ants, params, clock } = sim
-  void state
   const ticksPerDay = clock.ticksPerDay
   const callowDays = params.brood.callowDurationDays.value
   const fatThreshold = params.labour.foragerFatThreshold.value
+  const month = monthOfDayOfYear(dayOfYear)
+  const inForagingSeason = params.labour.foragingSeasonMonths.value.includes(month)
+
+  // How readily a worker whose own schedule has come due actually takes up foraging today.
+  //
+  // Onset is temperature-driven, not calendar-driven: foraging began within five days of
+  // 1 March in three of the four study years and a full month later in the fourth. Making
+  // it a hard date instead released the whole overwintered backlog on one morning, which
+  // gave a March spike and an April trough in a species whose foraging climbs steadily from
+  // March to a midsummer maximum.
+  const soilTempC = state.soilTemperatureAtForagerDepthC
+  const onsetChance = inForagingSeason
+    ? clamp01(
+        (soilTempC - params.labour.foragingOnsetSoilTempC.value) /
+          params.labour.foragingOnsetTempSpanC.value,
+      )
+    : 0
 
   for (let i = 0; i < ants.count; i += 1) {
     if (!ants.isAlive(i)) continue
@@ -459,7 +485,17 @@ function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: numbe
       )
     }
 
-    if (ants.fat[i]! < fatThreshold) {
+    // Foraging is seasonal, and this is the gate that makes the annual cycle come out.
+    //
+    // A worker whose own schedule falls due in December waits for spring: colonies are
+    // dormant, foraging falls to zero by December and does not resume until late February
+    // at the earliest. Without this gate the autumn cohort took up foraging the moment its
+    // 210-to-360-day clock expired, which for many of them is midwinter, and the model
+    // produced a January foraging peak in a species that does not forage in January.
+    //
+    // It also concentrates recruitment into the spring, which is what lifts the summer
+    // proportion foraging towards the measured 33 to 42 percent.
+    if (ants.fat[i]! < fatThreshold && sim.prng.chance(onsetChance)) {
       ants.task[i] = Task.Forager
       ants.y[i] = params.labour.foragerObservedMaxDepthCm.value * 0.5
       ants.ruleId[i] = RULE.idle
@@ -476,10 +512,11 @@ function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: numbe
  * applied as a hazard rather than a hard cap, so 27 days is an emergent mean rather than a
  * cliff. Inside workers die slowly.
  */
-function applyMortality(sim: Simulation, state: DemographyState): void {
+function applyMortality(sim: Simulation, state: DemographyState, dayOfYear: number): void {
   const { ants, params, prng, clock } = sim
   const mortality = params.labour.foragerMortalityPerDay
   const rate = (mortality.min + mortality.max) / 2
+  const inSeason = params.labour.foragingSeasonMonths.value.includes(monthOfDayOfYear(dayOfYear))
 
   for (let i = 0; i < ants.count; i += 1) {
     if (!ants.isAlive(i)) continue
@@ -500,6 +537,14 @@ function applyMortality(sim: Simulation, state: DemographyState): void {
       ageDays > params.brood.insideWorkerLifespanDays.value &&
       prng.chance(params.brood.insideWorkerMortalityPerDay.value)
     ) {
+      ants.kill(i)
+      continue
+    }
+
+    // Over winter the colony shrinks. Kwapich & Tschinkel are explicit that the spring rise
+    // in proportion foraging comes from more foragers *and* a smaller colony, so the losses
+    // have to be real rather than an artefact of how the proportion is counted.
+    if (!inSeason && prng.chance(params.labour.winterWorkerMortalityPerDay.value)) {
       ants.kill(i)
     }
   }

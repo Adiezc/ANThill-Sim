@@ -87,6 +87,7 @@ export class Colony {
       redepositedPellets: 0,
       foundingTargetDepthCm: 0,
       occupants: new Uint16Array(this.nest.cols * this.nest.rows),
+      blockAnts: new Uint16Array(this.nest.blockCols * this.nest.blockRows),
     }
     const nanatics = Math.round(
       this.sim.prng.nextRange(params.brood.nanaticCount.min, params.brood.nanaticCount.max),
@@ -142,6 +143,13 @@ export class Colony {
     this.climate.rollDay(date.dayOfYear, date.month, this.sim.prng)
     this.soil.updateMoisture(this.climate.day.rainfallMm)
     this.soil.updateTemperature(date.dayOfYear, this.climate)
+
+    // Foraging onset in spring follows soil temperature where the foragers are.
+    this.demography.soilTemperatureAtForagerDepthC = this.soil.temperatureAt(
+      this.sim.params.labour.foragerObservedMaxDepthCm.value,
+      date.dayOfYear,
+      this.climate,
+    )
   }
 
   /**

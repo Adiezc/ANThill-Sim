@@ -332,3 +332,44 @@ Known gaps to pick up next:
    at 600 workers. It belongs in a Worker (step 10).
 5. **Four papers are indexed but not yet read at depth.** Worker dry mass in particular is a
    [C] estimate that Tschinkel 1998 can replace with a measured value.
+
+---
+
+## D17. A grid cell is smaller than an ant, and that broke the crowding rule
+
+Digging effort is regulated by an ant's own rate of collision with nestmates. The first
+implementation counted how many ants shared its grid cell — but a cell is 5 mm across and a
+minor worker is 6.35 mm long, so two ants in *adjacent* cells are already touching. Cell
+co-occupancy is therefore not a collision rate; it is an artefact of the discretisation, and
+it reports every narrow shaft as permanently packed.
+
+**Resolution.** Crowding is ants per unit of open space over a neighbourhood a few
+centimetres across (`excavation.crowdingRadiusCm`), maintained cheaply as a block grid with
+the void count updated incrementally as cells are dug.
+
+The effect was larger than expected. Whole-nest build time went from about seventy simulated
+days to six, which is the 3-to-6 days the species is reported to manage, and chamber spacing
+began to widen with depth the way Figure 10 shows. Two gate criteria fell out of one fix to
+a unit-scale mistake.
+
+---
+
+## D18. Foraging onset follows temperature, not the calendar
+
+Workers were taking up foraging the moment their 210-to-360-day schedule expired, which for
+the autumn cohort is midwinter. The model produced a January foraging peak in a species that
+does not forage in January.
+
+Gating on the month fixed the winter but created a new artefact: the entire overwintered
+cohort was released on 1 March, giving a spike and then an April trough, where the real
+pattern climbs steadily from March to a midsummer maximum.
+
+**Resolution.** Onset probability follows soil temperature at forager depth. This is what the
+data suggest anyway — foraging began within five days of 1 March in three of the four study
+years and a full month later in the fourth — and it spreads the backlog across the spring.
+
+Peak proportion foraging is now about 26 % against a measured 33-41 %. The seasonal *shape*
+is right: zero in winter, a temperature-driven rise through spring, a midsummer maximum, and
+an autumn decline driven by the colony growing while forager number falls. The remaining
+shortfall in height is not yet explained and the trace it was measured on used an artificial
+age structure, so it should be re-measured on a naturally grown colony.

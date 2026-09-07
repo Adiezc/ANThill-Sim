@@ -228,6 +228,72 @@ describe('development rate is set by season of birth, not by colony need', () =>
   })
 })
 
+describe('the annual cycle of foraging', () => {
+  /**
+   * Stocks a colony with a spread of ages and schedules and runs it through a year, so the
+   * seasonal shape can be measured without simulating the five years it would take to grow
+   * one. The age structure is artificial and the peak height should not be read too closely;
+   * the shape — winter zero, spring rise, summer maximum, autumn decline — is the point.
+   */
+  function annualForagingTrace(seed: number, workers: number): { month: number; frac: number }[] {
+    const c = colony(seed, 0, workers * 2)
+    c.run(c.sim.clock.ticksPerDay)
+    const { ants, clock, params } = c.sim
+    for (let n = 0; n < workers; n += 1) {
+      const slot = ants.spawn(Caste.MinorWorker, 1)
+      if (slot < 0) break
+      const ageDays = (n / workers) * 365
+      ants.ageTicks[slot] = Math.round(ageDays * clock.ticksPerDay)
+      ants.fat[slot] = 1 - (ageDays / 365) * 0.85
+      ants.task[slot] = Task.BroodCare
+      // A third on the summer schedule, the rest overwintering.
+      ants.timer[slot] = n % 3 === 0 ? 43 : 210 + (n % 150)
+      ants.lengthMm[slot] = params.colony.minorWorkerLengthMm.value
+      const where = c.nest.deepVoidNear(0.8, ((n * 7919) % 1000) / 1000)
+      ants.x[slot] = c.nest.offsetOf(where.col)
+      ants.y[slot] = c.nest.depthOf(where.row)
+    }
+
+    const trace: { month: number; frac: number }[] = []
+    for (let day = 0; day < 365; day += 1) {
+      c.run(clock.ticksPerDay)
+      const w = countWorkers(c.sim)
+      trace.push({ month: c.sim.clock.date().month, frac: w > 0 ? countForagers(c.sim) / w : 0 })
+    }
+    return trace
+  }
+
+  function peakIn(trace: { month: number; frac: number }[], months: number[]): number {
+    return Math.max(0, ...trace.filter((t) => months.includes(t.month)).map((t) => t.frac))
+  }
+
+  it('does not forage in winter', () => {
+    // Foraging falls to zero by December and does not resume until late February at the
+    // earliest. A worker whose 210-to-360-day schedule comes due in January waits: without
+    // that gate the model produced a January foraging peak in a species that is dormant.
+    const trace = annualForagingTrace(2, 900)
+    expect(peakIn(trace, [12, 1, 2])).toBeLessThan(0.05)
+  }, 300000)
+
+  it('forages most in summer', () => {
+    // Foraging begins in March or April and reaches its annual maximum in midsummer.
+    const trace = annualForagingTrace(2, 900)
+    expect(peakIn(trace, [6, 7, 8])).toBeGreaterThan(peakIn(trace, [12, 1, 2]))
+    expect(peakIn(trace, [6, 7, 8])).toBeGreaterThan(0.15)
+  }, 300000)
+
+  it('rises through the spring rather than all at once', () => {
+    // Onset follows soil temperature, not the calendar: foraging began within five days of
+    // 1 March in three of four study years and a full month later in the fourth. Gating on
+    // the month alone released the whole overwintered cohort on one morning.
+    const trace = annualForagingTrace(2, 900)
+    const march = trace.filter((t) => t.month === 3).map((t) => t.frac)
+    const early = Math.max(0, ...march.slice(0, 8))
+    const late = Math.max(0, ...march.slice(-8))
+    expect(late).toBeGreaterThan(early)
+  }, 300000)
+})
+
 describe('colony trajectory', () => {
   it.skip('reaches sexual maturity in the reported four to five years [measured: year 5]', () => {
     // Skipped by default because it simulates five years of a colony growing past four

@@ -6,3 +6,7 @@ coverage/
 .DS_Store
 /out/
 .tsbuild/
+
+# Primary sources. Kept locally for reading; not redistributable.
+# See docs/papers/README.md for DOIs and citations.
+docs/papers/*.pdf
