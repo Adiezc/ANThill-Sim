@@ -132,6 +132,10 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | **Worker size and load** | Worker size does **not** predict seed size collected or foraging distance. Do not implement the intuitive "majors fetch big seeds from far away" rule | **[A]** | Ferster & Traniello 1995 |
 | Diet | Seeds and insects, with a preference for protein items | **[A]** | Wikipedia species account |
 | Water budget | Foragers carry a water budget; foraging is throttled under heat to limit water loss | **[B]** | Harvester ant water-loss plasticity literature (desert *Pogonomyrmex*) |
+| Walking speed, search pattern, trip budget | About 5 cm/s, a random-turn search, and a 90-minute budget before an ant gives up and comes home | **[C]** | None. No value is published for this species. Tuned so that trip duration is dominated by search rather than by walking, which is the [B] finding |
+| Seeds on the ground | A patchy standing crop, replenished daily towards its ceiling | **[C]** | None. No seed rain is published for these sandhills. Patchiness is what gives searching a cost, and therefore what makes site fidelity and recruitment worth anything |
+| Diurnal window | Foraging between about 06:00 and 20:00 | **[C]** | None. That these are diurnal ants is not in doubt; the hours are invented |
+| What a delivered seed does | Nothing yet. Seeds accumulate in a store that no other system draws on | **[C]** | Larval survival is still the forager-to-larva proxy described in section 4. The food account arrives with the seed store in section 6 |
 
 ## 6. Seed stores and germination
 

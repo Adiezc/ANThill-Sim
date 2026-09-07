@@ -7,6 +7,12 @@
     "outDir": ".tsbuild/app",
     "tsBuildInfoFile": ".tsbuild/app.tsbuildinfo"
   },
-  "include": ["src/render/**/*.ts", "src/ui/**/*.ts", "src/worker/**/*.ts", "src/main.ts"],
+  "include": [
+    "src/render/**/*.ts",
+    "src/ui/**/*.ts",
+    "src/worker/**/*.ts",
+    "src/main.ts",
+    "src/vite-env.d.ts"
+  ],
   "references": [{ "path": "./src/core" }]
 }

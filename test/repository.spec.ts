@@ -1,0 +1,62 @@
+import { describe, expect, it } from 'vitest'
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+const ROOT = join(import.meta.dirname, '..')
+
+function tracked(): string[] | null {
+  try {
+    return execFileSync('git', ['ls-files'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+      .split('\n')
+      .filter(Boolean)
+  } catch {
+    // Not a git checkout. A tarball is a legitimate way to receive this project and the
+    // absence of git is not a test failure.
+    return null
+  }
+}
+
+/**
+ * The primary sources are read locally and never redistributed.
+ *
+ * Most of them are not redistributable, and copying a paper into a repository does not make
+ * it more citable. Everything the model takes from them lives in the parameter file with its
+ * own provenance tag, and `docs/papers/README.md` carries the DOIs.
+ *
+ * `.gitignore` states the intent. This test enforces it, because `git add -f` exists and a
+ * mistake here is one that reaches everybody who clones the repository.
+ */
+describe('the papers are cited, not redistributed', () => {
+  it('tracks no PDF anywhere in the repository', () => {
+    const files = tracked()
+    if (files === null) return
+    const pdfs = files.filter((f) => f.toLowerCase().endsWith('.pdf'))
+    expect(pdfs).toEqual([])
+  })
+
+  it('keeps the notice and the DOIs that stand in for them', () => {
+    const notice = readFileSync(join(ROOT, 'docs', 'papers', 'README.md'), 'utf8')
+    expect(notice).toContain('not committed')
+    // Every primary source has to be reachable by DOI, since the file itself is not here.
+    for (const doi of [
+      '10.1093/jis/4.1.21',
+      '10.1007/s000400050097',
+      '10.1007/s00265-013-1611-9',
+      '10.1007/s00265-015-2038-2',
+      '10.2307/1941504',
+    ]) {
+      expect(notice).toContain(doi)
+    }
+  })
+
+  it('ignores study output, so a run cannot be committed by accident', () => {
+    const ignore = readFileSync(join(ROOT, '.gitignore'), 'utf8')
+    expect(ignore).toContain('/out/')
+    expect(ignore).toContain('docs/papers/*.pdf')
+  })
+})

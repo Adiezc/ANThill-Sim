@@ -1,0 +1,368 @@
+/**
+ * The reference list, as data.
+ *
+ * It lives in `/core` and not in the UI because three things need the same list and must
+ * not be allowed to disagree: the citations panel in the simulator, the methods report a
+ * batch run writes, and `docs/SCIENCE.md`. A citation that exists in one and not the others
+ * is how a model quietly loses its provenance.
+ *
+ * **No PDF of any of these is distributed with this software.** Most are not
+ * redistributable, and the ones that are do not become more citable by being copied. Every
+ * number taken from them lives in `species/pogonomyrmex-badius.json` with its own tag, and
+ * the DOIs below are how a reader gets the papers themselves. See `docs/papers/README.md`.
+ *
+ * A DOI appears here only where it has been checked against the paper. Where one is absent
+ * the entry is still a complete citation; an invented DOI would be worse than none.
+ */
+
+export interface Reference {
+  /** Short key, as it appears in the rule registry and in docs/SCIENCE.md. */
+  readonly key: string
+  readonly authors: string
+  readonly year: string
+  readonly title: string
+  readonly journal?: string
+  readonly doi?: string
+  /**
+   * True for the sources this model is actually built on, as opposed to those it cites in
+   * passing. The five primary sources supply nearly every [A] value in the parameter file.
+   */
+  readonly primary?: boolean
+  /** What this model took from it. Present for the primary sources. */
+  readonly usedFor?: string
+}
+
+export const REFERENCES: readonly Reference[] = [
+  {
+    key: 'tschinkel-2004',
+    authors: 'Tschinkel, W. R.',
+    year: '2004',
+    title: 'The nest architecture of the Florida harvester ant, Pogonomyrmex badius',
+    journal: 'Journal of Insect Science 4:21',
+    doi: '10.1093/jis/4.1.21',
+    primary: true,
+    usedFor:
+      'Nest architecture: chamber areas by depth, chamber spacing, the top-heavy distribution, shaft and chamber dimensions, and the area-to-worker relation the excavation gate is measured against. Read in full; its Figures 9, 10 and 11 corrected four values taken from secondary accounts.',
+  },
+  {
+    key: 'tschinkel-1998',
+    authors: 'Tschinkel, W. R.',
+    year: '1998',
+    title:
+      'Sociometry and sociogenesis of colonies of the harvester ant, Pogonomyrmex badius: worker characteristics in relation to colony size and season',
+    journal: 'Insectes Sociaux 45:385-410',
+    doi: '10.1007/s000400050097',
+    primary: true,
+    usedFor:
+      'Worker dry masses, which set the excavation rate; the fat-by-depth and fat-by-season cycles that drive the transition to foraging; major worker proportions by month.',
+  },
+  {
+    key: 'kwapich-tschinkel-2013',
+    authors: 'Kwapich, C. L. & Tschinkel, W. R.',
+    year: '2013',
+    title:
+      'Demography, demand, death, and the seasonal allocation of labor in the Florida harvester ant',
+    journal: 'Behavioral Ecology and Sociobiology 67:2011-2027',
+    doi: '10.1007/s00265-013-1611-9',
+    primary: true,
+    usedFor:
+      'Brood development schedules, age at first foraging by season of birth, forager depths, the annual proportion-foraging cycle, and colony size range.',
+  },
+  {
+    key: 'kwapich-tschinkel-2016',
+    authors: 'Kwapich, C. L. & Tschinkel, W. R.',
+    year: '2016',
+    title:
+      'Limited flexibility and unusual longevity shape forager allocation in the Florida harvester ant',
+    journal: 'Behavioral Ecology and Sociobiology 70:221-235',
+    doi: '10.1007/s00265-015-2038-2',
+    primary: true,
+    usedFor:
+      'The two HARD RULEs the demographic engine is built around: foragers do not revert to inside work, and the colony does not backfill from other castes when foragers are removed. Larval survival falls instead.',
+  },
+  {
+    key: 'harrison-gentry-1981',
+    authors: 'Harrison, J. S. & Gentry, J. B.',
+    year: '1981',
+    title:
+      'Foraging pattern, colony distribution, and foraging range of the Florida harvester ant, Pogonomyrmex badius',
+    journal: 'Ecology 62:1467-1473',
+    doi: '10.2307/1941504',
+    primary: true,
+    usedFor:
+      'Trunk trails, foraging range, and the finding that ranges are used almost exclusively by one colony without being actively defended.',
+  },
+
+  {
+    key: 'achenbach-foitzik-2009',
+    authors: 'Achenbach, A. & Foitzik, S.',
+    year: '2009',
+    title: 'First evidence for slave rebellion',
+    journal: 'Evolution',
+  },
+  {
+    key: 'avinery-2023',
+    authors: 'Avinery, R. et al.',
+    year: '2023',
+    title: 'Agitated ants',
+    journal: 'Journal of the Royal Society Interface',
+  },
+  {
+    key: 'belachew-2025',
+    authors: 'Belachew, M., Arson, C. & Frost, J. D.',
+    year: '2025',
+    title: 'Insights from studies on the spatial distribution of chambers in ant nests',
+  },
+  {
+    key: 'beverly-2009',
+    authors: 'Beverly, B. D. et al.',
+    year: '2009',
+    title:
+      'How site fidelity leads to individual differences in the foraging activity of harvester ants',
+    journal: 'Behavioral Ecology',
+  },
+  {
+    key: 'bruce-2018',
+    authors: 'Bruce, A. I. et al.',
+    year: '2018',
+    title: 'The digging dynamics of ant tunnels',
+    journal: 'Insectes Sociaux',
+  },
+  {
+    key: 'brunner-2009',
+    authors: 'Brunner, E. et al.',
+    year: '2009',
+    title: 'Worker dominance and policing in Temnothorax unifasciatus',
+    journal: 'Insectes Sociaux',
+  },
+  {
+    key: 'buarque-2021',
+    authors: 'Buarque de Macedo, R. et al.',
+    year: '2021',
+    title: 'Unearthing real-time 3D ant tunneling mechanics',
+    journal: 'PNAS',
+  },
+  {
+    key: 'buhl-2005',
+    authors: 'Buhl, J. et al.',
+    year: '2005',
+    title: 'Self-organized digging activity in ant colonies',
+    journal: 'Behavioral Ecology and Sociobiology',
+  },
+  {
+    key: 'czaczkes-2024',
+    authors: 'Czaczkes, T. et al.',
+    year: '2024',
+    title: 'Ants deposit more pheromone close to food sources',
+    journal: 'Insectes Sociaux',
+  },
+  {
+    key: 'diez-2012',
+    authors: 'Diez, L. et al.',
+    year: '2012',
+    title: 'Social prophylaxis through distant corpse removal',
+    journal: 'Naturwissenschaften',
+  },
+  {
+    key: 'diez-2014',
+    authors: 'Diez, L. et al.',
+    year: '2014',
+    title: 'Keep the nest clean',
+    journal: 'Biology Letters',
+  },
+  {
+    key: 'diez-2015',
+    authors: 'Diez, L. et al.',
+    year: '2015',
+    title: 'Emergency measures',
+    journal: 'Behavioural Processes',
+  },
+  {
+    key: 'espinoza-santamarina-2010',
+    authors: 'Espinoza, D. & Santamarina, J.',
+    year: '2010',
+    title: 'Ant tunneling, a granular media perspective',
+  },
+  {
+    key: 'ferster-traniello-1995',
+    authors: 'Ferster, B. & Traniello, J.',
+    year: '1995',
+    title: 'Polymorphism and foraging behavior in Pogonomyrmex badius',
+    journal: 'Environmental Entomology',
+  },
+  {
+    key: 'garcia-ibarra-2023',
+    authors: 'García Ibarra, F. A. et al.',
+    year: '2023',
+    title: 'Experimental evidence that increased surface temperature affects bioturbation by ants',
+  },
+  {
+    key: 'holldobler-wilson-1970',
+    authors: 'Hölldobler, B. & Wilson, E. O.',
+    year: '1970',
+    title: 'Recruitment trails in the harvester ant Pogonomyrmex badius',
+    journal: 'Psyche',
+  },
+  {
+    key: 'khuong-2016',
+    authors: 'Khuong, A. et al.',
+    year: '2016',
+    title: 'Stigmergic construction and topochemical information shape ant nest architecture',
+    journal: 'PNAS',
+  },
+  {
+    key: 'kwapich-2024',
+    authors: 'Kwapich, C. L. et al.',
+    year: '2024',
+    title: 'A kleptoparasitic beetle larva exploits vertical division of labor',
+    journal: 'Insectes Sociaux',
+  },
+  {
+    key: 'lebrun-2025',
+    authors: 'LeBrun, E. et al.',
+    year: '2025',
+    title: 'Social immunity in a supercolonial invasive ant',
+    journal: 'Journal of Animal Ecology',
+  },
+  {
+    key: 'leclerc-detrain-2016',
+    authors: 'Leclerc, J.-B. & Detrain, C.',
+    year: '2016',
+    title: 'Ants detect but do not discriminate diseased workers',
+    journal: 'The Science of Nature',
+  },
+  {
+    key: 'leclerc-2017',
+    authors: 'Leclerc, J.-B. et al.',
+    year: '2017',
+    title: 'Impact of colony size on survival and sanitary strategies',
+    journal: 'Behavioral Ecology and Sociobiology',
+  },
+  {
+    key: 'monaenkova-2015',
+    authors: 'Monaenkova, D. et al.',
+    year: '2015',
+    title: 'Behavioral and mechanical determinants of collective subsurface nest excavation',
+    journal: 'Journal of Experimental Biology',
+  },
+  {
+    key: 'monnin-ratnieks-2001',
+    authors: 'Monnin, T. & Ratnieks, F.',
+    year: '2001',
+    title: 'Policing in queenless ponerine ants',
+    journal: 'Behavioral Ecology and Sociobiology',
+  },
+  {
+    key: 'pielstrom-roces-2013',
+    authors: 'Pielström, S. & Roces, F.',
+    year: '2013',
+    title: 'Sequential soil transport',
+    journal: 'PLoS ONE',
+  },
+  {
+    key: 'sankovitz-purcell-2021',
+    authors: 'Sankovitz, M. & Purcell, J.',
+    year: '2021',
+    title:
+      'Ant nest architecture is shaped by local adaptation and plastic response to temperature',
+    journal: 'Scientific Reports',
+  },
+  {
+    key: 'stroeymeyt-2007',
+    authors: 'Stroeymeyt, N. et al.',
+    year: '2007',
+    title: 'Selfish worker policing',
+    journal: 'Behavioral Ecology and Sociobiology',
+  },
+  {
+    key: 'sumpter-beekman-2003',
+    authors: 'Sumpter, D. & Beekman, M.',
+    year: '2003',
+    title: 'From nonlinearity to optimality',
+    journal: 'Animal Behaviour',
+  },
+  {
+    key: 'tschinkel-1999',
+    authors: 'Tschinkel, W. R.',
+    year: '1999',
+    title:
+      'Sociometry and sociogenesis of Pogonomyrmex badius: distribution of workers, brood and seeds',
+    journal: 'Ecological Entomology',
+  },
+  {
+    key: 'tschinkel-2013',
+    authors: 'Tschinkel, W. R.',
+    year: '2013',
+    title:
+      'Florida harvester ant nest architecture, nest relocation and soil carbon dioxide gradients',
+    journal: 'PLoS ONE',
+  },
+  {
+    key: 'tschinkel-2014',
+    authors: 'Tschinkel, W. R.',
+    year: '2014',
+    title: 'Nest relocation and excavation in the Florida harvester ant',
+    journal: 'PLoS ONE',
+  },
+  {
+    key: 'tschinkel-2015',
+    authors: 'Tschinkel, W. R.',
+    year: '2015',
+    title: 'The architecture of subterranean ant nests',
+    journal: 'Journal of Bioeconomics',
+  },
+  {
+    key: 'tschinkel-2017',
+    authors: 'Tschinkel, W. R.',
+    year: '2017',
+    title: 'Do Florida harvester ant colonies have a nest architecture "plan"?',
+    journal: 'Ecology',
+  },
+  {
+    key: 'tschinkel-kwapich-2016',
+    authors: 'Tschinkel, W. R. & Kwapich, C. L.',
+    year: '2016',
+    title: 'The Florida harvester ant relies on germination to consume large seeds',
+    journal: 'PLoS ONE',
+  },
+  {
+    key: 'tschinkel-kwapich-2017',
+    authors: 'Tschinkel, W. R. & Kwapich, C. L.',
+    year: '2017',
+    title: 'Vertical organization of the division of labor',
+    journal: 'PLoS ONE',
+  },
+  {
+    key: 'tschinkel-seal-2015',
+    authors: 'Tschinkel, W. R. & Seal, J.',
+    year: '2015',
+    title: 'Sequential subterranean transport of excavated sand and foraged seeds',
+    journal: 'PLoS ONE',
+  },
+]
+
+/** The five the model is actually built on. */
+export function primaryReferences(): readonly Reference[] {
+  return REFERENCES.filter((r) => r.primary === true)
+}
+
+/**
+ * One line, in the form a reference list uses.
+ *
+ * `withDoi` is off where the panel renders the DOI separately as a link, and on in the
+ * written report, where there is nothing to click and the identifier has to be in the text.
+ */
+export function formatReference(reference: Reference, withDoi = true): string {
+  const parts = [`${reference.authors} (${reference.year})`, reference.title]
+  if (reference.journal !== undefined) parts.push(reference.journal)
+  const line = `${parts.join('. ')}.`
+  return reference.doi === undefined || !withDoi ? line : `${line} doi:${reference.doi}`
+}
+
+/**
+ * The standing notice about the papers themselves. Shown in the simulator and written into
+ * every batch report, because a reader who wants the sources needs to be told plainly that
+ * they are not in this repository and where they are instead.
+ */
+export const SOURCES_NOTICE =
+  'No PDF of any cited paper is distributed with this software. Most are not redistributable, and copying one would not make it more citable. Every value taken from them carries its own provenance tag in the parameter file; follow the DOIs above for the papers themselves.'

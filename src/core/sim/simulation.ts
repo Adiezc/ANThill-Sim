@@ -45,6 +45,8 @@ export class Simulation {
 
   private readonly systems: System[] = []
   private readonly systemNames: string[] = []
+  private readonly stateSources: (() => ArrayBufferView[])[] = []
+  private readonly stateNames: string[] = []
 
   constructor(options: SimulationOptions) {
     this.seed = options.seed
@@ -69,6 +71,29 @@ export class Simulation {
     return this.systemNames
   }
 
+  /**
+   * Registers state outside the ant store that the digest must cover.
+   *
+   * The ant store is not the whole simulation. The nest grid, the soil layers, the brood
+   * cohorts and the surface are all mutable state that systems write and later read, and a
+   * divergence in any of them is a divergence in the run — one that would surface in the
+   * ants only some indeterminate number of ticks later, or, for a run that ends first, not
+   * at all. Hashing them here is what makes the guarantee in docs/DETERMINISM.md the whole
+   * guarantee rather than most of one.
+   *
+   * Order is registration order, as with systems, and is part of the digest.
+   */
+  registerState(name: string, buffers: () => ArrayBufferView[]): this {
+    this.stateSources.push(buffers)
+    this.stateNames.push(name)
+    return this
+  }
+
+  /** The registered state sources, in order. */
+  get hashedState(): readonly string[] {
+    return this.stateNames
+  }
+
   /** Advances exactly one fixed timestep. */
   step(): void {
     for (let i = 0; i < this.systems.length; i += 1) this.systems[i]!(this)
@@ -82,7 +107,8 @@ export class Simulation {
 
   /**
    * A digest over the entire simulation state: the clock, the PRNG's internal position,
-   * every ant buffer and the store's bookkeeping. Two runs are the same run if this agrees
+   * every ant buffer, the store's bookkeeping, and every state source registered with
+   * `registerState`. Two runs are the same run if this agrees
    * at every checkpoint, not merely at the end, so a divergence is caught at the tick it
    * happens rather than a simulated year later. See docs/DETERMINISM.md.
    */
@@ -92,6 +118,9 @@ export class Simulation {
     hasher.absorb(this.prng.snapshot())
     hasher.absorb(this.ants.auxiliary())
     for (const buffer of this.ants.buffers()) hasher.absorb(buffer)
+    for (const source of this.stateSources) {
+      for (const buffer of source()) hasher.absorb(buffer)
+    }
     return hasher.digest()
   }
 }

@@ -168,9 +168,14 @@ describe('determinism', () => {
      *
      * If this changes, every run anyone has already published has been invalidated.
      * Regenerate deliberately and say so in the pull request. See docs/DETERMINISM.md.
+     *
+     * Regenerated once, when foraging landed: the ant store gained the two site-fidelity
+     * fields, and the digest widened to cover the nest, soil, brood and surface as well as
+     * the ants. Both change what the hash is taken over, so the value moved for a stated
+     * reason rather than a mysterious one. The previous value was 5b0d3c6947024b0b.
      */
     const sim = build(20240607)
     sim.run(10000)
-    expect(sim.digest()).toBe('5b0d3c6947024b0b')
+    expect(sim.digest()).toBe('14b17c699c52ab0b')
   })
 })

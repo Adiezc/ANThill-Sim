@@ -15,9 +15,11 @@ import { Simulation } from './simulation.js'
 import { Caste, Domain, Task } from '../state/ants.js'
 import { BroodStore } from '../state/brood.js'
 import { NestGrid } from '../state/nest.js'
+import { SurfaceGrid } from '../state/surface.js'
 import { SoilModel } from '../systems/soil.js'
 import { ClimateModel } from '../systems/climate.js'
 import { makeExcavationSystem } from '../systems/excavation.js'
+import { createForagingState, makeForagingSystem, meanTripTicks } from '../systems/foraging.js'
 import {
   createDemographyState,
   makeDemographySystem,
@@ -26,6 +28,7 @@ import {
 } from '../systems/demography.js'
 import { RULE } from '../provenance/rules.js'
 import type { ExcavationState } from '../systems/excavation.js'
+import type { ForagingState } from '../systems/foraging.js'
 import type { DemographyState } from '../systems/demography.js'
 import type { Params } from '../params/params.js'
 
@@ -54,6 +57,11 @@ export interface ColonySummary {
   readonly nestDepthCm: number
   readonly soilMovedCells: number
   readonly phase: string
+  readonly seedsStored: number
+  readonly totalSeedsCollected: number
+  readonly foragersOnSurface: number
+  /** Mean completed foraging trip, in ticks. A tick is one simulated minute; see D7. */
+  readonly meanTripTicks: number
 }
 
 export class Colony {
@@ -63,6 +71,8 @@ export class Colony {
   readonly climate: ClimateModel
   readonly excavation: ExcavationState
   readonly demography: DemographyState
+  readonly surface: SurfaceGrid
+  readonly foraging: ForagingState
 
   private peakWorkers = 0
 
@@ -103,6 +113,11 @@ export class Colony {
       nanatics,
     )
 
+    // The ground above. Trunk trail directions are drawn from the colony's own seed here,
+    // before anything walks on them, so a colony's trails are a property of its seed.
+    this.surface = new SurfaceGrid(params, this.sim.prng)
+    this.foraging = createForagingState(this.surface, this.soil, this.climate)
+
     // The entrance. Everything below it the colony digs itself.
     this.nest.excavate(this.nest.entranceCol, 0)
     this.soil.applyVoid(this.nest, this.nest.entranceCol, 0)
@@ -131,9 +146,17 @@ export class Colony {
     this.soil.updateMoisture(this.climate.day.rainfallMm)
     this.soil.updateTemperature(date.dayOfYear, this.climate)
 
+    // Everything mutable that is not an ant, folded into the digest. Registration order is
+    // part of the digest, so these are listed in the order the systems that write them run.
+    this.sim.registerState('nest', () => this.nest.buffers())
+    this.sim.registerState('soil', () => this.soil.buffers())
+    this.sim.registerState('brood', () => this.demography.brood.buffers())
+    this.sim.registerState('surface', () => this.surface.buffers())
+
     this.sim.register('climate', () => this.rollWeather())
     this.sim.register('excavation', makeExcavationSystem(this.excavation))
     this.sim.register('demography', makeDemographySystem(this.demography))
+    this.sim.register('foraging', makeForagingSystem(this.foraging))
     this.sim.register('newAdults', () => this.settleNewAdults())
   }
 
@@ -196,6 +219,10 @@ export class Colony {
       nestDepthCm: this.nest.maxDepthCm,
       soilMovedCells: this.nest.excavatedCells,
       phase: this.demography.phase,
+      seedsStored: this.foraging.seedsStored,
+      totalSeedsCollected: this.foraging.totalSeedsCollected,
+      foragersOnSurface: this.foraging.antsOnSurface,
+      meanTripTicks: meanTripTicks(this.foraging),
     }
   }
 }

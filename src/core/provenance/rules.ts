@@ -192,6 +192,47 @@ export const RULE = {
     'Tschinkel & Seal 2015',
     '3',
   ),
+
+  // ---- Foraging (docs/SCIENCE.md sections 5 and 8) ----
+  forageTrunkTrail: rule(
+    'foraging.trunkTrail',
+    'Heading out along one of the colony\u2019s few trunk trails.',
+    'A',
+    'Harrison & Gentry 1981',
+    '5',
+    'That the colony forages from a small number of short trunk trails is [A]. Their direction is [A] to be shaped by neighbouring colonies, and no neighbours are modelled here, so the directions are drawn once from the colony seed and fixed \u2014 which reproduces the population-level randomness without pretending to model its cause.',
+  ),
+  forageSiteFidelity: rule(
+    'foraging.siteFidelity',
+    'Going back to within half a metre of where it last found something.',
+    'B',
+    'Beverly et al. 2009 (Pogonomyrmex barbatus)',
+    '5',
+    'Measured in a congener, not in badius.',
+  ),
+  forageRecruitmentTrail: rule(
+    'foraging.recruitmentTrail',
+    'Following, or laying, a recruitment trail. Strong trails win disproportionately.',
+    'B',
+    'Hölldobler & Wilson 1970 [A] that badius recruits; Sumpter & Beekman 2003 [B] for the non-linear response',
+    '8',
+    'That this species lays recruitment trails and is capable of mass recruitment is [A]. The shape of the response curve, and every decay and deposition constant, is [B] or invented: no values are published for badius.',
+  ),
+  foragePathIntegration: rule(
+    'foraging.pathIntegration',
+    'Walking home on a vector it accumulated on the way out, not on a memory of the route.',
+    'B',
+    'General Pogonomyrmex and desert ant literature',
+    '8',
+  ),
+  forageHeatCurfew: rule(
+    'foraging.heatCurfew',
+    'Staying in because the surface is too hot to cross without losing more water than a seed is worth.',
+    'B',
+    'Harvester ant water-loss plasticity literature (desert Pogonomyrmex)',
+    '5',
+    'No threshold temperature is published for badius. The value is invented and exposed as a slider.',
+  ),
 } as const
 
 export type RuleKey = keyof typeof RULE

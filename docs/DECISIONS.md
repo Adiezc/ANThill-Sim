@@ -373,3 +373,41 @@ is right: zero in winter, a temperature-driven rise through spring, a midsummer 
 an autumn decline driven by the colony growing while forager number falls. The remaining
 shortfall in height is not yet explained and the trace it was measured on used an artificial
 age structure, so it should be re-measured on a naturally grown colony.
+
+---
+
+## D19. The simulation spent half its time on empty sand
+
+A profile of a colony in its first year — eleven nanitics in a burrow of about a thousand
+cells — found that more than half of all running time was the pheromone decay-and-diffuse
+sweep, and a further third was the arching calculation. Neither cost had anything to do with
+how many ants there were.
+
+The sweep ran over the whole grid: 400 by 640 cells, of which the nest occupied a
+four-hundredth. The arching calculation recomputed, per digging ant per tick, which of its
+neighbours lay inside a 3 cm radius and which lay in the cone above it — the same geometric
+question, with a square root per neighbour, answered identically every time.
+
+**Resolution.** Two changes, both rearrangements rather than changes of model.
+
+The nest grid tracks the rectangle it has ever excavated. Every pheromone deposit in the
+model happens at a cell an ant is standing in, and an ant underground stands in a void, so
+that rectangle contains every cell that can hold signal. The sweep runs over it grown by
+`discretisation.pheromoneHaloCells`, and cells beyond the halo are held at zero. Diffusion
+carries signal one cell per application against a per-application decay far below one, so
+the concentration six cells outside anything ever dug is below what a float32 distinguishes
+from zero. Edges reflect at the rectangle rather than at the grid, because the scratch
+buffer is only refreshed inside it and reading beyond would read the previous sweep.
+
+The arching stencil is precomputed once from the radius. The same cells are visited in the
+same order and the arithmetic on them is unchanged.
+
+**The state digest is byte-identical before and after, at every checkpoint**, which is the
+claim the halo argument predicts and the reason no golden value or recorded measurement in
+`VALIDATION.md` moved. A simulated first year fell from 42.8 s to 9.1 s and a third year
+from 101.8 s to 56.3 s.
+
+What is left scales with ant number, which is as it should be for an agent-based model: a
+colony of 4300 workers on a one-minute timestep is about 2.3 billion agent-updates per
+simulated year, and no amount of cache-tightening changes that. It is the reason the browser
+runs one colony and a replicate study runs headless, sharded by seed.

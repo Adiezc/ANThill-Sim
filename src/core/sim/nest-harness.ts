@@ -77,6 +77,9 @@ export function createNestHarness(options: HarnessOptions): NestHarness {
     }
   }
 
+  sim.registerState('nest', () => nest.buffers())
+  sim.registerState('soil', () => soil.buffers())
+
   sim.register('climate', rollWeather)
   sim.register('excavation', makeExcavationSystem(excavation))
 

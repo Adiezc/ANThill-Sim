@@ -184,6 +184,7 @@ export interface Params {
     readonly surfaceCellSizeM: Param<number>
     readonly surfaceExtentM: Param<number>
     readonly sliceThicknessCm: Param<number>
+    readonly pheromoneHaloCells: Param<number>
   }
 
   readonly labour: {
@@ -235,6 +236,30 @@ export interface Params {
     readonly workerSizePredictsForagingDistance: Param<boolean>
     readonly maxOpenableSeedWidthMm: Param<number>
     readonly maxCollectableSeedWidthMm: Param<number>
+
+    /**
+     * How a trip is walked and how long it may last. Every value below is invented: no
+     * walking speed, search pattern or trail constant is published for this species.
+     */
+    readonly speedMetresPerTick: Param<number>
+    readonly maxTripTicks: Param<number>
+    readonly departureChancePerTick: Param<number>
+    readonly encounterChancePerTick: Param<number>
+    readonly searchTurnSdTurns: Param<number>
+    readonly trunkTrailAngularSpreadTurns: Param<number>
+    readonly trunkTrailJitter: Param<number>
+    readonly trailSensingDistanceM: Param<number>
+    readonly trailSensingTurns: Param<number>
+    readonly trailFollowingStrength: Param<number>
+    readonly recruitmentDepositPerStep: Param<number>
+    readonly seedPatchCount: Param<number>
+    readonly seedPatchRadiusM: Param<number>
+    readonly backgroundSeedsPerSquareMetre: Param<number>
+    readonly standingSeedsPerSquareMetre: Param<number>
+    readonly seedReplenishmentPerDay: Param<number>
+    readonly surfaceTemperatureMaxC: Param<number>
+    readonly activeDayFractionStart: Param<number>
+    readonly activeDayFractionEnd: Param<number>
   }
 
   readonly brood: {
@@ -537,6 +562,7 @@ export function buildParams(root: Raw): Params {
       surfaceCellSizeM: readScalar(root, 'discretisation.surfaceCellSizeM'),
       surfaceExtentM: readScalar(root, 'discretisation.surfaceExtentM'),
       sliceThicknessCm: readScalar(root, 'discretisation.sliceThicknessCm'),
+      pheromoneHaloCells: readScalar(root, 'discretisation.pheromoneHaloCells'),
     },
 
     labour: {
@@ -593,6 +619,25 @@ export function buildParams(root: Raw): Params {
       ),
       maxOpenableSeedWidthMm: readScalar(root, 'foraging.maxOpenableSeedWidthMm'),
       maxCollectableSeedWidthMm: readScalar(root, 'foraging.maxCollectableSeedWidthMm'),
+      speedMetresPerTick: readScalar(root, 'foraging.speedMetresPerTick'),
+      maxTripTicks: readScalar(root, 'foraging.maxTripTicks'),
+      departureChancePerTick: readScalar(root, 'foraging.departureChancePerTick'),
+      encounterChancePerTick: readScalar(root, 'foraging.encounterChancePerTick'),
+      searchTurnSdTurns: readScalar(root, 'foraging.searchTurnSdTurns'),
+      trunkTrailAngularSpreadTurns: readScalar(root, 'foraging.trunkTrailAngularSpreadTurns'),
+      trunkTrailJitter: readScalar(root, 'foraging.trunkTrailJitter'),
+      trailSensingDistanceM: readScalar(root, 'foraging.trailSensingDistanceM'),
+      trailSensingTurns: readScalar(root, 'foraging.trailSensingTurns'),
+      trailFollowingStrength: readScalar(root, 'foraging.trailFollowingStrength'),
+      recruitmentDepositPerStep: readScalar(root, 'foraging.recruitmentDepositPerStep'),
+      seedPatchCount: readScalar(root, 'foraging.seedPatchCount'),
+      seedPatchRadiusM: readScalar(root, 'foraging.seedPatchRadiusM'),
+      backgroundSeedsPerSquareMetre: readScalar(root, 'foraging.backgroundSeedsPerSquareMetre'),
+      standingSeedsPerSquareMetre: readScalar(root, 'foraging.standingSeedsPerSquareMetre'),
+      seedReplenishmentPerDay: readScalar(root, 'foraging.seedReplenishmentPerDay'),
+      surfaceTemperatureMaxC: readScalar(root, 'foraging.surfaceTemperatureMaxC'),
+      activeDayFractionStart: readScalar(root, 'foraging.activeDayFractionStart'),
+      activeDayFractionEnd: readScalar(root, 'foraging.activeDayFractionEnd'),
     },
 
     brood: {

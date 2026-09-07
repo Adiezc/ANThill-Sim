@@ -12,6 +12,7 @@
  */
 
 import { Grid2D } from './grid.js'
+import type { GridBounds } from './grid.js'
 import type { Params } from '../params/params.js'
 
 export const SOIL = 0
@@ -53,6 +54,26 @@ export class NestGrid {
 
   private readonly scratch: Float32Array
 
+  /**
+   * The rectangle of cells that has ever been excavated, and therefore the only region
+   * that can hold pheromone or spoil: every deposit in the model happens at a cell an ant
+   * is standing in, and an ant underground stands in a void.
+   *
+   * It is kept so that the decay sweep costs the size of the nest rather than the size of
+   * the grid. Before it existed, a colony of eleven nanitics in a 1000-cell burrow paid
+   * for 256 000 cells of diffusion every ten ticks, which was more than half the total
+   * runtime of the simulation at every colony size. See docs/DECISIONS.md D19.
+   *
+   * Empty until the first cell is dug, which `minCol > maxCol` records.
+   */
+  private activeMinCol: number
+  private activeMaxCol = -1
+  private activeMinRow: number
+  private activeMaxRow = -1
+
+  /** How far past the excavated region the decay sweep reaches. See `activeMinCol`. */
+  private readonly haloCells: number
+
   constructor(params: Params) {
     const cell = params.discretisation.nestCellSizeCm.value
     const widthCm = params.discretisation.nestWidthCm.value
@@ -68,6 +89,22 @@ export class NestGrid {
     this.blockRows = Math.ceil(this.rows / this.blockSize)
     this.blockVoidCount = new Uint16Array(this.blockCols * this.blockRows)
     this.scratch = new Float32Array(this.cols * this.rows)
+    this.activeMinCol = this.cols
+    this.activeMinRow = this.rows
+    this.haloCells = Math.max(1, Math.round(params.discretisation.pheromoneHaloCells.value))
+  }
+
+  /**
+   * The excavated rectangle grown by the halo, which is the region the pheromone layers
+   * are swept over. Outside it every cell is zero and stays zero.
+   */
+  pheromoneBounds(): GridBounds {
+    return {
+      minCol: this.activeMinCol - this.haloCells,
+      minRow: this.activeMinRow - this.haloCells,
+      maxCol: this.activeMaxCol + this.haloCells,
+      maxRow: this.activeMaxRow + this.haloCells,
+    }
   }
 
   index(col: number, row: number): number {
@@ -111,6 +148,10 @@ export class NestGrid {
     this.excavatedCells += 1
     this.blockVoidCount[this.blockIndex(col, row)]! += 1
     if (row > this.deepestRow) this.deepestRow = row
+    if (col < this.activeMinCol) this.activeMinCol = col
+    if (col > this.activeMaxCol) this.activeMaxCol = col
+    if (row < this.activeMinRow) this.activeMinRow = row
+    if (row > this.activeMaxRow) this.activeMaxRow = row
     return true
   }
 
@@ -235,10 +276,11 @@ export class NestGrid {
   }
 
   decayPheromones(buildingDecay: number, buildingDiffusion: number, spoilDecay: number): void {
-    this.building.decayAndDiffuse(buildingDecay, buildingDiffusion, this.scratch)
+    if (this.activeMinCol > this.activeMaxCol) return
+    const bounds = this.pheromoneBounds()
+    this.building.decayAndDiffuse(buildingDecay, buildingDiffusion, this.scratch, bounds)
     // Spoil does not diffuse. A pellet heap is where it was put.
-    const spoil = this.spoil.data
-    for (let i = 0; i < spoil.length; i += 1) spoil[i]! *= spoilDecay
+    this.spoil.decayWithin(spoilDecay, bounds)
   }
 
   buffers(): ArrayBufferView[] {

@@ -61,6 +61,23 @@ export class SoilModel {
   private readonly params: Params
   private readonly dampingCm: number
 
+  /**
+   * The arching stencil, precomputed.
+   *
+   * `stressAt` asks the same geometric question of every cell it is called on — which
+   * neighbours lie inside the arching radius, and which of those are in the cone above —
+   * and the answer depends only on the radius. Recomputing it per call, with a square root
+   * per neighbour, was a third of the entire running time of the simulation once a colony
+   * had a few hundred diggers. The offsets are held as flat column/row pairs so the hot
+   * loop reads two integers rather than dereferencing a point object.
+   *
+   * This is a rearrangement, not a change of model: the same cells are visited, in the same
+   * order, and the arithmetic on them is unchanged.
+   */
+  private readonly archRadius: number
+  private readonly aboveConeOffsets: Int32Array
+  private readonly sideOffsets: Int32Array
+
   constructor(params: Params) {
     this.params = params
     const cell = params.discretisation.nestCellSizeCm.value
@@ -76,6 +93,22 @@ export class SoilModel {
 
     this.moisture.fill(params.soil.deepMoisture.value)
     this.initialiseStress()
+
+    this.archRadius = Math.max(1, Math.round(params.soil.archingRadiusCm.value / cell))
+    const above: number[] = []
+    const side: number[] = []
+    const radius = this.archRadius
+    for (let dRow = -radius; dRow <= radius; dRow += 1) {
+      for (let dCol = -radius; dCol <= radius; dCol += 1) {
+        if (dRow === 0 && dCol === 0) continue
+        if (Math.sqrt(dCol * dCol + dRow * dRow) > radius) continue
+        // A void within the cone above this cell interrupts the column of sand over it.
+        if (dRow < 0 && Math.abs(dCol) <= -dRow) above.push(dCol, dRow)
+        else if (dRow >= 0 || Math.abs(dCol) > -dRow) side.push(dCol, dRow)
+      }
+    }
+    this.aboveConeOffsets = Int32Array.from(above)
+    this.sideOffsets = Int32Array.from(side)
   }
 
   /**
@@ -202,34 +235,31 @@ export class SoilModel {
   stressAt(nest: NestOccupancy, col: number, row: number): number {
     if (!this.stress.inBounds(col, row)) return 1
     const base = this.overburden[row * this.stress.width + col]!
-    const radius = Math.max(
-      1,
-      Math.round(this.params.soil.archingRadiusCm.value / this.stress.cellSize),
-    )
+    const radius = this.archRadius
+    const width = this.stress.width
+    const height = this.stress.height
 
     let shieldedAbove = 0
     let aboveCells = 0
     let sideVoids = 0
     let sideCells = 0
 
-    for (let dRow = -radius; dRow <= radius; dRow += 1) {
-      for (let dCol = -radius; dCol <= radius; dCol += 1) {
-        if (dRow === 0 && dCol === 0) continue
-        const c = col + dCol
-        const r = row + dRow
-        if (!this.stress.inBounds(c, r)) continue
-        const distance = Math.sqrt(dCol * dCol + dRow * dRow)
-        if (distance > radius) continue
+    const above = this.aboveConeOffsets
+    for (let k = 0; k < above.length; k += 2) {
+      const c = col + above[k]!
+      const r = row + above[k + 1]!
+      if (c < 0 || c >= width || r < 0 || r >= height) continue
+      aboveCells += 1
+      if (nest.isVoid(c, r)) shieldedAbove += 1
+    }
 
-        // A void within the cone above this cell interrupts the column of sand over it.
-        if (dRow < 0 && Math.abs(dCol) <= -dRow) {
-          aboveCells += 1
-          if (nest.isVoid(c, r)) shieldedAbove += 1
-        } else if (dRow >= 0 || Math.abs(dCol) > -dRow) {
-          sideCells += 1
-          if (nest.isVoid(c, r)) sideVoids += 1
-        }
-      }
+    const sides = this.sideOffsets
+    for (let k = 0; k < sides.length; k += 2) {
+      const c = col + sides[k]!
+      const r = row + sides[k + 1]!
+      if (c < 0 || c >= width || r < 0 || r >= height) continue
+      sideCells += 1
+      if (nest.isVoid(c, r)) sideVoids += 1
     }
 
     const shield =
@@ -251,10 +281,7 @@ export class SoilModel {
    * never read a stale value.
    */
   applyVoid(nest: NestOccupancy, col: number, row: number): void {
-    const radius = Math.max(
-      1,
-      Math.round(this.params.soil.archingRadiusCm.value / this.stress.cellSize),
-    )
+    const radius = this.archRadius
     for (let r = row - radius; r <= row + radius; r += 1) {
       for (let c = col - radius; c <= col + radius; c += 1) {
         if (!this.stress.inBounds(c, r)) continue

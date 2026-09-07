@@ -11,6 +11,14 @@
  * and the grid knows its own cell size. Nothing outside converts by hand.
  */
 
+/** A half-open-free, inclusive rectangle of cells. Both corners are inside it. */
+export interface GridBounds {
+  readonly minCol: number
+  readonly minRow: number
+  readonly maxCol: number
+  readonly maxRow: number
+}
+
 export class Grid2D {
   readonly width: number
   readonly height: number
@@ -105,28 +113,67 @@ export class Grid2D {
    * variant. It runs on a fixed sub-schedule rather than every tick, identically at every
    * playback speed. See docs/ARCHITECTURE.md.
    *
+   * `bounds` restricts the sweep to a rectangle. This is not a shortcut: the cost of a
+   * full sweep is the size of the grid, which has nothing to do with how much of it holds
+   * any signal, and a young nest occupies about a four-hundredth of the cells it is
+   * embedded in. The caller is responsible for passing a rectangle that contains every
+   * cell it has ever written, grown by enough margin that what lies outside is negligible
+   * rather than merely small; see `NestGrid.decayPheromones`. Edges reflect at the
+   * rectangle exactly as they reflect at the grid, so signal is conserved inside it rather
+   * than draining into cells nobody is sweeping.
+   *
    * `scratch` is supplied by the caller so the hot path allocates nothing.
    */
-  decayAndDiffuse(factor: number, diffusion: number, scratch: Float32Array): void {
+  decayAndDiffuse(
+    factor: number,
+    diffusion: number,
+    scratch: Float32Array,
+    bounds?: GridBounds,
+  ): void {
     const { width, height, data } = this
     if (scratch.length !== data.length) {
       throw new Error('Diffusion scratch buffer is the wrong size for this grid')
     }
-    scratch.set(data)
-    const keep = 1 - diffusion
-    for (let row = 0; row < height; row += 1) {
+    const minCol = bounds === undefined ? 0 : Math.max(0, bounds.minCol)
+    const minRow = bounds === undefined ? 0 : Math.max(0, bounds.minRow)
+    const maxCol = bounds === undefined ? width - 1 : Math.min(width - 1, bounds.maxCol)
+    const maxRow = bounds === undefined ? height - 1 : Math.min(height - 1, bounds.maxRow)
+    if (minCol > maxCol || minRow > maxRow) return
+
+    for (let row = minRow; row <= maxRow; row += 1) {
       const base = row * width
-      for (let col = 0; col < width; col += 1) {
+      scratch.set(data.subarray(base + minCol, base + maxCol + 1), base + minCol)
+    }
+
+    const keep = 1 - diffusion
+    for (let row = minRow; row <= maxRow; row += 1) {
+      const base = row * width
+      for (let col = minCol; col <= maxCol; col += 1) {
         const i = base + col
         const centre = scratch[i]!
         // Edges reflect rather than leak, so total signal is conserved at the boundary
         // instead of quietly draining out of the world.
-        const left = col > 0 ? scratch[i - 1]! : centre
-        const right = col < width - 1 ? scratch[i + 1]! : centre
-        const up = row > 0 ? scratch[i - width]! : centre
-        const down = row < height - 1 ? scratch[i + width]! : centre
+        const left = col > minCol ? scratch[i - 1]! : centre
+        const right = col < maxCol ? scratch[i + 1]! : centre
+        const up = row > minRow ? scratch[i - width]! : centre
+        const down = row < maxRow ? scratch[i + width]! : centre
         data[i] = factor * (keep * centre + (diffusion * (left + right + up + down)) / 4)
       }
+    }
+  }
+
+  /** Multiplies every cell in `bounds` by `factor`. The decay half, for a layer that does
+   * not diffuse. */
+  decayWithin(factor: number, bounds: GridBounds): void {
+    const { width, data } = this
+    const minCol = Math.max(0, bounds.minCol)
+    const minRow = Math.max(0, bounds.minRow)
+    const maxCol = Math.min(width - 1, bounds.maxCol)
+    const maxRow = Math.min(this.height - 1, bounds.maxRow)
+    if (minCol > maxCol || minRow > maxRow) return
+    for (let row = minRow; row <= maxRow; row += 1) {
+      const base = row * width
+      for (let i = base + minCol; i <= base + maxCol; i += 1) data[i]! *= factor
     }
   }
 }

@@ -115,6 +115,37 @@ wider out of plane than in it.
 Foragers in the top 15 cm with ≤5% below 20 cm; transfer workers ~30% below 20 cm; ≥90% of
 workers below 70 cm are brood-care workers. **[A]**
 
+## G4b. Foraging
+
+Encoded in `test/foraging.spec.ts`. Foraging cannot be measured on a naturally grown colony
+inside a test suite — a worker does not forage before 43 days old and a founding colony has
+eleven workers — so these run on an artificial age structure. Nothing demographic may be
+read off them; they are about what a forager *does*.
+
+| Property | Target | Status |
+|---|---|---|
+| Trunk trails | 1-4 short trails into a surrounding range | **Met.** Drawn once per colony from its own seed |
+| Trail direction | Random at population level | **Met**, by construction. The [A] cause — the position of neighbouring colonies — is not modelled, because no neighbours are |
+| Site fidelity | Return to within ~0.5 m of the last site | **Met** |
+| Path integration | Home on an accumulated vector, not on a read of position | **Met** structurally. Drift is **not modelled**; the vector is exact. See the not-modelled panel |
+| Trip duration is search time | Trip length dominated by searching, not by walking | **Met.** Mean trip is well above the walk across the range |
+| **Worker size predicts nothing** | Majors and minors range equally far | **Met.** Mean distances within 15 % across castes. HARD RULE |
+| Range not defended | No territorial behaviour anywhere | **Met**, by absence |
+| Non-linear recruitment | Trails should earn their keep | **Met.** A colony with trail following finds more seeds than the same colony with the response set to zero — the one test here that fails if the recruitment model is deleted |
+| Heat curfew | Foraging stops when the surface is too hot | **Met.** The threshold is invented; that there is one is [B] |
+| Diurnal | No foraging at night | **Met** |
+| **Seeds feed the colony** | Larval survival should depend on what foragers deliver | **Not met, and not attempted.** Delivered seeds accumulate in a scalar store that nothing draws on. Larval survival is still the forager-to-larva proxy it was before. The food account arrives with the seed store at G5 |
+| Seed size classes | Large seeds accumulate to 70 % of stores | **Not met.** No size classes yet; a seed is a seed. G5 |
+
+### What the seed field is, and why it is patchy
+
+No seed rain is published for these sandhills, so the standing crop, its patchiness and its
+replenishment are all invented and tagged **[C]**. Patchiness is not decoration. With seeds
+spread evenly, every ant finds one within a few steps of the entrance, every trip succeeds,
+and site fidelity and recruitment trails are ornaments on a conveyor belt — which is exactly
+what the first implementation did, at a 100 % trip success rate. With patches, trip success
+runs 34-62 % and falls as a colony grows and depletes the patches nearest home.
+
 ## G5. Seeds and germination
 
 Large seeds accumulate to ≥70% of stores by weight. Germination rate tracks the seasonal

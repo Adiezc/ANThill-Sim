@@ -31,6 +31,7 @@ export type { CalendarDate } from './sim/clock.js'
 export * from './params/index.js'
 export * from './provenance/index.js'
 export { Grid2D } from './state/grid.js'
+export type { GridBounds } from './state/grid.js'
 export { NestGrid, measureNest, SOIL, VOID } from './state/nest.js'
 export type { NestMeasurement } from './state/nest.js'
 export { SoilModel, dampingDepthCm } from './systems/soil.js'
@@ -38,6 +39,14 @@ export { ClimateModel } from './systems/climate.js'
 export type { Weather } from './systems/climate.js'
 export { makeExcavationSystem, assignDiggerTrait, isDigging } from './systems/excavation.js'
 export type { ExcavationState } from './systems/excavation.js'
+export { SurfaceGrid } from './state/surface.js'
+export {
+  createForagingState,
+  makeForagingSystem,
+  meanTripTicks,
+  surfaceIsForageable,
+} from './systems/foraging.js'
+export type { ForagingState } from './systems/foraging.js'
 export { createNestHarness } from './sim/nest-harness.js'
 export type { NestHarness, HarnessOptions } from './sim/nest-harness.js'
 export { BroodStore, BroodFate } from './state/brood.js'

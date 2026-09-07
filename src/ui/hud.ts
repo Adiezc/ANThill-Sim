@@ -7,6 +7,7 @@
  * papers report, the readout says so rather than presenting the figure bare.
  */
 
+import type { ColonySummary } from '../core/sim/colony.js'
 import type { NestMeasurement } from '../core/state/nest.js'
 import type { Params } from '../core/params/params.js'
 import type { CalendarDate } from '../core/sim/clock.js'
@@ -36,10 +37,17 @@ const MONTHS = [
   'December',
 ]
 
+/**
+ * `compareToMature` is false while the queen is still sinking her founding shaft. A nest
+ * that is half dug is not a nest outside what the papers report, it is an unfinished one,
+ * and flagging it red before the colony has done anything teaches a reader to ignore the
+ * flag when it starts meaning something.
+ */
 export function nestReadings(
   measurement: NestMeasurement,
   params: Params,
   workers: number,
+  compareToMature = true,
 ): HudReading[] {
   const depth = measurement.maxDepthCm
   const matureDepth = params.nest.matureDepthCm
@@ -56,8 +64,8 @@ export function nestReadings(
     {
       label: 'Nest depth',
       value: `${depth.toFixed(0)} cm`,
-      expected: `mature ${matureDepth.min}–${matureDepth.max} cm`,
-      outOfRange: depth > 0 && depth < params.nest.incipientDepthCm.min,
+      expected: `mature ${matureDepth.min} to ${matureDepth.max} cm`,
+      outOfRange: compareToMature && depth > 0 && depth < params.nest.incipientDepthCm.min,
       tag: 'A',
     },
     {
@@ -65,6 +73,7 @@ export function nestReadings(
       value: `${measurement.meanChamberHeightCm.toFixed(2)} cm`,
       expected: `${params.nest.chamberHeightCm.value.toFixed(1)} cm, whatever the area`,
       outOfRange:
+        compareToMature &&
         measurement.meanChamberHeightCm > 0 &&
         Math.abs(measurement.meanChamberHeightCm - params.nest.chamberHeightCm.value) > 0.5,
       tag: 'A',
@@ -79,21 +88,24 @@ export function nestReadings(
       label: 'Area in top quarter',
       value: `${(measurement.topQuarterShare * 100).toFixed(0)}%`,
       expected: `about ${(params.nest.topQuarterAreaFraction.value * 100).toFixed(0)}%`,
-      outOfRange: measurement.topQuarterShare > 0 && measurement.topQuarterShare < 0.35,
+      outOfRange:
+        compareToMature && measurement.topQuarterShare > 0 && measurement.topQuarterShare < 0.35,
       tag: 'A',
     },
     {
       label: 'Shaft series',
       value: `${measurement.shaftSeriesCount}`,
-      expected: `1–${params.nest.maxShaftChamberSeries.value}`,
-      outOfRange: measurement.shaftSeriesCount > params.nest.maxShaftChamberSeries.value,
+      expected: `1 to ${params.nest.maxShaftChamberSeries.value}`,
+      outOfRange:
+        compareToMature && measurement.shaftSeriesCount > params.nest.maxShaftChamberSeries.value,
       tag: 'A',
     },
     {
       label: 'Chamber spacing',
       value: `${measurement.verticalSpacingShallowCm.toFixed(1)} cm shallow, ${measurement.verticalSpacingDeepCm.toFixed(1)} cm deep`,
-      expected: '3–4 cm shallow, ~12 cm at decile 7–8',
-      outOfRange: measurement.verticalSpacingDeepCm < measurement.verticalSpacingShallowCm,
+      expected: '3 to 4 cm shallow, about 12 cm at decile 7 to 8',
+      outOfRange:
+        compareToMature && measurement.verticalSpacingDeepCm < measurement.verticalSpacingShallowCm,
       tag: 'A',
     },
     {
@@ -147,4 +159,87 @@ export function renderHud(container: HTMLElement, readings: readonly HudReading[
       return row
     }),
   )
+}
+
+/**
+ * The colony readings: what the demographic engine and the foragers are doing.
+ *
+ * Held against the same measured ranges the nest readings are, and flagged the same way
+ * when the model is outside them. Two of these are deliberately unflattering. Peak
+ * proportion foraging comes out low, and the seed store is a number nothing draws on yet.
+ * Both are stated here rather than left for a reader to discover.
+ */
+export function colonyReadings(summary: ColonySummary, params: Params): HudReading[] {
+  const proportionForaging = summary.workers > 0 ? summary.foragers / summary.workers : 0
+  const measured = params.labour.maxProportionForaging
+
+  return [
+    {
+      label: 'Workers',
+      value: `${summary.workers}`,
+      expected: `mature colony ~${params.colony.meanMatureWorkers.value}`,
+      tag: 'A',
+    },
+    {
+      label: 'Brood',
+      value: `${Math.round(summary.brood)}`,
+      expected: 'eggs, larvae and pupae together',
+      tag: 'A',
+    },
+    {
+      label: 'Foragers',
+      value: `${summary.foragers} of ${summary.workers}`,
+      expected: `summer peak ${(measured.min * 100).toFixed(0)} to ${(measured.max * 100).toFixed(0)}%`,
+      outOfRange: summary.workers > 0 && proportionForaging > measured.max,
+      tag: 'A',
+    },
+    {
+      label: 'Above ground now',
+      value: `${summary.foragersOnSurface}`,
+      expected: 'daylight only, and not in the heat of the day',
+      tag: 'B',
+    },
+    {
+      label: 'Mean trip',
+      value: summary.meanTripTicks > 0 ? `${summary.meanTripTicks.toFixed(0)} min` : 'no trips yet',
+      expected: 'search time, not distance, sets this',
+      tag: 'B',
+    },
+    {
+      label: 'Seeds brought home',
+      value: `${summary.totalSeedsCollected}`,
+      expected: 'stored, but nothing draws on them yet',
+      tag: 'C',
+    },
+    {
+      label: 'Peak workers',
+      value: `${summary.peakWorkers}`,
+      expected: `sexual maturity near ${params.colony.sexualMaturityWorkers.value}`,
+      tag: 'A',
+    },
+    {
+      label: 'Larvae starved',
+      value: `${Math.round(summary.totalLarvaeStarved)}`,
+      expected: 'too few foragers is answered with larval death, never with replacements',
+      tag: 'A',
+    },
+  ]
+}
+
+/** The colony phase, in words a reader can use. */
+export function describePhase(summary: ColonySummary): string {
+  switch (summary.phase) {
+    case 'founding':
+      return 'sealed in, living on her own reserves'
+    case 'growing':
+      return 'growing'
+    case 'mature':
+      return 'mature, producing alates'
+    case 'queenless':
+      return 'queenless'
+    case 'dead':
+      return 'dead'
+    default:
+      return summary.phase
+  }
 }

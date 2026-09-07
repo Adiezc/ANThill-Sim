@@ -114,6 +114,17 @@ export class AntStore {
   readonly homeVecY: Float32Array
 
   /**
+   * Where this forager last found something, in surface metres, or (0, 0) for never.
+   *
+   * A forager returns to within about half a metre of its previous site on successive
+   * trips, so the site is remembered as a position rather than as a direction: a
+   * remembered patch stays where it is when the ant does not. The entrance is the origin,
+   * so (0, 0) is unambiguous as "no memory" — no ant ever forages at the entrance itself.
+   */
+  readonly fidelityX: Float32Array
+  readonly fidelityY: Float32Array
+
+  /**
    * This individual's persistent digging propensity, 0 to 255, drawn once at eclosion.
    *
    * It reconciles two things Tschinkel 2004 reports together. "A worker either digs
@@ -183,6 +194,8 @@ export class AntStore {
     this.lengthMm = new Float32Array(capacity)
     this.homeVecX = new Float32Array(capacity)
     this.homeVecY = new Float32Array(capacity)
+    this.fidelityX = new Float32Array(capacity)
+    this.fidelityY = new Float32Array(capacity)
     this.digger = new Uint8Array(capacity)
     this.agitation = new Float32Array(capacity)
     this.helixPhase = new Float32Array(capacity)
@@ -219,6 +232,8 @@ export class AntStore {
     this.lengthMm[slot] = 0
     this.homeVecX[slot] = 0
     this.homeVecY[slot] = 0
+    this.fidelityX[slot] = 0
+    this.fidelityY[slot] = 0
     this.digger[slot] = 0
     this.agitation[slot] = 0
     this.helixPhase[slot] = 0
@@ -265,6 +280,8 @@ export class AntStore {
       this.lengthMm,
       this.homeVecX,
       this.homeVecY,
+      this.fidelityX,
+      this.fidelityY,
       this.digger,
       this.agitation,
       this.helixPhase,

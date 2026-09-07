@@ -16,7 +16,8 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "headless": "tsx headless/run.ts"
+    "headless": "tsx headless/run.ts",
+    "study": "tsx headless/study.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",

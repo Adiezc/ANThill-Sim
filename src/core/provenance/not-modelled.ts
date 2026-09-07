@@ -69,6 +69,27 @@ export const NOT_MODELLED: readonly NotModelled[] = [
     experimentallyRejected: true,
   },
   {
+    assumption: 'Big foragers go further and bring back bigger seeds.',
+    reason:
+      'Tested and rejected. Worker size predicts neither the size of seed collected nor the distance travelled to collect it, so nothing in the foraging system reads body size or caste at all. The parameter file records both prohibitions as HARD RULEs and the loader refuses a file that flips either.',
+    citation: 'Ferster & Traniello 1995',
+    experimentallyRejected: true,
+  },
+  {
+    assumption: 'Colonies defend a foraging territory.',
+    reason:
+      'A range is used almost exclusively by one colony, but it is not actively defended, and a range expands into ground a neighbour has abandoned. Exclusivity here is a consequence of where the trails point, not of any fighting. There is no territorial behaviour in this model.',
+    citation: 'Harrison & Gentry 1981',
+    experimentallyRejected: false,
+  },
+  {
+    assumption: 'A forager’s sense of the way home drifts as it wanders.',
+    reason:
+      'It does in a real ant, and it does not here. A forager accumulates its homing vector from its own steps rather than reading its position off the world, which is the part that matters for the claim that no ant knows where it is; but the accumulation is exact, so the vector never goes wrong. No homing error has been measured in this species, and an invented error would be worse than an absent one that is declared.',
+    citation: 'None. General Pogonomyrmex and desert ant literature for the mechanism',
+    experimentallyRejected: false,
+  },
+  {
     assumption: 'Ants plan the nest.',
     reason:
       'There is no plan and no architect. No ant has a map, and none has seen the whole structure. Everything here emerges from local rules — though ice-cast experiments do show colonies have preferences about what they will accept.',

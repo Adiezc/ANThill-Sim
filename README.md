@@ -24,9 +24,26 @@ The simulator also ships a panel for mechanics it deliberately **refuses** to mo
 intuitive assumptions that were tested in this species and rejected. What a model declines
 to do is as instructive as what it does. See [`docs/SCIENCE.md`](docs/SCIENCE.md) §11.
 
+## Two ways to use it
+
+The simulator opens on a choice, because it has two audiences who want incompatible things
+from it.
+
+**Watch a colony.** One colony, in a browser tab, from the founding queen to the end of the
+run. Nothing to install.
+
+**Use it as an instrument.** Replicate runs on your own machine, with a methods file written
+at the end. A browser tab runs one colony well and cannot run a study: a colony of a few
+thousand workers on a one-minute timestep is on the order of a billion agent updates per
+simulated year. Replicates are independent, sharded by seed, and embarrassingly parallel.
+
 ## Status
 
-Early. See `docs/DECISIONS.md` for the open questions and how they were resolved.
+Early, and honest about it. Founding, excavation, the demographic engine, climate and
+foraging are built. Seed stores, germination and annual relocation are not. Delivered seeds
+are counted but nothing draws on them yet, so larval survival is still a forager-to-larva
+proxy. See [`docs/VALIDATION.md`](docs/VALIDATION.md) for the acceptance gates this model
+meets and the ones it fails, and `docs/DECISIONS.md` for the open questions.
 
 ## Running it
 
@@ -34,8 +51,36 @@ Early. See `docs/DECISIONS.md` for the open questions and how they were resolved
 npm install
 npm run dev        # simulator in the browser
 npm test           # determinism and validation suites
-npm run headless   # seeded run, no renderer, machine-readable output
+npm run headless   # one seeded run, no renderer, machine-readable output
 ```
+
+### Running a study
+
+```bash
+npm run study -- --replicates 30 --years 12 --out out/my-study
+```
+
+Writes four files:
+
+| File            | What it is                                                                                                                                         |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `REPORT.md`     | Methods, provenance, the invented values the results rest on, the acceptance gates this model fails, and the exact command that reproduces the run |
+| `runs.csv`      | One row per replicate-year, with the state digest for that year                                                                                    |
+| `runs.jsonl`    | Full per-run records, including the digest chain                                                                                                   |
+| `manifest.json` | What was run, and the SHA-256 of the parameter file it was run against                                                                             |
+
+**Read `REPORT.md` before using `runs.csv`.** It states what the model does not reproduce.
+
+To split a large study across machines, give each a disjoint seed range with `--seed-from`
+and `--replicates` and concatenate the CSVs. No coordination is needed: replicates share
+nothing.
+
+## Hosting it
+
+The browser build is a static site and deploys to GitHub Pages for free.
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) builds and publishes on every
+push to `main`; in the repository settings, set Pages to build from GitHub Actions. The
+`BASE_PATH` for a project site is handled already.
 
 ## For scientists
 
@@ -52,6 +97,14 @@ npm run headless   # seeded run, no renderer, machine-readable output
   ant is following at the moment you inspect it.
 - **Headless.** `/src/core` imports no DOM and no Node built-ins, and runs unchanged in
   both.
+
+## A note on the papers
+
+**No PDF of any cited paper is in this repository, and none will be.** Most are not
+redistributable, and copying one would not make it more citable. Every number taken from
+them lives in [`species/pogonomyrmex-badius.json`](species/pogonomyrmex-badius.json) with
+its own provenance tag, and [`docs/papers/README.md`](docs/papers/README.md) carries the
+DOIs. A test fails the build if a PDF is ever committed.
 
 ## How to cite
 

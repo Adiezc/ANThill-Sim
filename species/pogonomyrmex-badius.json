@@ -179,6 +179,101 @@
     "workerSizePredictsSeedSize": { "value": false, "tag": "A", "note": "HARD RULE. Tested and rejected (Ferster & Traniello 1995)." },
     "workerSizePredictsForagingDistance": { "value": false, "tag": "A", "note": "HARD RULE. Tested and rejected." },
     "maxOpenableSeedWidthMm": { "value": 1.4, "tag": "A", "note": "Maximum width a worker can OPEN. Wider seeds are still collected and stored; see seeds.largeSeedStoreFractionByWeight and docs/DECISIONS.md D2." },
+    "speedMetresPerTick": {
+      "value": 3.0,
+      "tag": "C",
+      "note": "About 5 cm/s, which is the right order for a harvester ant but is not taken from a measurement of this species. A tick is one simulated minute. Chosen so that the walking part of a trip to the far edge of the range takes about seven minutes, leaving trip duration dominated by search time, which is what Beverly et al. found."
+    },
+    "maxTripTicks": {
+      "value": 90,
+      "tag": "C",
+      "note": "Minutes a forager will search before giving up and coming home empty. No published value; a budget, not a biological constant."
+    },
+    "departureChancePerTick": {
+      "value": 0.02,
+      "tag": "C",
+      "note": "Per-tick chance that a forager already indoors and off duty starts a trip. Sets how much of the foraging force is out at once, not who forages: that is fixed by the one-way age progression and nothing here may alter it."
+    },
+    "encounterChancePerTick": {
+      "value": 0.25,
+      "tag": "C",
+      "note": "Chance of noticing a seed in the cell the ant is standing in. Search is imperfect; without this the first ant into a patch strips it."
+    },
+    "searchTurnSdTurns": {
+      "value": 0.035,
+      "tag": "C",
+      "note": "Standard deviation of the random turn taken each step while searching. Sets how straight an outbound path is."
+    },
+    "trunkTrailAngularSpreadTurns": {
+      "value": 0.06,
+      "tag": "C",
+      "note": "How widely departures fan out around a trunk trail direction."
+    },
+    "trunkTrailJitter": {
+      "value": 0.6,
+      "tag": "C",
+      "note": "How irregularly the trunk trails are spaced around the compass, as a fraction of even spacing. Zero would space them with a regularity no colony has."
+    },
+    "trailSensingDistanceM": {
+      "value": 0.15,
+      "tag": "C",
+      "note": "How far ahead the ant samples trail strength to either side. A nose length, not a survey: an ant with two antennae can compare left with right and nothing more."
+    },
+    "trailSensingTurns": {
+      "value": 0.08,
+      "tag": "C",
+      "note": "Angle either side of its heading at which the ant samples."
+    },
+    "trailFollowingStrength": {
+      "value": 0.12,
+      "tag": "C",
+      "note": "How hard a trail difference pulls the heading round, in turns. Deliberately of the same order as the search turn noise: a trail that captured every forager the moment it existed would never be tested against the alternatives, and the winner-take-all behaviour reported for this species is a property of the non-linear response, not of an irresistible attraction."
+    },
+    "recruitmentDepositPerStep": {
+      "value": 1.0,
+      "tag": "C",
+      "note": "Units of recruitment pheromone laid per step on a laden return leg. No published value exists for badius; the scale is arbitrary and only ratios matter."
+    },
+    "seedPatchCount": {
+      "value": 45,
+      "tag": "C",
+      "note": "Seeds on the ground are not spread evenly and a model in which they are has no searching in it: every ant finds a seed within a few steps of the entrance, every trip succeeds, and site fidelity and recruitment trails are decorations on a conveyor belt. Patches give search a cost and therefore give memory and recruitment something to be worth. No seed distribution is published for these sandhills; the count and the radius are invented."
+    },
+    "seedPatchRadiusM": {
+      "value": 1.6,
+      "tag": "C",
+      "note": "Radius of a patch. Comfortably larger than the half-metre a forager returns to, so a remembered site lands the ant back inside the patch it found."
+    },
+    "backgroundSeedsPerSquareMetre": {
+      "value": 1.2,
+      "tag": "C",
+      "note": "Scattered seeds away from any patch. Not zero, so that a wandering ant is occasionally rewarded and the colony is not wholly dependent on the patches it happens to have found."
+    },
+    "standingSeedsPerSquareMetre": {
+      "value": 40,
+      "tag": "C",
+      "note": "Standing crop of harvestable seeds. No seed rain is published for these sandhills. Tuned against the observation that a range is used almost exclusively by one colony and is not exhausted by it."
+    },
+    "seedReplenishmentPerDay": {
+      "value": 0.02,
+      "tag": "C",
+      "note": "Fraction of the shortfall to the standing crop that returns each day. Invented."
+    },
+    "surfaceTemperatureMaxC": {
+      "value": 46,
+      "tag": "C",
+      "note": "Surface temperature above which foraging stops. That harvester ants have such a limit is well supported in the desert Pogonomyrmex water-loss literature [B]; no threshold is published for badius, so the number itself is invented and exposed as a slider."
+    },
+    "activeDayFractionStart": {
+      "value": 0.25,
+      "tag": "C",
+      "note": "Foraging starts about 06:00. These are diurnal ants; the hours are invented."
+    },
+    "activeDayFractionEnd": {
+      "value": 0.83,
+      "tag": "C",
+      "note": "Foraging stops about 20:00."
+    },
     "maxCollectableSeedWidthMm": { "value": 4.0, "tag": "C", "note": "Maximum width a worker can carry home. No published value. Tuned so that large seeds reach the observed 70% of stores by weight." }
   },
 
@@ -282,7 +377,8 @@
     "nestDepthCm": { "value": 320, "tag": "C", "note": "Comfortably past the 250-300 cm mature depth, so the floor of the grid never constrains the nest." },
     "surfaceCellSizeM": { "value": 0.25, "tag": "C" },
     "surfaceExtentM": { "value": 25, "tag": "C", "note": "Half-width. Covers the 20 m foraging range with margin." },
-    "sliceThicknessCm": { "value": 0.9, "tag": "C", "note": "The out-of-plane depth a slice cell stands for, taken as the shaft bore. A vertical slice has no third dimension, but a volume of sand has to be attributed to a cell somewhere or excavation rates in cm3 per worker-day cannot be used at all. Chambers are wider than this out of plane, so cell volume is understated for chambers and about right for shafts. See docs/DECISIONS.md D11." }
+    "sliceThicknessCm": { "value": 0.9, "tag": "C", "note": "The out-of-plane depth a slice cell stands for, taken as the shaft bore. A vertical slice has no third dimension, but a volume of sand has to be attributed to a cell somewhere or excavation rates in cm3 per worker-day cannot be used at all. Chambers are wider than this out of plane, so cell volume is understated for chambers and about right for shafts. See docs/DECISIONS.md D11." },
+    "pheromoneHaloCells": { "value": 6, "tag": "C", "note": "Pheromone decay and diffusion are applied only within the excavated region grown by this many cells, and cells beyond it are held at zero. Diffusion carries signal one cell per application and the per-application decay is far below one, so the concentration six cells outside anything ever dug is smaller than a float32 can usefully hold. Raising it costs speed and changes nothing measurable. Performance decision; see docs/DECISIONS.md D19." }
   },
 
   "climate": {
