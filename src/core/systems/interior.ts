@@ -183,7 +183,7 @@ function walkToward(
   row: number,
   targetDepthCm: number,
   seeking: NestGrid['brood'] | null = null,
-): void {
+): boolean {
   const { ants, params, prng } = sim
   const { nest } = state
 
@@ -214,9 +214,10 @@ function walkToward(
     }
   }
 
-  if (best === -Infinity) return
+  if (best === -Infinity) return false
   ants.x[slot] = nest.offsetOf(bestCol)
   ants.y[slot] = nest.depthOf(bestRow)
+  return bestCol !== col || bestRow !== row
 }
 
 /**
@@ -230,6 +231,19 @@ function walkToward(
  */
 function isChamber(sim: Simulation, nest: NestGrid, col: number, row: number): boolean {
   return nest.isChamberCell(col, row, chamberThresholdCm(sim.params))
+}
+
+/**
+ * Whether there is anywhere deeper for this ant to take what it is carrying.
+ *
+ * The test that matters for putting something down. "Did my last step move me" is not it: a
+ * founding nest is a shaft a centimetre long, and an ant carrying a seed toward a chamber
+ * that does not exist yet can step up and down that shaft for ever, always moving and never
+ * arriving. Sixty foraging trips in a row ended with the seed still in her mandibles, and a
+ * forager holding a seed does not go out again, so the colony simply stopped foraging.
+ */
+function canGoDeeper(nest: NestGrid, col: number, row: number): boolean {
+  return nest.isVoid(col - 1, row + 1) || nest.isVoid(col, row + 1) || nest.isVoid(col + 1, row + 1)
 }
 
 /** The fullest cell of something the ant can reach from where it stands, or null. */
@@ -306,19 +320,21 @@ function depositSeed(
   // never takes one deeper: that is somebody else's job, and it is the finding that gives
   // the store its structure.
   const inAChamber = nest.isChamberCell(col, row, threshold)
-  if ((inAChamber && depthCm > 0) || depthCm >= maxDepth) {
-    if (placeInCell(nest, nest.seeds, col, row, 1, params.seeds.maxSeedsPerCell.value)) {
-      ants.burden[slot] = Burden.Nothing
-      state.seedsInStore += 1
-      state.seedsCarried = Math.max(0, state.seedsCarried - 1)
-      state.totalSeedsDeposited += 1
-      ants.ruleId[slot] = RULE.seedDepositTopChamber
-      return
-    }
+  ants.ruleId[slot] = RULE.seedDepositTopChamber
+  // The first chamber she comes to, the depth past which a forager does not go, or the
+  // bottom of what has been dug — a founding nest has no chamber to put anything in.
+  const arrived = (inAChamber && depthCm > 0) || depthCm >= maxDepth || !canGoDeeper(nest, col, row)
+  if (!arrived) {
+    walkToward(sim, state, slot, col, row, maxDepth)
+    return
   }
 
-  ants.ruleId[slot] = RULE.seedDepositTopChamber
-  walkToward(sim, state, slot, col, row, maxDepth)
+  if (placeInCell(nest, nest.seeds, col, row, 1, params.seeds.maxSeedsPerCell.value)) {
+    ants.burden[slot] = Burden.Nothing
+    state.seedsInStore += 1
+    state.seedsCarried = Math.max(0, state.seedsCarried - 1)
+    state.totalSeedsDeposited += 1
+  }
 }
 
 /** A transfer worker taking a seed down toward the seed chambers. */
@@ -334,21 +350,23 @@ function carrySeedDown(
   const band = seedBandCm(sim, nest)
   const depthCm = nest.depthOf(row)
 
-  // In a chamber inside the band, or — so that nothing is carried for ever in a nest whose
-  // band happens to hold no chamber — anywhere at all once past the bottom of the band.
-  if (depthCm >= band.top && (isChamber(sim, nest, col, row) || depthCm >= band.bottom)) {
-    if (placeInCell(nest, nest.seeds, col, row, 1, params.seeds.maxSeedsPerCell.value)) {
-      ants.burden[slot] = Burden.Nothing
-      state.seedsInStore += 1
-      state.seedsCarried = Math.max(0, state.seedsCarried - 1)
-      state.totalSeedsTakenDeeper += 1
-      ants.ruleId[slot] = RULE.seedCarryDown
-      return
-    }
+  ants.ruleId[slot] = RULE.seedCarryDown
+  // On chamber floor inside the band, past the bottom of it, or at the deepest point there
+  // is: nothing is carried for ever.
+  const arrived =
+    (depthCm >= band.top && (isChamber(sim, nest, col, row) || depthCm >= band.bottom)) ||
+    !canGoDeeper(nest, col, row)
+  if (!arrived) {
+    walkToward(sim, state, slot, col, row, (band.top + band.bottom) / 2)
+    return
   }
 
-  ants.ruleId[slot] = RULE.seedCarryDown
-  walkToward(sim, state, slot, col, row, (band.top + band.bottom) / 2)
+  if (placeInCell(nest, nest.seeds, col, row, 1, params.seeds.maxSeedsPerCell.value)) {
+    ants.burden[slot] = Burden.Nothing
+    state.seedsInStore += 1
+    state.seedsCarried = Math.max(0, state.seedsCarried - 1)
+    state.totalSeedsTakenDeeper += 1
+  }
 }
 
 /** A nurse carrying a piece of brood down to where the colony keeps it. */
@@ -364,18 +382,23 @@ function carryBroodDown(
   const band = broodBandTopCm(sim, nest)
   const depthCm = nest.depthOf(row)
 
-  if (depthCm >= band && (isChamber(sim, nest, col, row) || depthCm >= nest.maxDepthCm * 0.9)) {
-    if (placeInCell(nest, nest.brood, col, row, 1, params.interior.maxBroodPerCell.value)) {
-      ants.burden[slot] = Burden.Nothing
-      state.broodInCells += 1
-      state.broodCarried = Math.max(0, state.broodCarried - 1)
-      ants.ruleId[slot] = RULE.interiorTendBrood
-      return
-    }
+  ants.ruleId[slot] = RULE.interiorTendBrood
+  // Chamber floor below the band, the very bottom of the nest, or the deepest point there
+  // is.
+  const bottom = nest.maxDepthCm - sim.params.nest.chamberHeightCm.value
+  const arrived =
+    (depthCm >= band && (isChamber(sim, nest, col, row) || depthCm >= bottom)) ||
+    !canGoDeeper(nest, col, row)
+  if (!arrived) {
+    walkToward(sim, state, slot, col, row, band)
+    return
   }
 
-  ants.ruleId[slot] = RULE.interiorTendBrood
-  walkToward(sim, state, slot, col, row, band)
+  if (placeInCell(nest, nest.brood, col, row, 1, params.interior.maxBroodPerCell.value)) {
+    ants.burden[slot] = Burden.Nothing
+    state.broodInCells += 1
+    state.broodCarried = Math.max(0, state.broodCarried - 1)
+  }
 }
 
 /** The system. Registered after excavation, so diggers have already had their tick. */
@@ -566,8 +589,11 @@ function spreadBrood(
   // Chambers first, over a wider search than the fallback: a clutch belongs on a chamber
   // floor, and the queen may be standing in the shaft between two of them. Then anywhere
   // void, so that a nest too young to have a chamber still keeps its brood somewhere.
+  const reach = Math.max(
+    1,
+    Math.round(sim.params.interior.broodSearchRadiusCm.value / nest.cellSizeCm),
+  )
   for (const chambersOnly of [true, false]) {
-    const reach = chambersOnly ? 40 : 24
     for (let radius = 0; radius <= reach && left > 0; radius += 1) {
       for (let dRow = -radius; dRow <= radius && left > 0; dRow += 1) {
         for (let dCol = -radius; dCol <= radius && left > 0; dCol += 1) {

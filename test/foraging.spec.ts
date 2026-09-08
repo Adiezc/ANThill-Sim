@@ -102,31 +102,51 @@ describe('a foraging trip', () => {
     expect(c.foraging.totalTripsStarted).toBeGreaterThan(0)
     expect(c.foraging.completedTrips).toBeGreaterThan(0)
 
-    // Every ant that came home is underground again, at the entrance, with nothing on it.
+    // Every ant that came home is underground again, and what it brought is in the nest.
+    //
+    // A forager does not hand her seed to a counter at the door: she carries it in and puts
+    // it down in the topmost chamber she comes to, and somebody else takes it deeper. That
+    // is the [A] task partitioning of docs/SCIENCE.md section 6, and it is why this asserts
+    // conservation rather than empty mandibles. Every successful trip's seed is either in
+    // the store, still being carried in, or went with a forager that died holding it.
     const { ants } = c.sim
+    let carrying = 0
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i)) continue
       if (ants.domain[i] !== Domain.Nest) continue
-      if (ants.task[i] !== Task.Forager) continue
-      expect(ants.burden[i]).not.toBe(Burden.Seed)
+      if (ants.burden[i] === Burden.Seed) carrying += 1
     }
+    expect(c.interior.totalSeedsDeposited).toBeGreaterThan(0)
+    expect(c.interior.totalSeedsDeposited + carrying).toBeLessThanOrEqual(
+      c.foraging.totalTripsSuccessful,
+    )
+    // And no seed is invented: the store cannot hold more than the foragers brought in.
+    expect(c.interior.seedsInStore).toBeLessThanOrEqual(c.foraging.totalSeedsCollected)
   })
 
   it('walks home on its own accumulated vector, not on a read of its position', () => {
     // Path integration is the claim. The homing vector must point from the ant back to the
     // entrance at all times, which is only true if it was maintained step by step.
+    //
+    // Checked at every tick of a day rather than at one chosen instant. The first version
+    // of this test looked at midday of the second day, on the reasoning that the foraging
+    // window is daylight and a day boundary would find everybody home — and then found
+    // nobody out at midday either, because that day was hot enough for the heat curfew to
+    // empty the surface at noon. Which ants are outside at any given moment depends on the
+    // weather; that every ant outside knows the way home does not.
     const c = colonyWithForagers(4, 30)
-    // Midday of the following day: the foraging window is daylight, so a check made at a
-    // day boundary would find everybody home and prove nothing.
-    c.run(c.sim.clock.ticksPerDay + Math.round(c.sim.clock.ticksPerDay * 0.5))
+    c.run(c.sim.clock.ticksPerDay)
     const { ants } = c.sim
     let checked = 0
-    for (let i = 0; i < ants.count; i += 1) {
-      if (!ants.isAlive(i) || ants.domain[i] !== Domain.Surface) continue
-      checked += 1
-      // Home is the origin, so the vector from the ant to home is minus its position.
-      expect(ants.homeVecX[i]!).toBeCloseTo(-ants.x[i]!, 3)
-      expect(ants.homeVecY[i]!).toBeCloseTo(-ants.y[i]!, 3)
+    for (let tick = 0; tick < c.sim.clock.ticksPerDay; tick += 1) {
+      c.step()
+      for (let i = 0; i < ants.count; i += 1) {
+        if (!ants.isAlive(i) || ants.domain[i] !== Domain.Surface) continue
+        checked += 1
+        // Home is the origin, so the vector from the ant to home is minus its position.
+        expect(ants.homeVecX[i]!).toBeCloseTo(-ants.x[i]!, 3)
+        expect(ants.homeVecY[i]!).toBeCloseTo(-ants.y[i]!, 3)
+      }
     }
     expect(checked).toBeGreaterThan(0)
   })

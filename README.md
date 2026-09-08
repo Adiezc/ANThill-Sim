@@ -46,13 +46,14 @@ brings home are put down in the top chambers for other workers to carry toward t
 chambers. Germination, seed size classes and annual relocation are not built, and nothing
 eats a seed yet, so larval survival is still a forager-to-larva proxy.
 
-Two failures are worth knowing before you watch it. Colonies dig far deeper than their
-worker number warrants, and because most of the workforce ends up at a dig face, the
-vertical sorting of workers by task and the downward movement of the seed store — both
-things the model implements and both measured in the field — barely happen in a grown
-colony. Both have the same cause. See [`docs/VALIDATION.md`](docs/VALIDATION.md) for the
-acceptance gates this model meets and the ones it fails, and `docs/DECISIONS.md` for the
-open questions.
+Two failures are worth knowing before you watch it. A founding queen digs about 5 cm before
+her first daughters eclose, against the 29 to 37 cm the species digs, so the opening minutes
+are quiet. And colonies dig far deeper than their worker number warrants, which leaves most
+of the workforce at a dig face: the vertical sorting of workers by task barely shows in a
+grown colony, and about two fifths of the seed store reaches the chambers at 20 to 80 cm
+where it belongs rather than most of it. Both failures have the same cause. See
+[`docs/VALIDATION.md`](docs/VALIDATION.md) for the acceptance gates this model meets and the
+ones it fails, and `docs/DECISIONS.md` for the open questions.
 
 ## Running it
 

@@ -443,12 +443,14 @@ cue, this file changes and the measured distributions should not.
 **An ant that digs will still carry a seed it comes across.** Tschinkel & Seal 2015 is
 specific that the forager which brings a seed home does not take it deeper and that other
 workers do. In this model four workers in five pass the persistent-digging test and belong
-to the excavation system, and at any moment only about two of a hundred are in the top
-20 cm where the seeds are. Restricting the downward carry to workers on the transfer task
-therefore meant it essentially never happened: the crop sat in the entrance chamber. So the
-prohibition is enforced — a forager never takes its own seed deeper — and the permission is
-left open: any worker that is not a forager will pick up a seed it finds above the store.
-That an excavator carries seeds is not a documented behaviour and is not offered as one.
+to the excavation system, and at any moment only about two in a hundred are in the top 20 cm
+where the seeds are. Restricting the downward carry to the workers on the transfer task
+would hand the job to a group that is almost never present to do it. So the prohibition is
+enforced — a forager never takes its own seed deeper — and the permission is left open: any
+worker that is not a forager will pick up a seed it finds above the store. That an excavator
+carries seeds is not a documented behaviour and is not offered as one. What the store
+actually looks like with this in place is measured in VALIDATION.md G5: the band fills, and
+the top of the nest still holds more than it should.
 
 It is a workaround for something else, and the something else is already on the record: the
 excavation model puts far too much of the workforce at a dig face, which is the same defect

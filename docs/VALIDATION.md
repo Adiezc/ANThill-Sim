@@ -194,7 +194,7 @@ preferentially to larvae. **[A]**
 | The store is a place, not a total | Seeds lie in chambers | **Met.** Counts per cell in the nest grid, and visible in the slice |
 | Foragers deposit in the topmost chambers only | The [A] prohibition | **Met**, and asserted by `test/interior.spec.ts` |
 | A separate class carries them down | The [A] partitioning | **Met in the mechanism**, and asserted in a test with workers available to do it |
-| The store ends up at 20 to 80 cm | **[A]** | **Not met in a grown colony.** In the test, seeds placed in the top chambers reach the band within days. In a running colony they largely do not: only about two workers in a hundred are in the top 20 cm at any moment — everyone else is at a dig face — so seeds arrive faster than they are carried away and the crop accumulates in the entrance chamber. The store is in the wrong place for the same reason the nest is too deep. See G1 |
+| The store ends up at 20 to 80 cm | **[A]** | **Partly met.** Measured on one colony at year 2, 350 simulated days, 82 workers, 1749 seeds in store: 39 % lies in the measured 20 to 80 cm band, 19 % between 5 and 20 cm, and 42 % in the top 5 cm. So the wave runs and the band fills, but the top of the nest holds more than it should. The cause is the same one as G1: only a couple of workers in a hundred are in the top 20 cm at any moment, because the rest are at a dig face, so seeds arrive at the entrance faster than they are carried away from it |
 | Size classes | Large seeds reach 70 % of stores | **Not met.** A seed is a seed |
 | Germination | Tracks soil temperature and depth | **Not met.** Nothing germinates |
 | Germinating seeds fed to larvae | The mechanic that unlocks large seeds | **Not met.** Nothing eats |
