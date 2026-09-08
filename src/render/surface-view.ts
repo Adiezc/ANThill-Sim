@@ -15,8 +15,10 @@
  */
 
 import { Domain } from '../core/state/ants.js'
+import { coloursFor, drawAnt } from './ant-sprite.js'
 import type { AntStore } from '../core/state/ants.js'
 import type { SurfaceGrid } from '../core/state/surface.js'
+import type { AntMotion } from './ant-motion.js'
 
 export interface SurfaceViewTheme {
   readonly ground: string
@@ -31,8 +33,13 @@ export interface SurfaceViewTheme {
 
 export const DEFAULT_SURFACE_THEME: SurfaceViewTheme = {
   ground: '#c8b48c',
-  seed: '#6f6034',
-  trail: '#3c2d1a',
+  // Seeds are what these ants eat, so they are drawn as food rather than as a faint stain:
+  // a warm husk colour against the sand.
+  seed: '#8a6a2c',
+  // The trail is deliberately not a shade of sand. It is the one thing on this picture that
+  // is a signal rather than a substance, and a reader should be able to see at a glance
+  // which way the colony is currently pointing.
+  trail: '#3f7d6a',
   entrance: '#20120a',
   ant: '#2a1a0e',
   antLaden: '#7a4a18',
@@ -64,6 +71,7 @@ export class SurfaceView {
     widthPx: number,
     heightPx: number,
     spanM: number,
+    options: { motion: AntMotion; timeSeconds: number },
   ): void {
     const { ctx, theme } = this
     ctx.clearRect(0, 0, widthPx, heightPx)
@@ -90,8 +98,8 @@ export class SurfaceView {
         for (let col = 0; col < surface.cols; col += 1) {
           const amount = surface.seeds.get(col, row)
           if (amount <= 0) continue
-          const alpha = Math.min(0.5, (amount / peakSeed) * 0.5)
-          if (alpha < 0.02) continue
+          const alpha = Math.min(0.85, 0.1 + (amount / peakSeed) * 0.75)
+          if (alpha < 0.03) continue
           ctx.globalAlpha = alpha
           ctx.fillRect(
             toPxX(surface.seeds.xOf(col)) - cellPx / 2,
@@ -131,17 +139,31 @@ export class SurfaceView {
       ctx.globalAlpha = 1
     }
 
-    // Ants. Drawn at a legible minimum rather than at body length: a 6 mm ant at this scale
-    // is a fraction of a pixel, and a dot that cannot be seen is not an honest rendering of
-    // an ant that is there.
-    const antPx = Math.max(1.6, 0.006 * pxPerM)
+    // Ants, drawn far larger than life.
+    //
+    // This is the one deliberate exaggeration in either view and it should be said plainly.
+    // At a scale that fits a 20 m foraging range on screen, a 6.35 mm worker is a fiftieth
+    // of a pixel. Drawn truthfully she is invisible, and a picture in which the ants cannot
+    // be seen is not a more honest picture of ants — it is a picture of sand. So this view
+    // is a map: the ants are symbols at a legible size, the scale bar gives the reader the
+    // real distances, and the caption says the trails are pheromone rather than drawing.
+    // The nest slice is where body length is true, and that is where a reader who wants to
+    // compare an ant to a chamber should look.
+    const antPx = Math.max(9, 0.02 * pxPerM)
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i)) continue
       if (ants.domain[i] !== Domain.Surface) continue
-      ctx.fillStyle = ants.burden[i] === 2 ? theme.antLaden : theme.ant
-      ctx.beginPath()
-      ctx.arc(toPxX(ants.x[i]!), toPxY(ants.y[i]!), antPx, 0, Math.PI * 2)
-      ctx.fill()
+      drawAnt(
+        ctx,
+        toPxX(options.motion.drawnX(i)),
+        toPxY(options.motion.drawnY(i)),
+        antPx,
+        options.motion.facingX(i),
+        options.motion.facingY(i),
+        coloursFor(ants.caste[i]!),
+        ants.burden[i]!,
+        options.timeSeconds * 9 + i * 1.7,
+      )
     }
 
     // The entrance: the one point the two domains share.

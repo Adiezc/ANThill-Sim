@@ -140,6 +140,8 @@
     "foragerFractionBelow20cm": { "value": 0.05, "tag": "A" },
     "transferWorkerFractionBelow20cm": { "value": 0.30, "tag": "A" },
     "broodCareFractionBelow70cm": { "value": 0.90, "tag": "A" },
+    "stratificationShallowProbeCm": { "value": 20, "tag": "A", "note": "The depth foragerFractionBelow20cm and transferWorkerFractionBelow20cm are measured against. Tschinkel and Kwapich 2017 sorted nests chamber by chamber and reported the fractions below this depth; it is their measurement boundary, not a threshold any ant senses." },
+    "stratificationDeepProbeCm": { "value": 70, "tag": "A", "note": "The depth broodCareFractionBelow70cm is measured against. Same source and the same caveat." },
     "summerForagerFraction": { "value": 0.40, "tag": "A" },
     "summerTransferWorkerFraction": { "value": 0.25, "tag": "A" },
     "peakForagingProportion": { "value": 0.37, "tag": "A", "note": "Peak of the annual cycle." },
@@ -308,8 +310,25 @@
     "queenFoundingFatPerEgg": { "value": 0.012, "tag": "C" }
   },
 
+  "interior": {
+    "$comment": "How an ant that is not digging moves around inside the nest, and how brood and seeds get where they are kept. WHERE each group ends up is [A] — Tschinkel and Kwapich 2017 sorted whole nests chamber by chamber and counted. HOW an ant gets there is invented: no one has watched a badius worker choose a chamber, and an ant walking toward a depth is the same admitted fiction as the depth cue in excavation. See docs/SCIENCE.md sections 4 and 11.",
+    "stepIntervalTicks": { "value": 3, "tag": "C", "note": "INVENTED. An ant inside the nest is considered for a step every this many ticks, staggered across the population so they do not all move on the same tick. A tick is a simulated minute and a cell is 5 mm, so this is far slower than an ant walks; what the model takes from this movement is the DISTRIBUTION of ants through the nest, which is measured, and not their speed, which is not. It is also the cost control: the alternative is an eight-neighbour scan for every ant on every tick of every simulated year." },
+    "depthPreferenceWeight": { "value": 3.5, "tag": "C", "note": "INVENTED. How strongly a step toward the ant's own preferred depth is favoured over one away from it. This is the term that produces the measured stratification, and it is a fiction: no ant knows its depth. See docs/SCIENCE.md section 11." },
+    "walkNoise": { "value": 1.4, "tag": "C", "note": "INVENTED. Random weight added to each candidate step, so that ants at their preferred depth mill about rather than freezing on one cell." },
+    "crowdAvoidance": { "value": 2.2, "tag": "C", "note": "INVENTED. Penalty per nestmate already in a candidate cell. Without it a whole nursery stacks on the single deepest cell." },
+    "preferredDepthRedrawDays": { "value": 3, "tag": "C", "note": "INVENTED. How often an ant redraws its preferred depth from the distribution for its task. Redrawing every tick makes the population distribution right and every individual jittery; never redrawing freezes each ant on one shelf for life." },
+    "tendingAttraction": { "value": 2.6, "tag": "C", "note": "INVENTED. How strongly a worker prefers a step onto a cell holding the thing it tends — brood for a brood-care worker, seeds for a transfer worker. Ants gather on what they are working on; without this term a worker walks to its preferred depth and never encounters the pile it is supposed to be moving." },
+    "broodPickUpChancePerTick": { "value": 0.04, "tag": "C", "note": "INVENTED. Chance a brood-care worker standing on brood that is shallower than where brood belongs picks a piece up to carry it deeper." },
+    "maxBroodPerCell": { "value": 26, "tag": "C", "note": "INVENTED. Brood spreads across the floor of a chamber rather than stacking on one cell. A packing limit, not a biological capacity." },
+    "broodChamberDepthFraction": { "value": 0.55, "tag": "C", "note": "INVENTED. Brood is carried below this fraction of the nest's current depth. Expressed as a fraction rather than a depth because a founding nest is 30 cm deep and a mature one is three metres, and the brood is deep in both. The pattern it reproduces is [A]: below 70 cm, 90 percent of workers are brood-care workers, and callows eclose in the bottom chambers." }
+  },
+
   "seeds": {
     "seedChamberDepthCm": { "min": 20, "max": 80, "tag": "A" },
+    "foragerDepositMaxDepthCm": { "value": 25, "tag": "C", "note": "INVENTED depth for an [A] behaviour. Tschinkel and Seal 2015 established that foragers deposit seeds only in the topmost chambers and that a separate group carries them down; no one published where 'topmost' stops. A returning forager drops its seed in the first chamber it meets above this depth." },
+    "downwardTransportChancePerTick": { "value": 0.6, "tag": "C", "note": "INVENTED. Chance a worker that comes across a seed lying above the seed-chamber band picks it up to take it deeper. High, because the alternative reading — that a worker mostly walks past misplaced food — leaves the whole crop sitting in the entrance: at any moment only a couple of workers are in the top 20 cm, so an opportunity missed is an opportunity that does not come round again for hours. Sets how fast the wave of seeds moves down, which Tschinkel and Seal 2015 describe qualitatively and did not time." },
+    "storeBandFractionOfDepth": { "value": 0.35, "tag": "C", "note": "INVENTED. The measured seed chambers sit at 20 to 80 cm, which is deeper than a young colony's whole nest. While the nest is shallower than the band, the store sits below this fraction of whatever depth has been dug. A mature nest never uses this: the measured band applies." },
+    "maxSeedsPerCell": { "value": 90, "tag": "C", "note": "INVENTED packing limit, so a store spreads across a chamber floor instead of becoming an infinitely deep pile in one cell." },
     "largeSeedStoreFractionByWeight": { "value": 0.70, "tag": "A", "note": "Large seeds accumulate because workers cannot open them." },
     "majorsIncreaseOpeningRate": { "value": true, "tag": "A" },
     "majorsWidenOpenableSizeRange": { "value": false, "tag": "A", "note": "HARD RULE." },

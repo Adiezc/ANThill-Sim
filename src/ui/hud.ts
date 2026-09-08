@@ -206,9 +206,21 @@ export function colonyReadings(summary: ColonySummary, params: Params): HudReadi
       tag: 'B',
     },
     {
+      label: 'Seeds in store',
+      value: `${Math.round(summary.seedsStored)}`,
+      expected: `in the chambers at ${params.seeds.seedChamberDepthCm.min} to ${params.seeds.seedChamberDepthCm.max} cm`,
+      tag: 'A',
+    },
+    {
+      label: 'Seeds in transit',
+      value: `${summary.seedsInTransit}`,
+      expected: 'foragers drop them at the top; others take them down',
+      tag: 'A',
+    },
+    {
       label: 'Seeds brought home',
       value: `${summary.totalSeedsCollected}`,
-      expected: 'stored, but nothing draws on them yet',
+      expected: 'total ever collected. Nothing eats them yet',
       tag: 'C',
     },
     {

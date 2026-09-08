@@ -173,9 +173,14 @@ describe('determinism', () => {
      * fields, and the digest widened to cover the nest, soil, brood and surface as well as
      * the ants. Both change what the hash is taken over, so the value moved for a stated
      * reason rather than a mysterious one. The previous value was 5b0d3c6947024b0b.
+     *
+     * Regenerated again when the interior of the nest was modelled: the ant store gained
+     * `preferredDepthCm`, and the nest grid gained the seed and brood layers, so the hash is
+     * again taken over more than it was. The run itself is unchanged — this simulation has
+     * none of those systems in it — and the previous value was 14b17c699c52ab0b.
      */
     const sim = build(20240607)
     sim.run(10000)
-    expect(sim.digest()).toBe('14b17c699c52ab0b')
+    expect(sim.digest()).toBe('c7839c69077adb0b')
   })
 })

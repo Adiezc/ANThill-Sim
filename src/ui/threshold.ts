@@ -15,6 +15,7 @@
  */
 
 import { NestView } from '../render/nest-view.js'
+import { AntMotion } from '../render/ant-motion.js'
 import { createNestHarness } from '../core/sim/nest-harness.js'
 import { measureNest } from '../core/state/nest.js'
 import type { Params } from '../core/params/params.js'
@@ -96,6 +97,8 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
   // A fixed seed, so every reader meets the same nest and a screenshot of this page is
   // reproducible. Small enough that it digs visibly while somebody reads three paragraphs.
   const harness = createNestHarness({ seed: 7, params, workers: 240 })
+  const motion = new AntMotion(harness.sim.ants.capacity)
+  let lastDrawMs = performance.now()
   let frame = 0
   let running = true
 
@@ -107,8 +110,18 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
     canvas.height = Math.round(rect.height * dpr)
     const ctx = canvas.getContext('2d')
     if (ctx !== null) ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-    const viewport = NestView.frameNest(harness.nest, rect.height)
-    view.draw(harness.nest, harness.soil, harness.sim.ants, viewport, rect.width, rect.height)
+    const now = performance.now()
+    motion.update(harness.sim.ants, (now - lastDrawMs) / 1000)
+    lastDrawMs = now
+    const viewport = NestView.frameNest(harness.nest)
+    view.draw(harness.nest, harness.soil, harness.sim.ants, viewport, rect.width, rect.height, {
+      motion,
+      timeSeconds: now / 1000,
+      selected: -1,
+      // The demonstration is a nest being dug by a synthetic workforce. It has no queen and
+      // no brood, so there is no mix to draw.
+      broodMix: { eggs: 0, larvae: 0, pupae: 0 },
+    })
   }
 
   const tick = (): void => {

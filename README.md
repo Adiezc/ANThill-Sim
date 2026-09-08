@@ -39,11 +39,20 @@ simulated year. Replicates are independent, sharded by seed, and embarrassingly 
 
 ## Status
 
-Early, and honest about it. Founding, excavation, the demographic engine, climate and
-foraging are built. Seed stores, germination and annual relocation are not. Delivered seeds
-are counted but nothing draws on them yet, so larval survival is still a forager-to-larva
-proxy. See [`docs/VALIDATION.md`](docs/VALIDATION.md) for the acceptance gates this model
-meets and the ones it fails, and `docs/DECISIONS.md` for the open questions.
+Early, and honest about it. Founding, excavation, the demographic engine, climate, foraging
+and the inside of the nest are built: ants move around underground, the queen sits in the
+brood chambers, brood is kept somewhere rather than merely counted, and seeds a forager
+brings home are put down in the top chambers for other workers to carry toward the seed
+chambers. Germination, seed size classes and annual relocation are not built, and nothing
+eats a seed yet, so larval survival is still a forager-to-larva proxy.
+
+Two failures are worth knowing before you watch it. Colonies dig far deeper than their
+worker number warrants, and because most of the workforce ends up at a dig face, the
+vertical sorting of workers by task and the downward movement of the seed store — both
+things the model implements and both measured in the field — barely happen in a grown
+colony. Both have the same cause. See [`docs/VALIDATION.md`](docs/VALIDATION.md) for the
+acceptance gates this model meets and the ones it fails, and `docs/DECISIONS.md` for the
+open questions.
 
 ## Running it
 

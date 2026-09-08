@@ -719,7 +719,20 @@ export function makeExcavationSystem(state: ExcavationState) {
 
       // Foragers are outside. Everyone else who digs, digs.
       if (ants.task[i] === Task.Forager) continue
-      if (ants.caste[i] !== Caste.Queen && !isDigging(sim, i)) continue
+      // An ant with a seed or a piece of brood in its mandibles is not digging with them.
+      // Before this line existed, a worker carrying a seed down the shaft dug on the way and
+      // the dig replaced the seed in its jaws with a pellet of sand: the seed simply ceased
+      // to exist. Sand is the exception, because moving sand is what digging is.
+      if (ants.burden[i] !== Burden.Nothing && ants.burden[i] !== Burden.SoilPellet) continue
+      if (ants.caste[i] === Caste.Queen) {
+        // A founding queen digs her own shaft and chamber. Once her daughters are working
+        // she never digs again, and she belongs to the interior system: she sits deep in
+        // the nest and lays. Before this guard existed she went on wandering and digging
+        // for the whole life of the colony.
+        if (state.foundingTargetDepthCm <= 0) continue
+      } else if (!isDigging(sim, i)) {
+        continue
+      }
 
       // Digging does not overwrite the ant's task. Task is its place in the one-way
       // age progression — brood care, transfer work, foraging — and excavation is something

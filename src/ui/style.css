@@ -677,6 +677,151 @@ pre.command {
   font-variant-numeric: tabular-nums;
 }
 
+/* ---------------------------------------------------------------------------------------
+   Camera tools on the slice, the note under the lever, the inspector and the legend.
+   --------------------------------------------------------------------------------------- */
+
+.view-tools {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.view-tools button {
+  padding: 4px 9px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.view-tools button:hover {
+  border-color: var(--line-strong);
+}
+
+.view-tools button[aria-pressed='true'] {
+  color: var(--accent-text);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.view--nest canvas {
+  cursor: grab;
+  touch-action: none;
+}
+
+.view--nest canvas:active {
+  cursor: grabbing;
+}
+
+.control-note {
+  margin: 0;
+  padding: 10px 18px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--line);
+}
+
+.inspector {
+  padding: 12px 18px 14px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-sunken);
+  display: grid;
+  gap: 6px;
+}
+
+.inspector-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inspector-where {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.inspector-rule {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.inspector-cite,
+.inspector-caveat {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.inspector-caveat {
+  padding-left: 8px;
+  border-left: 2px solid var(--line-strong);
+}
+
+.swatch {
+  display: inline-block;
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
+}
+
+.legend {
+  border-bottom: 1px solid var(--line);
+}
+
+.legend > summary {
+  padding: 11px 18px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.legend > summary:hover {
+  color: var(--text);
+}
+
+.legend-body {
+  padding: 0 18px 14px;
+}
+
+.legend-list {
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 7px;
+}
+
+.legend-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-dim);
+}
+
+.legend-caveat {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--text-faint);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;

@@ -25,6 +25,24 @@ export class NestGrid {
   readonly spoil: Grid2D
   /** Building pheromone, added to excavated material. Its lifetime dominates nest form. */
   readonly building: Grid2D
+  /**
+   * Seeds in store, per cell.
+   *
+   * The colony's food, where the colony actually put it. Foragers drop seeds in the
+   * topmost chambers and transfer workers carry them down into the seed-chamber band, so
+   * this grid is the record of that traffic rather than a granary anyone laid out.
+   * See docs/SCIENCE.md section 6.
+   */
+  readonly seeds: Grid2D
+  /**
+   * Brood in the nest, per cell, as a count of eggs, larvae and pupae together.
+   *
+   * The *demography* of the brood — how many of each stage, how old, what each cohort is
+   * destined to become — lives in BroodStore and is authoritative. This grid holds only
+   * where that same brood is being kept, which is a separate question and one the ants
+   * answer by carrying it. The two are reconciled once a day; see systems/interior.ts.
+   */
+  readonly brood: Grid2D
 
   readonly cols: number
   readonly rows: number
@@ -83,6 +101,8 @@ export class NestGrid {
     this.occupancy = new Uint8Array(this.cols * this.rows)
     this.spoil = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.building = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
+    this.seeds = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
+    this.brood = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.entranceCol = Math.floor(this.cols / 2)
     this.blockSize = Math.max(1, Math.round(params.excavation.crowdingRadiusCm.value / cell))
     this.blockCols = Math.ceil(this.cols / this.blockSize)
@@ -284,7 +304,7 @@ export class NestGrid {
   }
 
   buffers(): ArrayBufferView[] {
-    return [this.occupancy, this.spoil.data, this.building.data]
+    return [this.occupancy, this.spoil.data, this.building.data, this.seeds.data, this.brood.data]
   }
 }
 
@@ -330,7 +350,7 @@ export interface NestMeasurement {
  * roughly constant small diameter, chambers are horizontal-floored and much wider than they
  * are tall — so the threshold is read from the shaft bore rather than invented.
  */
-function chamberThresholdCm(params: Params): number {
+export function chamberThresholdCm(params: Params): number {
   return params.nest.shaftBoreDiameterCm.value * 2
 }
 

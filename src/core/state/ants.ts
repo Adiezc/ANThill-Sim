@@ -141,6 +141,15 @@ export class AntStore {
   readonly digger: Uint8Array
 
   /**
+   * The depth in centimetres this ant is currently heading for inside the nest.
+   *
+   * Drawn from the distribution measured for its task and redrawn every few days. It is
+   * the mechanism behind the vertical stratification, and it is invented: the *positions*
+   * are [A] and this is not. No ant knows its depth. See systems/interior.ts.
+   */
+  readonly preferredDepthCm: Float32Array
+
+  /**
    * Recent collisions with nestmates, decayed each tick. This is the only thing regulating
    * an ant's digging effort; there is no global control. See docs/SCIENCE.md section 3.
    */
@@ -197,6 +206,7 @@ export class AntStore {
     this.fidelityX = new Float32Array(capacity)
     this.fidelityY = new Float32Array(capacity)
     this.digger = new Uint8Array(capacity)
+    this.preferredDepthCm = new Float32Array(capacity)
     this.agitation = new Float32Array(capacity)
     this.helixPhase = new Float32Array(capacity)
     this.tunnelLengthCm = new Float32Array(capacity)
@@ -235,6 +245,7 @@ export class AntStore {
     this.fidelityX[slot] = 0
     this.fidelityY[slot] = 0
     this.digger[slot] = 0
+    this.preferredDepthCm[slot] = 0
     this.agitation[slot] = 0
     this.helixPhase[slot] = 0
     this.tunnelLengthCm[slot] = 0
@@ -283,6 +294,7 @@ export class AntStore {
       this.fidelityX,
       this.fidelityY,
       this.digger,
+      this.preferredDepthCm,
       this.agitation,
       this.helixPhase,
       this.tunnelLengthCm,

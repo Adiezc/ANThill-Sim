@@ -225,6 +225,46 @@ export const RULE = {
     'General Pogonomyrmex and desert ant literature',
     '8',
   ),
+  // ---- Inside the nest (docs/SCIENCE.md sections 4 and 6) ----
+  interiorStratification: rule(
+    'interior.stratification',
+    'Settling at the depth workers doing its job are found at: nurses deep, transfer workers through the middle, foragers in the top few centimetres.',
+    'A',
+    'Tschinkel & Kwapich 2017',
+    '4',
+    'The distribution is measured \u2014 whole nests were sorted chamber by chamber. The mechanism is invented: an ant here walks toward a depth it is given, and no real ant knows its depth. Same admitted fiction as excavation.depthCue.',
+  ),
+  interiorTendBrood: rule(
+    'interior.tendBrood',
+    'Carrying brood down to the deep chambers where the colony keeps it.',
+    'A',
+    'Tschinkel & Kwapich 2017; Tschinkel 2004',
+    '4',
+    'That brood is kept deep and that callows eclose in the bottom chambers is [A]. That a nurse carries it there piece by piece is the obvious mechanism and is not itself documented.',
+  ),
+  seedDepositTopChamber: rule(
+    'seeds.depositTopChamber',
+    'Dropping a seed in the topmost chamber and going back out. A forager never takes one deeper.',
+    'A',
+    'Tschinkel & Seal 2015',
+    '6',
+  ),
+  seedCarryDown: rule(
+    'seeds.carryDown',
+    'Carrying a seed down toward the seed chambers. This traffic is visible in a real nest as a wave of seeds moving downward.',
+    'A',
+    'Tschinkel & Seal 2015; Tschinkel & Kwapich 2017 for the 20 to 80 cm band',
+    '6',
+    'What is [A] is the partitioning — the forager that brought the seed in never takes it deeper, and somebody else does — and the 20 to 80 cm band it ends up in. Which workers do the carrying is left open here: any worker that is not a forager will carry a seed it comes across. How fast the wave travels is invented; nobody timed it.',
+  ),
+  queenLaying: rule(
+    'colony.queenLaying',
+    'Laying, in the chamber her daughters keep her in.',
+    'C',
+    'None. That the colony has exactly one queen is [A]; where in the nest she sits is not published',
+    '4',
+  ),
+
   forageHeatCurfew: rule(
     'foraging.heatCurfew',
     'Staying in because the surface is too hot to cross without losing more water than a seed is worth.',

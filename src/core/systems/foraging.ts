@@ -47,17 +47,6 @@ export interface ForagingState {
   readonly soil: SoilModel
   readonly climate: ClimateModel
 
-  /**
-   * Seeds brought home and not yet consumed, as whole seeds.
-   *
-   * A single number, deliberately. The seed *store* — chambers at 20 to 80 cm, the downward
-   * wave of workers moving seeds deeper, size classes, germination — is step 7, and putting
-   * a placeholder structure here would be harder to replace than a scalar. What this number
-   * is for now is an audit: it says how much the foragers actually delivered, which is what
-   * makes the trip machinery falsifiable before anything depends on it.
-   */
-  seedsStored: number
-
   /** Running totals, for the end-of-run summary and the validation gates. */
   totalTripsStarted: number
   totalTripsSuccessful: number
@@ -78,7 +67,6 @@ export function createForagingState(
     surface,
     soil,
     climate,
-    seedsStored: 0,
     totalTripsStarted: 0,
     totalTripsSuccessful: 0,
     totalSeedsCollected: 0,
@@ -333,9 +321,10 @@ function returnHome(sim: Simulation, state: ForagingState, slot: number): void {
 function arriveHome(sim: Simulation, state: ForagingState, slot: number): void {
   const { ants } = sim
   if (ants.burden[slot] === Burden.Seed) {
-    state.seedsStored += 1
     state.totalTripsSuccessful += 1
-    ants.burden[slot] = Burden.Nothing
+    // The seed stays in her mandibles. She carries it in and puts it down in the topmost
+    // chamber she comes to, which is the interior system's business and is where the store
+    // actually comes from — see systems/interior.ts and docs/SCIENCE.md section 6.
   } else {
     // A fruitless trip costs the ant its memory of the site: it went back and found
     // nothing, so next time it looks somewhere else.

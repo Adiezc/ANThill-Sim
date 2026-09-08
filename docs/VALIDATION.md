@@ -61,6 +61,26 @@ at 0.19 — as a side effect rather than as a target.
 **The figures, not just the text.** Figure 10 gives spacing by decile peaking near 12 cm,
 against the body text's 20-30. Figure 9B gives chamber area by depth, which fixes widths.
 
+### The founding nest is a tenth of the size it should be
+
+Measured while making the inside of the nest visible, 2026-09-08, and not previously
+recorded. `nest.incipientDepthCm` is **[A]**: Tschinkel 2004 measured incipient nests at 29
+to 37 cm. A founding queen in this model gets to about **5 cm** before her first daughters
+eclose and founding ends.
+
+The rate is not the reason. Her per-tick rate at a face works out to roughly 3 cells a day,
+which would sink a 30 cm shaft in about three weeks; she manages under a third of a cell a
+day. The time goes on everything that is not digging — carrying each pellet up, putting it
+down, walking back to the face, and dig attempts refused by the roof and body-size rules.
+For a colony that is one ant, there is no relay chain to hand a pellet to, so every pellet
+is her own round trip.
+
+It is worth stating what this costs a viewer, because it is the first thing anyone sees: for
+the first two months of simulated time there is a queen, a hole a centimetre deep, and a
+clutch of eggs, and nothing else. The nest only starts to look like a nest once workers
+eclose. This is a model failure and not a rendering one, and it is the first thing to fix
+in the excavation rules.
+
 ### The central unsolved problem: nothing stops the digging
 
 Tschinkel's nests obey a law. Total chamber area tracks worker number and depth goes with
@@ -115,6 +135,23 @@ wider out of plane than in it.
 Foragers in the top 15 cm with ≤5% below 20 cm; transfer workers ~30% below 20 cm; ≥90% of
 workers below 70 cm are brood-care workers. **[A]**
 
+Implemented in `systems/interior.ts` and exercised by `test/interior.spec.ts`, which shows
+brood-care workers settling below foragers when both start at the same depth.
+
+| Property | Target | Status |
+|---|---|---|
+| Nurses below foragers | The measured sorting | **Met** for workers the interior system owns |
+| The distribution across the whole workforce | The measured fractions | **Not met.** About four workers in five pass the persistent-digging test and belong to the excavation system, which walks them to the dig face at the bottom of the nest and keeps them there. In a grown colony most of the workforce is therefore deep whatever its task, and the measured fractions cannot be recovered from it. This is the same defect as the runaway digging in G1 and it will not be fixed here |
+| The mechanism | — | **Invented.** An ant walks toward a depth it is handed. See DECISIONS.md D20 |
+
+### Brood placement
+
+Brood is now somewhere rather than merely counted: `nest.brood` holds a count per cell, laid
+where the queen is and carried deeper by nurses, with `BroodStore` still authoritative for
+how much brood exists. What this reproduces is the [A] observation that brood is kept in the
+deep chambers and that callows eclose there. What it does not reproduce is any measured
+*number* of brood per chamber, because none is published.
+
 ## G4b. Foraging
 
 Encoded in `test/foraging.spec.ts`. Foraging cannot be measured on a naturally grown colony
@@ -134,7 +171,7 @@ read off them; they are about what a forager *does*.
 | Non-linear recruitment | Trails should earn their keep | **Met.** A colony with trail following finds more seeds than the same colony with the response set to zero — the one test here that fails if the recruitment model is deleted |
 | Heat curfew | Foraging stops when the surface is too hot | **Met.** The threshold is invented; that there is one is [B] |
 | Diurnal | No foraging at night | **Met** |
-| **Seeds feed the colony** | Larval survival should depend on what foragers deliver | **Not met, and not attempted.** Delivered seeds accumulate in a scalar store that nothing draws on. Larval survival is still the forager-to-larva proxy it was before. The food account arrives with the seed store at G5 |
+| **Seeds feed the colony** | Larval survival should depend on what foragers deliver | **Not met, and not attempted.** Nothing eats a seed. Larval survival is still the forager-to-larva proxy it was before. The food account arrives with germination at G5 |
 | Seed size classes | Large seeds accumulate to 70 % of stores | **Not met.** No size classes yet; a seed is a seed. G5 |
 
 ### What the seed field is, and why it is patchy
@@ -151,6 +188,16 @@ runs 34-62 % and falls as a colony grows and depletes the patches nearest home.
 Large seeds accumulate to ≥70% of stores by weight. Germination rate tracks the seasonal
 soil temperature cycle with depth. Germinating seeds are removed promptly and fed
 preferentially to larvae. **[A]**
+
+| Property | Target | Status |
+|---|---|---|
+| The store is a place, not a total | Seeds lie in chambers | **Met.** Counts per cell in the nest grid, and visible in the slice |
+| Foragers deposit in the topmost chambers only | The [A] prohibition | **Met**, and asserted by `test/interior.spec.ts` |
+| A separate class carries them down | The [A] partitioning | **Met in the mechanism**, and asserted in a test with workers available to do it |
+| The store ends up at 20 to 80 cm | **[A]** | **Not met in a grown colony.** In the test, seeds placed in the top chambers reach the band within days. In a running colony they largely do not: only about two workers in a hundred are in the top 20 cm at any moment — everyone else is at a dig face — so seeds arrive faster than they are carried away and the crop accumulates in the entrance chamber. The store is in the wrong place for the same reason the nest is too deep. See G1 |
+| Size classes | Large seeds reach 70 % of stores | **Not met.** A seed is a seed |
+| Germination | Tracks soil temperature and depth | **Not met.** Nothing germinates |
+| Germinating seeds fed to larvae | The mechanic that unlocks large seeds | **Not met.** Nothing eats |
 
 ## G6. Relocation
 

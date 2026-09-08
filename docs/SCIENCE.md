@@ -118,6 +118,9 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | Response to forager loss | Removing 50 percent of foragers does **not** draw workers from other castes. Larval survival suffers instead | **[A]** | Kwapich & Tschinkel 2013 |
 | Worker castes | Minor and major workers. Majors average about 7 percent of the colony regardless of colony size, rising slightly in midsummer. Minors grow larger as the colony grows; majors do not | **[A]** | Tschinkel 1998 |
 | Vertical age sorting is active | Older workers actively move upward and choose their position. It is not passive | **[A]** | Tschinkel 2004 |
+| How an ant reaches its depth | It walks toward a depth drawn from the distribution measured for its task, redrawn every few days. **No ant knows its depth**; this is the same invented cue as `excavation.depthCue` and carries the same caveat | **[C]** | None. See §11 and DECISIONS.md D20 |
+| Where the brood is | Brood is held as a count per chamber in the nest grid, laid where the queen is and carried deeper by brood-care workers. The demographic count in `BroodStore` remains authoritative and the two are reconciled daily | **[A]** for brood being kept deep and callows eclosing in the bottom chambers; **[C]** for the carrying mechanism | Tschinkel & Kwapich 2017; DECISIONS.md D20 |
+| Where the queen is | In the brood chambers, which is where the eggs then appear. No source in the bibliography says where in the nest she sits | **[C]** | None |
 
 ## 5. Foraging
 
@@ -146,6 +149,9 @@ process, not a container.
 |---|---|---|---|
 | Seed chamber depth | Seed chambers sit 20 to 80 cm below the surface, in damp soil | **[A]** | Tschinkel & Kwapich 2017; Tschinkel & Kwapich 2016 |
 | Task partitioning | Foragers deposit seeds only in the topmost chambers. A separate class of workers moves them downward, visible as a travelling "wave" | **[A]** | Tschinkel & Seal 2015 |
+| Task partitioning, as implemented | **Implemented.** A returning forager carries its seed in and puts it down in the first chamber it meets, and never takes one deeper. Any worker that is *not* a forager will pick up a seed lying above the store and carry it down toward 20 to 80 cm. The prohibition is the documented half; leaving the permission open to any non-forager is a workaround, and DECISIONS.md D20 says what for | **[A]** prohibition, **[C]** permission | Tschinkel & Seal 2015 |
+| The store, as implemented | **Implemented.** Seeds are counts per cell in the nest grid — a place in the nest a reader can point at, not a global total | **[A]** | Tschinkel & Kwapich 2017 |
+| Seed size classes, germination, and eating | **Still not implemented.** A seed is a seed, nothing germinates, and nothing eats one. Larval survival remains the forager-to-larva proxy of §4 | — | — |
 | Size limit on opening | Workers collect a wide range of seed sizes but can only open small ones. Large seeds accumulate to 70 percent or more of stores by weight | **[A]** | Tschinkel & Kwapich 2016 |
 | Size limit on collection | The widest seed a worker will carry home is a separate and larger limit than the widest it can open. Tuned so that large seeds reach the observed 70 percent of stores by weight | **[C]** (D2) | None |
 | Majors and seed opening | Majors increase the *rate* at which small and medium seeds are opened, but do **not** widen the size range that can be opened | **[A]** | Tschinkel & Kwapich 2016 |

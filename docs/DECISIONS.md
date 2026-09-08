@@ -411,3 +411,48 @@ What is left scales with ant number, which is as it should be for an agent-based
 colony of 4300 workers on a one-minute timestep is about 2.3 billion agent-updates per
 simulated year, and no amount of cache-tightening changes that. It is the reason the browser
 runs one colony and a replicate study runs headless, sharded by seed.
+
+## D20. The inside of the nest: two places for the brood, and a fiction for everyone else
+
+**Date.** 2026-09-08.
+
+Until this point the only ants that moved underground were the ones digging. Everyone else
+was placed once, at eclosion, and never took another step. The nest was a photograph of a
+cloud of dots, and the two best-measured facts about the inside of a *badius* nest — that
+the colony is sorted by task from top to bottom, and that seeds travel downward in stages —
+were not in the model at all. `systems/interior.ts` is where they are now. Three decisions
+in it are worth recording.
+
+**Brood is counted in one place and located in another.** `BroodStore` holds the
+demography — how many eggs, larvae and pupae, how old, what each cohort will become — and
+stays authoritative. `nest.brood` holds where that same brood is being kept, as a count per
+cell. They are reconciled once a day: new brood appears wherever the queen is, and losses
+are taken off the existing distribution in proportion, because nothing in the demographic
+engine says which chamber a dead larva was in. The alternative — giving every egg an
+identity and a position — buys nothing the picture or the science needs and costs a
+per-individual store for the most numerous thing in the colony.
+
+**Depth is handed to every ant, not just to diggers.** The stratification is [A] and the
+mechanism producing it is invented. Excavation already had this problem and states it
+(`excavation.depthCue`): the CO₂-gradient hypothesis was tested by venting the gradient away
+and then by reversing it, and the architecture did not change. Nothing has replaced it. So
+an ant that wants to be at 70 cm is told how deep it is, exactly as a digging ant is, and
+the rule registry says so on the ant's own inspector line. If someone identifies the real
+cue, this file changes and the measured distributions should not.
+
+**An ant that digs will still carry a seed it comes across.** Tschinkel & Seal 2015 is
+specific that the forager which brings a seed home does not take it deeper and that other
+workers do. In this model four workers in five pass the persistent-digging test and belong
+to the excavation system, and at any moment only about two of a hundred are in the top
+20 cm where the seeds are. Restricting the downward carry to workers on the transfer task
+therefore meant it essentially never happened: the crop sat in the entrance chamber. So the
+prohibition is enforced — a forager never takes its own seed deeper — and the permission is
+left open: any worker that is not a forager will pick up a seed it finds above the store.
+That an excavator carries seeds is not a documented behaviour and is not offered as one.
+
+It is a workaround for something else, and the something else is already on the record: the
+excavation model puts far too much of the workforce at a dig face, which is the same defect
+that gives a colony of sixty workers a three-metre nest. See VALIDATION.md G1. When that is
+fixed, this permission should be narrowed back to the transfer task and the store should
+still fill.
+

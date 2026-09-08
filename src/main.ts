@@ -13,6 +13,11 @@
  * is the correct trade of the two, and it is the reason speed is expressed as simulated
  * days per real second and never as a step size. Moving the core into a Worker is the next
  * step and changes nothing about the model: `/core` already imports no DOM.
+ *
+ * **Drawing and stepping are separate clocks.** The ants are eased toward their simulated
+ * positions every frame (see render/ant-motion.ts), so the picture is continuous even when
+ * the model is taking one step a second. That is a property of the drawing only; delete it
+ * and the run is identical.
  */
 
 import species from '../species/pogonomyrmex-badius.json'
@@ -20,12 +25,18 @@ import { loadSpecies } from './core/params/index.js'
 import { Colony } from './core/sim/colony.js'
 import { BroodInvestment } from './core/systems/demography.js'
 import { measureNest } from './core/state/nest.js'
+import { Burden, Caste, Domain, Task } from './core/state/ants.js'
+import { ruleById } from './core/provenance/rules.js'
 import { NestView } from './render/nest-view.js'
 import { SurfaceView } from './render/surface-view.js'
+import { AntMotion } from './render/ant-motion.js'
+import { CASTE_COLOURS, BURDEN_COLOURS, coloursFor } from './render/ant-sprite.js'
+import { DEFAULT_THEME } from './render/nest-view.js'
 import { colonyReadings, describePhase, formatDate, nestReadings, renderHud } from './ui/hud.js'
 import { createSourcesSheet } from './ui/sources.js'
 import { createInstrumentSheet } from './ui/instrument.js'
 import { mountThreshold } from './ui/threshold.js'
+import type { NestViewport } from './render/nest-view.js'
 import type { BroodInvestmentValue } from './core/systems/demography.js'
 
 const { params, counts } = loadSpecies(species as unknown as Record<string, unknown>)
@@ -53,22 +64,54 @@ function repositoryUrl(): string {
 const openSources = createSourcesSheet(counts)
 const openInstrument = createInstrumentSheet(repositoryUrl())
 
-/** Simulated days per real second. Speed changes how many steps run, never their size. */
+/**
+ * Simulated days per real second. Speed changes how many steps run, never their size.
+ *
+ * Labelled in days rather than in multipliers. "16x" says nothing about what a reader is
+ * about to see; "16 days a second" says that the first workers are about three seconds
+ * away.
+ */
 const SPEEDS: readonly { label: string; daysPerSecond: number }[] = [
-  { label: '1x', daysPerSecond: 1 / 60 },
-  { label: '4x', daysPerSecond: 4 / 60 },
-  { label: '16x', daysPerSecond: 16 / 60 },
-  { label: '64x', daysPerSecond: 64 / 60 },
-  { label: '256x', daysPerSecond: 256 / 60 },
+  { label: '1 day/min', daysPerSecond: 1 / 60 },
+  { label: '1 day/4s', daysPerSecond: 0.25 },
+  { label: '1 day/s', daysPerSecond: 1 },
+  { label: '4 days/s', daysPerSecond: 4 },
+  { label: '16 days/s', daysPerSecond: 16 },
 ]
+
+/**
+ * The speed a visitor starts at.
+ *
+ * A day a second. The queen seals herself in, digs her founding shaft over the next few
+ * seconds, lays, and her first daughters eclose about forty seconds in — which is roughly
+ * how long someone will watch before deciding whether this is worth their time. Slower and
+ * the first minute is a still picture; faster and the founding is over before it is seen.
+ */
+const DEFAULT_SPEED = 2
 
 /** Milliseconds of simulation permitted per frame. Past this the picture slows, not the model. */
 const FRAME_BUDGET_MS = 9
 
-const INVESTMENTS: readonly { label: string; value: BroodInvestmentValue }[] = [
-  { label: 'Workers', value: BroodInvestment.Workers },
-  { label: 'Balanced', value: BroodInvestment.Balanced },
-  { label: 'Alates', value: BroodInvestment.Alates },
+const INVESTMENTS: readonly {
+  label: string
+  value: BroodInvestmentValue
+  note: string
+}[] = [
+  {
+    label: 'Workers',
+    value: BroodInvestment.Workers,
+    note: 'Every egg is raised as a worker. The colony grows as fast as its foragers can feed the brood, and produces almost no winged reproductives.',
+  },
+  {
+    label: 'Balanced',
+    value: BroodInvestment.Balanced,
+    note: 'Most eggs become workers. Once the colony is past 700 workers, a small share of the spring brood is raised into winged queens and males instead.',
+  },
+  {
+    label: 'Alates',
+    value: BroodInvestment.Alates,
+    note: 'As much of the spring brood as the season allows is raised into winged queens and males. That is the colony reproducing, and it is paid for out of the fat its workers stored last autumn.',
+  },
 ]
 
 function startThreshold(): void {
@@ -87,12 +130,16 @@ function startThreshold(): void {
   })
 }
 
+/** Camera modes for the slice. "Free" is whatever the reader has zoomed or dragged to. */
+type Camera = 'work' | 'nest' | 'free'
+
 function startSimulator(): void {
   // A colony seed drawn once per visit, so two people who open the page do not watch the
   // same nest. It is printed in the panel, so any run a person likes can be repeated here
   // or handed to the headless runner and reproduced exactly.
   const seed = Math.floor(Math.random() * 2 ** 31) || 1
   const colony = new Colony({ seed, params })
+  const motion = new AntMotion(colony.sim.ants.capacity)
 
   app!.innerHTML = `
     <main class="layout">
@@ -101,6 +148,7 @@ function startSimulator(): void {
           <div class="view view--nest">
             <canvas id="slice"></canvas>
             <p class="view-label">nest, vertical slice</p>
+            <div class="view-tools" id="cameras"></div>
           </div>
           <div class="view view--surface">
             <canvas id="ground"></canvas>
@@ -108,9 +156,10 @@ function startSimulator(): void {
           </div>
         </div>
         <p class="stage-note">
-          Real shafts are helices 4 to 6 cm across; the slice is a plane cut through one, not
-          a flattened nest. The lines on the ground are not drawn: they are recruitment
-          pheromone, left by foragers walking home.
+          Scroll to zoom the slice, drag to move it. Click an ant to see the rule it is
+          following. Real shafts are helices 4 to 6 cm across; the slice is a plane cut
+          through one, not a flattened nest. The lines on the ground are not drawn: they are
+          recruitment pheromone, left by foragers walking home.
         </p>
       </section>
       <aside class="panel">
@@ -124,6 +173,12 @@ function startSimulator(): void {
         </div>
         <div class="controls" id="speeds"></div>
         <div class="controls" id="levers"></div>
+        <p class="control-note" id="lever-note"></p>
+        <div class="inspector" id="inspector" hidden></div>
+        <details class="legend" id="legend">
+          <summary>What am I looking at?</summary>
+          <div class="legend-body" id="legend-body"></div>
+        </details>
         <div class="readouts" id="hud"></div>
         <div class="panel-foot">
           <p class="provenance">
@@ -150,12 +205,25 @@ function startSimulator(): void {
   const phaseEl = app!.querySelector<HTMLElement>('#phase')!
   const speedBar = app!.querySelector<HTMLDivElement>('#speeds')!
   const leverBar = app!.querySelector<HTMLDivElement>('#levers')!
+  const leverNote = app!.querySelector<HTMLParagraphElement>('#lever-note')!
+  const cameraBar = app!.querySelector<HTMLDivElement>('#cameras')!
+  const inspector = app!.querySelector<HTMLDivElement>('#inspector')!
 
   const nestView = new NestView(sliceCanvas)
   const surfaceView = new SurfaceView(groundCanvas)
 
-  let speedIndex = 1
+  let speedIndex = DEFAULT_SPEED
   let paused = false
+  let camera: Camera = 'work'
+  /**
+   * How much depth the slice shows. Starts at ant scale — a founding chamber is 1 cm high
+   * and a worker 6.35 mm long, so this is about forty body lengths of nest.
+   */
+  let spanCm = 26
+  let freeTopCm = 0
+  let freeCentreCm = 0
+  let selected = -1
+  const startedAtMs = performance.now()
 
   // Speed controls. Pause first, because it is the one a person reaches for in a hurry.
   const pauseButton = document.createElement('button')
@@ -182,6 +250,33 @@ function startSimulator(): void {
   })
   speedButtons[speedIndex]!.ariaPressed = 'true'
 
+  // Camera. The default is ant scale, over the deepest work; one click gives the whole nest.
+  const cameraButtons: HTMLButtonElement[] = []
+  const CAMERAS: readonly { label: string; value: Camera; title: string }[] = [
+    { label: 'Follow the ants', value: 'work', title: 'Ant scale, over the deepest digging' },
+    { label: 'Whole nest', value: 'nest', title: 'Everything dug so far, to scale' },
+  ]
+  CAMERAS.forEach((option) => {
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.textContent = option.label
+    button.title = option.title
+    button.addEventListener('click', () => {
+      camera = option.value
+      if (option.value === 'work') spanCm = 26
+      syncCameraButtons()
+    })
+    cameraButtons.push(button)
+    cameraBar.append(button)
+  })
+
+  function syncCameraButtons(): void {
+    for (const [i, b] of cameraButtons.entries()) {
+      b.ariaPressed = String(CAMERAS[i]!.value === camera)
+    }
+  }
+  syncCameraButtons()
+
   // The one lever a person is given. It biases the queen's egg laying and acts on
   // developmental scheduling only. It cannot reassign an adult, and nothing in the UI may
   // ever offer to: foragers in this species do not revert and the colony does not backfill.
@@ -197,16 +292,116 @@ function startSimulator(): void {
     button.textContent = investment.label
     button.addEventListener('click', () => {
       colony.demography.investment = investment.value
-      for (const [i, b] of leverButtons.entries())
-        b.ariaPressed = String(INVESTMENTS[i]!.value === investment.value)
+      syncLever()
     })
     leverButtons.push(button)
     leverBar.append(button)
   })
-  leverButtons[colony.demography.investment]!.ariaPressed = 'true'
+
+  function syncLever(): void {
+    const chosen = INVESTMENTS.find((i) => i.value === colony.demography.investment)!
+    for (const [i, b] of leverButtons.entries())
+      b.ariaPressed = String(INVESTMENTS[i]!.value === colony.demography.investment)
+    leverNote.textContent = `${chosen.note} It changes what the queen's eggs are raised into, and nothing else: a worker already alive is never reassigned, because in this species a forager never returns to inside work and no shortage recruits a replacement.`
+  }
+  syncLever()
+
+  buildLegend(app!.querySelector<HTMLDivElement>('#legend-body')!)
 
   app!.querySelector('#show-sources')!.addEventListener('click', () => openSources('sources'))
   app!.querySelector('#show-instrument')!.addEventListener('click', () => openInstrument())
+
+  // ---- Zooming, dragging and picking an ant ----
+
+  let lastViewport: NestViewport = { topCm: 0, spanCm, centreCm: 0 }
+  let lastSliceSize = { width: 1, height: 1 }
+
+  sliceCanvas.addEventListener(
+    'wheel',
+    (event) => {
+      event.preventDefault()
+      // Zoom about the pointer, so the thing being looked at stays under the cursor.
+      const rect = sliceCanvas.getBoundingClientRect()
+      const at = NestView.unproject(
+        lastViewport,
+        rect.width,
+        rect.height,
+        event.clientX - rect.left,
+        event.clientY - rect.top,
+      )
+      const factor = Math.exp(event.deltaY * 0.0015)
+      const next = Math.min(400, Math.max(3, spanCm * factor))
+      const fraction = (at.depthCm - lastViewport.topCm) / lastViewport.spanCm
+      freeTopCm = at.depthCm - fraction * next
+      freeCentreCm = lastViewport.centreCm
+      spanCm = next
+      camera = 'free'
+      syncCameraButtons()
+    },
+    { passive: false },
+  )
+
+  let dragging = false
+  let dragX = 0
+  let dragY = 0
+  let dragged = false
+  sliceCanvas.addEventListener('pointerdown', (event) => {
+    dragging = true
+    dragged = false
+    dragX = event.clientX
+    dragY = event.clientY
+    sliceCanvas.setPointerCapture(event.pointerId)
+  })
+  sliceCanvas.addEventListener('pointermove', (event) => {
+    if (!dragging) return
+    const dx = event.clientX - dragX
+    const dy = event.clientY - dragY
+    if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true
+    dragX = event.clientX
+    dragY = event.clientY
+    const pxPerCm = lastSliceSize.height / lastViewport.spanCm
+    freeTopCm = lastViewport.topCm - dy / pxPerCm
+    freeCentreCm = lastViewport.centreCm - dx / pxPerCm
+    camera = 'free'
+    syncCameraButtons()
+  })
+  sliceCanvas.addEventListener('pointerup', (event) => {
+    dragging = false
+    sliceCanvas.releasePointerCapture(event.pointerId)
+    if (dragged) return
+    // A click, not a drag: pick the nearest ant to the pointer.
+    const rect = sliceCanvas.getBoundingClientRect()
+    const at = NestView.unproject(
+      lastViewport,
+      rect.width,
+      rect.height,
+      event.clientX - rect.left,
+      event.clientY - rect.top,
+    )
+    selected = nearestAnt(at.offsetCm, at.depthCm)
+  })
+
+  function nearestAnt(offsetCm: number, depthCm: number): number {
+    const { ants } = colony.sim
+    // Within a centimetre or so of the click, scaled with the zoom so a wide view is not
+    // impossible to hit and a close one is not sloppy.
+    const reach = Math.max(0.4, lastViewport.spanCm * 0.03)
+    let best = -1
+    let bestDistance = reach * reach
+    for (let i = 0; i < ants.count; i += 1) {
+      if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
+      const dx = motion.drawnX(i) - offsetCm
+      const dy = motion.drawnY(i) - depthCm
+      const d = dx * dx + dy * dy
+      if (d < bestDistance) {
+        bestDistance = d
+        best = i
+      }
+    }
+    return best
+  }
+
+  // ---- Drawing ----
 
   function fit(canvas: HTMLCanvasElement): { width: number; height: number } | null {
     const rect = canvas.getBoundingClientRect()
@@ -219,17 +414,38 @@ function startSimulator(): void {
     return { width: rect.width, height: rect.height }
   }
 
+  function viewportFor(): NestViewport {
+    if (camera === 'nest') return NestView.frameNest(colony.nest)
+    if (camera === 'work') {
+      return NestView.frameWork(colony.nest, colony.sim.ants, spanCm, colony.demography.queenSlot)
+    }
+    return { topCm: freeTopCm, spanCm, centreCm: freeCentreCm }
+  }
+
   function redraw(): void {
+    const timeSeconds = (performance.now() - startedAtMs) / 1000
+    const brood = colony.demography.brood
     const sliceSize = fit(sliceCanvas)
     if (sliceSize !== null) {
-      const viewport = NestView.frameNest(colony.nest, sliceSize.height)
+      lastSliceSize = sliceSize
+      lastViewport = viewportFor()
       nestView.draw(
         colony.nest,
         colony.soil,
         colony.sim.ants,
-        viewport,
+        lastViewport,
         sliceSize.width,
         sliceSize.height,
+        {
+          motion,
+          timeSeconds,
+          selected,
+          broodMix: {
+            eggs: brood.eggCount,
+            larvae: brood.larvaCount,
+            pupae: brood.pupaCount,
+          },
+        },
       )
     }
 
@@ -241,6 +457,7 @@ function startSimulator(): void {
         groundSize.width,
         groundSize.height,
         params.foraging.foragingRangeMetres.value * 2.2,
+        { motion, timeSeconds },
       )
     }
 
@@ -252,6 +469,65 @@ function startSimulator(): void {
     ])
     dateEl.textContent = formatDate(colony.sim.clock.date())
     phaseEl.textContent = describePhase(summary)
+    renderInspector()
+  }
+
+  /** The card that appears when a reader clicks an ant. The citation is the point of it. */
+  function renderInspector(): void {
+    const { ants } = colony.sim
+    if (selected < 0 || selected >= ants.count || !ants.isAlive(selected)) {
+      inspector.hidden = true
+      return
+    }
+    inspector.hidden = false
+    const rule = ruleById(ants.ruleId[selected]!)
+    const depth = ants.y[selected]!
+    const carrying = BURDEN_NAMES[ants.burden[selected]!] ?? ''
+    inspector.replaceChildren()
+
+    const title = document.createElement('p')
+    title.className = 'inspector-title'
+    const swatch = document.createElement('span')
+    swatch.className = 'swatch'
+    swatch.style.background = coloursFor(ants.caste[selected]!).body
+    title.append(
+      swatch,
+      document.createTextNode(
+        `${CASTE_NAMES[ants.caste[selected]!] ?? 'ant'}, ${TASK_NAMES[ants.task[selected]!] ?? 'no task yet'}`,
+      ),
+    )
+
+    const where = document.createElement('p')
+    where.className = 'inspector-where'
+    where.textContent =
+      `${depth.toFixed(1)} cm down` +
+      (carrying === '' ? '' : `, carrying ${carrying}`) +
+      `, ${(ants.ageTicks[selected]! / colony.sim.clock.ticksPerDay).toFixed(0)} days old`
+
+    const doing = document.createElement('p')
+    doing.className = 'inspector-rule'
+    doing.textContent = rule.summary
+
+    const cite = document.createElement('p')
+    cite.className = 'inspector-cite'
+    cite.textContent = `[${rule.tag}] ${rule.citation} · SCIENCE.md §${rule.section}`
+
+    const close = document.createElement('button')
+    close.type = 'button'
+    close.className = 'linkish'
+    close.textContent = 'Stop following'
+    close.addEventListener('click', () => {
+      selected = -1
+    })
+
+    inspector.append(title, where, doing, cite)
+    if (rule.caveat !== undefined && rule.caveat !== '—') {
+      const caveat = document.createElement('p')
+      caveat.className = 'inspector-caveat'
+      caveat.textContent = rule.caveat
+      inspector.append(caveat)
+    }
+    inspector.append(close)
   }
 
   let lastFrameMs = performance.now()
@@ -279,6 +555,9 @@ function startSimulator(): void {
       if (owedTicks > colony.sim.clock.ticksPerDay) owedTicks = 0
     }
 
+    // The ants keep walking even while the model is paused mid-step, which is what makes a
+    // slow speed watchable rather than a slideshow.
+    motion.update(colony.sim.ants, elapsedSeconds)
     redraw()
     window.requestAnimationFrame(frame)
   }
@@ -301,6 +580,88 @@ function startSimulator(): void {
       },
     }
   }
+}
+
+const CASTE_NAMES: Record<number, string> = {
+  [Caste.Queen]: 'The queen',
+  [Caste.Alate]: 'Winged queen',
+  [Caste.Male]: 'Male',
+  [Caste.MinorWorker]: 'Minor worker',
+  [Caste.MajorWorker]: 'Major worker',
+  [Caste.Callow]: 'Callow, newly eclosed',
+}
+
+const TASK_NAMES: Record<number, string> = {
+  [Task.None]: 'not yet working',
+  [Task.BroodCare]: 'brood care',
+  [Task.Transfer]: 'transfer work',
+  [Task.Excavator]: 'digging',
+  [Task.Forager]: 'foraging',
+}
+
+const BURDEN_NAMES: Record<number, string> = {
+  [Burden.SoilPellet]: 'a pellet of sand',
+  [Burden.Seed]: 'a seed',
+  [Burden.Brood]: 'a piece of brood',
+  [Burden.Charcoal]: 'a fragment of charcoal',
+  [Burden.Corpse]: 'a dead nestmate',
+}
+
+/**
+ * The key to the picture.
+ *
+ * It exists because a reader cannot be expected to infer that a pale blob is a callow and a
+ * cream oval is a larva. Where the drawing makes a distinction the model does not, this
+ * says so — the brood stages and the queen's size are both conventions of the renderer.
+ */
+function buildLegend(container: HTMLElement): void {
+  const entries: readonly { colour: string; label: string }[] = [
+    {
+      colour: coloursFor(Caste.Queen).body,
+      label: 'The queen. One per colony, and there is never another.',
+    },
+    {
+      colour: CASTE_COLOURS[Caste.MinorWorker]!.body,
+      label: 'Minor worker, 6.35 mm. Most of the colony.',
+    },
+    {
+      colour: CASTE_COLOURS[Caste.MajorWorker]!.body,
+      label: 'Major worker, 9.52 mm. About one in fourteen; they crack seeds.',
+    },
+    {
+      colour: CASTE_COLOURS[Caste.Callow]!.body,
+      label: 'Callow: newly eclosed and still pale. It darkens over its first days.',
+    },
+    {
+      colour: BURDEN_COLOURS[Burden.SoilPellet]!,
+      label: 'A pellet of sand, on its way up and out.',
+    },
+    { colour: BURDEN_COLOURS[Burden.Seed]!, label: 'A seed. Seeds are what this species eats.' },
+    { colour: DEFAULT_THEME.egg, label: 'Eggs, larvae and pupae, kept in the deep chambers.' },
+    { colour: DEFAULT_THEME.seed, label: 'The seed store, in the chambers at 20 to 80 cm.' },
+    {
+      colour: '#3f7d6a',
+      label: 'Recruitment pheromone on the ground. Not drawn: left by foragers walking home.',
+    },
+  ]
+
+  const list = document.createElement('ul')
+  list.className = 'legend-list'
+  for (const entry of entries) {
+    const item = document.createElement('li')
+    const swatch = document.createElement('span')
+    swatch.className = 'swatch'
+    swatch.style.background = entry.colour
+    item.append(swatch, document.createTextNode(entry.label))
+    list.append(item)
+  }
+
+  const caveat = document.createElement('p')
+  caveat.className = 'legend-caveat'
+  caveat.textContent =
+    'Three things in this picture are the renderer’s doing rather than the model’s. On the ground, seen from above, the ants are drawn far larger than life: at a scale that fits a 20 metre foraging range on screen, a 6.35 mm worker is a fiftieth of a pixel. Use the scale bar for distances, and the nest slice — where body length is drawn true — for size. The queen is drawn larger than her daughters because she is larger, but no body length for a badius queen appears in the bibliography, so her size on screen is a convention. And the nest tracks brood as a count per chamber, not as individuals, so which glyph is an egg and which a larva is assigned in the colony’s current proportions. Everything else — where each ant is, what it carries, how many seeds are in that chamber — is the model’s.'
+
+  container.replaceChildren(list, caveat)
 }
 
 startThreshold()

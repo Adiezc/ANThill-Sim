@@ -20,6 +20,7 @@ import { SoilModel } from '../systems/soil.js'
 import { ClimateModel } from '../systems/climate.js'
 import { makeExcavationSystem } from '../systems/excavation.js'
 import { createForagingState, makeForagingSystem, meanTripTicks } from '../systems/foraging.js'
+import { createInteriorState, makeInteriorSystem } from '../systems/interior.js'
 import {
   createDemographyState,
   makeDemographySystem,
@@ -29,6 +30,7 @@ import {
 import { RULE } from '../provenance/rules.js'
 import type { ExcavationState } from '../systems/excavation.js'
 import type { ForagingState } from '../systems/foraging.js'
+import type { InteriorState } from '../systems/interior.js'
 import type { DemographyState } from '../systems/demography.js'
 import type { Params } from '../params/params.js'
 
@@ -57,7 +59,12 @@ export interface ColonySummary {
   readonly nestDepthCm: number
   readonly soilMovedCells: number
   readonly phase: string
+  /** Seeds lying in the nest's own chambers, where the ants put them. */
   readonly seedsStored: number
+  /** Seeds in a worker's mandibles inside the nest, on their way to or down the store. */
+  readonly seedsInTransit: number
+  /** Brood the colony is holding, as placed in chambers. */
+  readonly broodInChambers: number
   readonly totalSeedsCollected: number
   readonly foragersOnSurface: number
   /** Mean completed foraging trip, in ticks. A tick is one simulated minute; see D7. */
@@ -73,6 +80,7 @@ export class Colony {
   readonly demography: DemographyState
   readonly surface: SurfaceGrid
   readonly foraging: ForagingState
+  readonly interior: InteriorState
 
   private peakWorkers = 0
 
@@ -118,6 +126,11 @@ export class Colony {
     this.surface = new SurfaceGrid(params, this.sim.prng)
     this.foraging = createForagingState(this.surface, this.soil, this.climate)
 
+    // Movement, brood tending and the seed store, inside the nest. It borrows excavation's
+    // per-cell ant counts rather than recounting them: excavation fills that array at the
+    // top of every tick and runs first.
+    this.interior = createInteriorState(this.nest, this.demography, this.excavation.occupants)
+
     // The entrance. Everything below it the colony digs itself.
     this.nest.excavate(this.nest.entranceCol, 0)
     this.soil.applyVoid(this.nest, this.nest.entranceCol, 0)
@@ -155,6 +168,7 @@ export class Colony {
 
     this.sim.register('climate', () => this.rollWeather())
     this.sim.register('excavation', makeExcavationSystem(this.excavation))
+    this.sim.register('interior', makeInteriorSystem(this.interior))
     this.sim.register('demography', makeDemographySystem(this.demography))
     this.sim.register('foraging', makeForagingSystem(this.foraging))
     this.sim.register('newAdults', () => this.settleNewAdults())
@@ -219,7 +233,9 @@ export class Colony {
       nestDepthCm: this.nest.maxDepthCm,
       soilMovedCells: this.nest.excavatedCells,
       phase: this.demography.phase,
-      seedsStored: this.foraging.seedsStored,
+      seedsStored: this.interior.seedsInStore,
+      seedsInTransit: this.interior.seedsCarried,
+      broodInChambers: this.interior.broodInCells,
       totalSeedsCollected: this.foraging.totalSeedsCollected,
       foragersOnSurface: this.foraging.antsOnSurface,
       meanTripTicks: meanTripTicks(this.foraging),

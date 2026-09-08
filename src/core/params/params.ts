@@ -192,6 +192,9 @@ export interface Params {
     readonly foragerFractionBelow20cm: Param<number>
     readonly transferWorkerFractionBelow20cm: Param<number>
     readonly broodCareFractionBelow70cm: Param<number>
+    /** The depths those fractions were measured against. A measurement boundary, not a cue. */
+    readonly stratificationShallowProbeCm: Param<number>
+    readonly stratificationDeepProbeCm: Param<number>
     readonly summerForagerFraction: Param<number>
     readonly summerTransferWorkerFraction: Param<number>
     readonly peakForagingProportion: Param<number>
@@ -293,8 +296,30 @@ export interface Params {
     readonly queenFoundingFatPerEgg: Param<number>
   }
 
+  /**
+   * Movement and work inside the nest for ants that are not digging.
+   *
+   * Where each group ends up is measured; how an ant gets there is invented. See the
+   * `$comment` on this section in the species file.
+   */
+  readonly interior: {
+    readonly stepIntervalTicks: Param<number>
+    readonly depthPreferenceWeight: Param<number>
+    readonly walkNoise: Param<number>
+    readonly crowdAvoidance: Param<number>
+    readonly preferredDepthRedrawDays: Param<number>
+    readonly tendingAttraction: Param<number>
+    readonly broodPickUpChancePerTick: Param<number>
+    readonly maxBroodPerCell: Param<number>
+    readonly broodChamberDepthFraction: Param<number>
+  }
+
   readonly seeds: {
     readonly seedChamberDepthCm: RangeParam
+    readonly foragerDepositMaxDepthCm: Param<number>
+    readonly downwardTransportChancePerTick: Param<number>
+    readonly storeBandFractionOfDepth: Param<number>
+    readonly maxSeedsPerCell: Param<number>
     readonly largeSeedStoreFractionByWeight: Param<number>
     readonly majorsIncreaseOpeningRate: Param<boolean>
     /** HARD RULE, false. Majors raise the rate, not the range. */
@@ -570,6 +595,8 @@ export function buildParams(root: Raw): Params {
       foragerFractionBelow20cm: readScalar(root, 'labour.foragerFractionBelow20cm'),
       transferWorkerFractionBelow20cm: readScalar(root, 'labour.transferWorkerFractionBelow20cm'),
       broodCareFractionBelow70cm: readScalar(root, 'labour.broodCareFractionBelow70cm'),
+      stratificationShallowProbeCm: readScalar(root, 'labour.stratificationShallowProbeCm'),
+      stratificationDeepProbeCm: readScalar(root, 'labour.stratificationDeepProbeCm'),
       summerForagerFraction: readScalar(root, 'labour.summerForagerFraction'),
       summerTransferWorkerFraction: readScalar(root, 'labour.summerTransferWorkerFraction'),
       peakForagingProportion: readScalar(root, 'labour.peakForagingProportion'),
@@ -670,8 +697,24 @@ export function buildParams(root: Raw): Params {
       queenFoundingFatPerEgg: readScalar(root, 'brood.queenFoundingFatPerEgg'),
     },
 
+    interior: {
+      stepIntervalTicks: readScalar(root, 'interior.stepIntervalTicks'),
+      depthPreferenceWeight: readScalar(root, 'interior.depthPreferenceWeight'),
+      walkNoise: readScalar(root, 'interior.walkNoise'),
+      crowdAvoidance: readScalar(root, 'interior.crowdAvoidance'),
+      preferredDepthRedrawDays: readScalar(root, 'interior.preferredDepthRedrawDays'),
+      tendingAttraction: readScalar(root, 'interior.tendingAttraction'),
+      broodPickUpChancePerTick: readScalar(root, 'interior.broodPickUpChancePerTick'),
+      maxBroodPerCell: readScalar(root, 'interior.maxBroodPerCell'),
+      broodChamberDepthFraction: readScalar(root, 'interior.broodChamberDepthFraction'),
+    },
+
     seeds: {
       seedChamberDepthCm: readRange(root, 'seeds.seedChamberDepthCm'),
+      foragerDepositMaxDepthCm: readScalar(root, 'seeds.foragerDepositMaxDepthCm'),
+      downwardTransportChancePerTick: readScalar(root, 'seeds.downwardTransportChancePerTick'),
+      storeBandFractionOfDepth: readScalar(root, 'seeds.storeBandFractionOfDepth'),
+      maxSeedsPerCell: readScalar(root, 'seeds.maxSeedsPerCell'),
       largeSeedStoreFractionByWeight: readScalar(root, 'seeds.largeSeedStoreFractionByWeight'),
       majorsIncreaseOpeningRate: readFlag(root, 'seeds.majorsIncreaseOpeningRate'),
       majorsWidenOpenableSizeRange: readFlag(root, 'seeds.majorsWidenOpenableSizeRange'),
