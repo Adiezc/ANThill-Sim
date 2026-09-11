@@ -93,12 +93,17 @@ const GLYPH_MIN_CELL_PX = 5
 
 export class NestView {
   private readonly ctx: CanvasRenderingContext2D
-  private readonly theme: NestViewTheme
+  private theme: NestViewTheme
 
   constructor(canvas: HTMLCanvasElement, theme: NestViewTheme = DEFAULT_THEME) {
     const context = canvas.getContext('2d')
     if (context === null) throw new Error('Canvas 2D is not available in this browser')
     this.ctx = context
+    this.theme = theme
+  }
+
+  /** Swaps the colours when the page theme changes. The next draw uses them. */
+  setTheme(theme: NestViewTheme): void {
     this.theme = theme
   }
 
@@ -411,7 +416,7 @@ export class NestView {
     ctx.fillStyle = 'rgba(0,0,0,0.28)'
     ctx.fillRect(0, 0, RULER_WIDTH, heightPx)
 
-    ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, monospace'
+    ctx.font = "11px 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace"
     ctx.textAlign = 'right'
     ctx.textBaseline = 'middle'
 

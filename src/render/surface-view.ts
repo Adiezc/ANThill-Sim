@@ -204,7 +204,7 @@ export class SurfaceView {
 
     ctx.fillStyle = theme.ruleText
     ctx.font =
-      '11px ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace'
+      '11px "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'bottom'
     ctx.fillText(`${metres} m`, x, y - 6)

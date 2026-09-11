@@ -43,8 +43,18 @@ import {
 import { createSourcesSheet } from './ui/sources.js'
 import { createInstrumentSheet } from './ui/instrument.js'
 import { mountThreshold } from './ui/threshold.js'
+import {
+  currentTheme,
+  initTheme,
+  nestThemeFor,
+  onThemeChange,
+  themeToggleLabel,
+  toggleTheme,
+} from './ui/theme.js'
 import type { NestViewport } from './render/nest-view.js'
 import type { BroodInvestmentValue } from './core/systems/demography.js'
+
+initTheme()
 
 const { params, counts } = loadSpecies(species as unknown as Record<string, unknown>)
 
@@ -121,6 +131,13 @@ const INVESTMENTS: readonly {
   },
 ]
 
+/**
+ * The four figures shown large at the top of the readouts. They are the ones that change from
+ * one glance to the next, and the ones a reader asks about first: how big, how many out, how
+ * much coming, how much put by. Everything else stays in rows with its note beside it.
+ */
+const GLANCE: readonly string[] = ['Workers', 'Foragers', 'Brood', 'Seeds in store']
+
 /** Plain words for the three evidence labels, used wherever a rule is shown. */
 const TAG_WORDS: Readonly<Record<'A' | 'B' | 'C', string>> = {
   A: 'Measured in this species',
@@ -193,7 +210,7 @@ function startSimulator(): void {
         </section>
         <section class="panel-section">
           <h2 class="panel-label">What the queen's eggs become</h2>
-          <div class="controls" id="levers"></div>
+          <div class="controls controls--segmented controls--three" id="levers"></div>
           <p class="control-note" id="lever-note"></p>
         </section>
         <div class="inspector" id="inspector" hidden></div>
@@ -214,8 +231,11 @@ function startSimulator(): void {
             model's ${totalValues} values, ${counts.A} are measured in this species,
             ${counts.B} are borrowed from other ants and ${counts.C} are invented.
           </p>
-          <button class="linkish" id="show-sources" type="button">Sources and evidence</button>
-          <button class="linkish" id="show-instrument" type="button">Run your own study</button>
+          <div class="foot-links">
+            <button class="linkish" id="show-sources" type="button">Sources and evidence</button>
+            <button class="linkish" id="show-instrument" type="button">Run your own study</button>
+            <button class="linkish" id="theme-toggle" type="button"></button>
+          </div>
         </footer>
       </aside>
     </main>
@@ -232,8 +252,18 @@ function startSimulator(): void {
   const cameraBar = app!.querySelector<HTMLDivElement>('#cameras')!
   const inspector = app!.querySelector<HTMLDivElement>('#inspector')!
 
-  const nestView = new NestView(sliceCanvas)
+  const nestView = new NestView(sliceCanvas, nestThemeFor(currentTheme()))
   const surfaceView = new SurfaceView(groundCanvas)
+
+  // The slice draws its own sky and ruler, so it is told when the theme changes. The next
+  // frame redraws it; nothing else needs to happen.
+  const themeButton = app!.querySelector<HTMLButtonElement>('#theme-toggle')!
+  themeButton.textContent = themeToggleLabel()
+  themeButton.addEventListener('click', () => toggleTheme())
+  onThemeChange((theme) => {
+    nestView.setTheme(nestThemeFor(theme))
+    themeButton.textContent = themeToggleLabel()
+  })
 
   let speedIndex = DEFAULT_SPEED
   let paused = false
@@ -479,9 +509,18 @@ function startSimulator(): void {
 
     const summary = colony.summary()
     const measurement = measureNest(colony.nest, params)
+    const colonyFigures = colonyReadings(summary, params)
+    const seedFigures = seedReadings(summary, params)
+    const allFigures = [...colonyFigures, ...seedFigures]
+    const elsewhere = (reading: { label: string }): boolean => !GLANCE.includes(reading.label)
     renderHud(hud, [
-      { title: 'The colony', readings: colonyReadings(summary, params) },
-      { title: 'Seeds', readings: seedReadings(summary, params) },
+      {
+        title: 'At a glance',
+        layout: 'tiles',
+        readings: GLANCE.flatMap((label) => allFigures.filter((r) => r.label === label)),
+      },
+      { title: 'The colony', readings: colonyFigures.filter(elsewhere) },
+      { title: 'Seeds', readings: seedFigures.filter(elsewhere) },
       {
         title: 'The nest',
         readings: nestReadings(measurement, params, summary.phase !== 'founding'),

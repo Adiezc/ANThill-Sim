@@ -3,11 +3,10 @@
  *
  * It exists because this software has two audiences who want incompatible things from it.
  * One wants to watch a colony. The other wants thirty of them, with a methods file at the
- * end. The choice is made on the way in, and each door says plainly what it can and cannot
- * do. A browser tab runs one colony well. It cannot run a study, and the second door says
- * so and hands over the command that can.
+ * end. The choice is made on the way in: one action for each, and the evidence behind the
+ * model one click away.
  *
- * The picture on the left is not a screenshot. It is the same renderer and the same core,
+ * The picture on the right is not a screenshot. It is the same renderer and the same core,
  * running a seeded colony while the reader reads.
  */
 
@@ -15,6 +14,13 @@ import { NestView } from '../render/nest-view.js'
 import { AntMotion } from '../render/ant-motion.js'
 import { createNestHarness } from '../core/sim/nest-harness.js'
 import { measureNest } from '../core/state/nest.js'
+import {
+  currentTheme,
+  nestThemeFor,
+  onThemeChange,
+  themeToggleLabel,
+  toggleTheme,
+} from './theme.js'
 import type { Params } from '../core/params/params.js'
 
 export type Door = 'watch' | 'instrument'
@@ -44,52 +50,61 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
 
   root.innerHTML = `
     <main class="threshold">
-      <section class="threshold-stage" aria-label="A colony digging">
-        <canvas id="threshold-slice" aria-hidden="true"></canvas>
-        <p class="threshold-caption">
-          A colony digging in your browser right now, seen as a slice through the sand. The
-          ruler on the left is in centimetres.
-        </p>
-      </section>
       <section class="threshold-body">
         <header>
           <h1>A nest with no architect</h1>
           <p class="binomial"><i>Pogonomyrmex badius</i>, the Florida harvester ant</p>
         </header>
         <p class="lede">${OPENING}</p>
-        <div class="doors">
-          <button class="door door--primary" id="door-watch" type="button">
-            <span class="door-title">Watch a colony</span>
-            <span class="door-note">
-              Follow one queen as her colony digs, forages and grows. Her first workers hatch
-              within about a minute.
-            </span>
-          </button>
-          <button class="door" id="door-instrument" type="button">
-            <span class="door-title">Run your own study</span>
-            <span class="door-note">
-              Run dozens of colonies on your own computer and get a methods report at the end.
-              The browser only runs one colony at a time.
-            </span>
-          </button>
-          <button class="door" id="door-sources" type="button">
-            <span class="door-title">Where the numbers come from</span>
-            <span class="door-note">
-              ${counts.A} values measured in this species, ${counts.B} borrowed from related ants
-              and ${counts.C} invented. Every one is labelled.
-            </span>
+        <div class="actions">
+          <button class="btn btn--primary" id="door-watch" type="button">Watch a colony</button>
+          <button class="btn btn--secondary" id="door-instrument" type="button">
+            Run your own study
           </button>
         </div>
-        <p class="threshold-foot">
-          The biology comes from three decades of field work by Walter R. Tschinkel and
-          Christina L. Kwapich. Cite them, not this software, for any claim about the ants.
+        <p class="actions-note">
+          One founding queen to start. Her first workers hatch within about a minute.
+        </p>
+        <button class="facts" id="door-sources" type="button">
+          <span class="facts-grid">
+            <span class="fact">
+              <span class="fact-value">${counts.A}</span>
+              <span class="fact-label">values measured in this species</span>
+            </span>
+            <span class="fact">
+              <span class="fact-value">${counts.B}</span>
+              <span class="fact-label">borrowed from related ants</span>
+            </span>
+            <span class="fact">
+              <span class="fact-value">${counts.C}</span>
+              <span class="fact-label">invented, and labelled as such</span>
+            </span>
+          </span>
+          <span class="facts-caption">See where every number comes from</span>
+        </button>
+        <footer class="threshold-foot">
+          <p>
+            The biology comes from three decades of field work by Walter R. Tschinkel and
+            Christina L. Kwapich. Cite them, not this software, for any claim about the ants.
+          </p>
+          <button class="linkish" id="theme-toggle" type="button"></button>
+        </footer>
+      </section>
+      <section class="threshold-stage" aria-label="A colony digging">
+        <canvas id="threshold-slice" aria-hidden="true"></canvas>
+        <p class="threshold-caption">
+          A colony digging in your browser right now, seen as a slice through the sand. The
+          ruler is in centimetres.
         </p>
       </section>
     </main>
   `
 
   const canvas = root.querySelector<HTMLCanvasElement>('#threshold-slice')!
-  const view = new NestView(canvas)
+  const view = new NestView(canvas, nestThemeFor(currentTheme()))
+  const themeButton = root.querySelector<HTMLButtonElement>('#theme-toggle')!
+  themeButton.textContent = themeToggleLabel()
+  themeButton.addEventListener('click', () => toggleTheme())
 
   // A fixed seed, so every reader meets the same nest and a screenshot of this page is
   // reproducible. Small enough to dig visibly while somebody reads a paragraph.
@@ -126,6 +141,12 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
     })
   }
 
+  const stopListening = onThemeChange((theme) => {
+    view.setTheme(nestThemeFor(theme))
+    themeButton.textContent = themeToggleLabel()
+    draw()
+  })
+
   const tick = (): void => {
     if (!running) return
     // A small, fixed number of steps per frame. The point is a nest that visibly deepens,
@@ -156,5 +177,6 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
     running = false
     window.cancelAnimationFrame(frame)
     window.removeEventListener('resize', onResize)
+    stopListening()
   }
 }

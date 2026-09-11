@@ -8,6 +8,15 @@
       name="description"
       content="An agent-based simulation of a Florida harvester ant colony, from a single mated queen to the death of the colony."
     />
+    <script>
+      // The remembered theme, set before the first paint so a light-theme reader never sees a
+      // dark flash. src/ui/theme.ts owns the choice after this, and the key must match it.
+      try {
+        if (localStorage.getItem('anthill-theme') === 'light') {
+          document.documentElement.dataset.theme = 'light'
+        }
+      } catch {}
+    </script>
     <link rel="stylesheet" href="./src/ui/style.css" />
   </head>
   <body>

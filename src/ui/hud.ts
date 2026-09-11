@@ -30,6 +30,11 @@ export interface HudReading {
 export interface HudGroup {
   readonly title: string
   readonly readings: readonly HudReading[]
+  /**
+   * Tiles for the few figures a reader checks at a glance, rows for everything else. Rows by
+   * default, because most readings need their note beside them more than they need size.
+   */
+  readonly layout?: 'tiles' | 'rows'
 }
 
 const MONTHS = [
@@ -143,11 +148,15 @@ export function renderHud(container: HTMLElement, groups: readonly HudGroup[]): 
 
       const title = document.createElement('h2')
       title.textContent = group.title
-      section.append(title)
+
+      const tiles = group.layout === 'tiles'
+      const body = document.createElement('div')
+      body.className = tiles ? 'hud-grid' : 'hud-rows'
+      const itemClass = tiles ? 'hud-tile' : 'hud-row'
 
       for (const reading of group.readings) {
-        const row = document.createElement('div')
-        row.className = 'hud-row' + (reading.outOfRange === true ? ' hud-row--out' : '')
+        const item = document.createElement('div')
+        item.className = itemClass + (reading.outOfRange === true ? ` ${itemClass}--out` : '')
 
         const label = document.createElement('span')
         label.className = 'hud-label'
@@ -157,16 +166,17 @@ export function renderHud(container: HTMLElement, groups: readonly HudGroup[]): 
         value.className = 'hud-value'
         value.textContent = reading.value
 
-        row.append(label, value)
+        item.append(label, value)
 
         if (reading.expected !== undefined) {
           const expected = document.createElement('span')
           expected.className = 'hud-expected'
           expected.textContent = reading.expected
-          row.append(expected)
+          item.append(expected)
         }
-        section.append(row)
+        body.append(item)
       }
+      section.append(title, body)
       return section
     }),
   )
