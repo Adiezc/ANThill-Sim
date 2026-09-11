@@ -1,67 +1,75 @@
 # Determinism
 
-The same seed and the same parameter file must produce a byte-identical run, in Chrome, in
-Firefox and in Node. This is what makes the simulator usable as an instrument rather than
-an illustration, and it is asserted by `test/determinism.spec.ts`, not assumed.
+The same seed and the same parameter file must produce the same run, down to the last bit, in
+Chrome, Firefox and Node. That is what makes the simulator an instrument rather than an
+illustration.
 
-## The three sources of divergence, and what we do about each
+Two things back the promise. The model uses only operations that every JavaScript engine is
+required to compute identically. And `test/determinism.spec.ts` pins the fingerprint of a
+seeded run, so any change that alters a run fails the build. The test runs in Node. Agreement
+with browsers follows from the first point, not from a browser test.
 
-### 1. Ambient randomness
+## Three ways runs drift apart, and what stops each
 
-`Math.random()` is seeded by the host and is not reproducible. `/core` never calls it —
-ESLint fails the build if it appears. All randomness comes from a single counter-based
-PRNG, constructed from the run seed and passed explicitly into every system that needs it.
+### 1. Randomness from the host
 
-A consequence worth stating plainly: **adding a new consumer of randomness changes the
-whole downstream sequence.** The determinism test will fail. That is the test doing its
-job. Regenerate the golden hash deliberately, and say so in the pull request.
+`Math.random()` is seeded by the browser or by Node and cannot be reproduced. `/core` never
+calls it, and ESLint fails the build if it appears. All randomness comes from one generator,
+xoshiro128\*\* seeded through splitmix32 (`src/core/math/prng.ts`), built from the run seed and
+passed explicitly to every system that needs it. It uses only 32-bit integer operations, which
+every engine computes the same way.
 
-### 2. Unspecified transcendental functions
+One consequence catches people out. **A new consumer of randomness changes every number drawn
+after it**, so the determinism test will fail. That is the test doing its job. Update the
+pinned fingerprint on purpose and say so in the pull request.
 
-This is the one that bites silently. ECMA-262 does **not** require `Math.sin`, `cos`,
-`tan`, `exp`, `pow`, `log` and friends to be bit-identical across implementations — only
-that they be within an implementation-defined approximation of the true result. V8,
-SpiderMonkey and JavaScriptCore give different last bits. A run seeded identically would
-therefore diverge between a scientist's browser and the same scientist's Node script, with
-no error and no warning, which is the worst possible failure mode for a reproducibility
-claim.
+### 2. Maths functions that engines may compute differently
 
-`/core` therefore never calls them. ESLint bans the entire family. Instead:
+This one fails silently. The JavaScript standard does **not** require `Math.sin`, `Math.exp`,
+`Math.pow`, `Math.log` and their relatives to return identical bits everywhere, only a close
+approximation of the true value. V8, SpiderMonkey and JavaScriptCore disagree in the last bits.
+A run seeded identically could therefore drift apart between a scientist's browser and the same
+scientist's Node script, with no error and no warning. That is the worst way a reproducibility
+claim can fail.
 
-- **Trigonometry** comes from precomputed lookup tables in `src/core/math/trig.ts`. Ant
-  headings are quantised anyway, so a table is the natural representation rather than a
+So `/core` never calls them. ESLint bans every trigonometric and hyperbolic function and its
+inverse, along with `exp`, `expm1`, `pow`, `log`, `log2`, `log10`, `log1p`, `cbrt` and `hypot`.
+In their place:
+
+- **Trigonometry** comes from `src/core/math/trig.ts`. It builds a lookup table when the module
+  loads, from ten series coefficients and ordinary arithmetic, so every engine builds the same
+  table. Ant headings are quantised anyway, which makes a table the natural form rather than a
   compromise.
-- **Exponentials and powers** come from fixed polynomial approximations in
-  `src/core/math/approx.ts`.
-- Both are pure integer-and-float-arithmetic, both are covered by tests that pin their
-  outputs to committed golden values, and both are generated offline by `tools/`, which is
-  the only code permitted to touch the host `Math`.
+- **Exponentials, logarithms and powers** come from fixed truncated series in
+  `src/core/math/approx.ts`, built from ordinary arithmetic and exact bit manipulation.
+  `test/math.spec.ts` checks them against the host functions to within about one part in a
+  trillion. Accuracy is not really the point. Agreement is.
 
-What _is_ safe: `+ - * /`, comparison, `Math.abs`, `floor`, `ceil`, `round`, `trunc`,
-`sign`, `min`, `max`, `sqrt` and `Math.fround`. These are all exactly specified by IEEE
-754 or by ECMA-262 and are used freely.
+Everything else is safe and used freely: the four arithmetic operators, comparisons, and
+`Math.abs`, `floor`, `ceil`, `round`, `trunc`, `sign`, `min`, `max`, `sqrt`, `fround` and
+`imul`. IEEE 754 or the JavaScript standard specifies each of these exactly.
 
-### 3. Iteration and accumulation order
+### 3. The order things happen in
 
-Floating-point addition is not associative, so the order in which ants are visited and
-grid cells are accumulated is part of the result. `/core` therefore:
+Floating-point addition is not associative, so the order in which ants are visited and grid
+cells are added up is part of the result. Three habits keep that order fixed.
 
-- stores ants as struct-of-arrays typed arrays and iterates them by index, never by
-  reference or by hash-map order;
-- never uses `Object.keys`, `Set` or `Map` iteration to drive a numerical accumulation;
-- never sorts with a comparator that can return 0 for distinct elements — ties break on
-  ant id, so every sort is total.
+- Ants live in typed arrays and are visited by index, never by reference or in hash-map order.
+- `Object.keys`, `Set` and `Map` iteration never drive a numerical sum.
+- Nothing is sorted while the simulation runs. The only sort in `/core` orders error messages
+  in the parameter loader.
 
-## What "byte-identical" is measured on
+## What "the same run" means
 
-`hashState()` in `src/core/state/hash.ts` produces a 64-bit digest over a canonical
-serialisation of the whole simulation state: every typed array, every grid, the clock, and
-the PRNG's own internal counter. Two runs agree if their digests agree at every checkpoint
-tick, not merely at the end.
+`Simulation.digest()`, built on `StateHasher` in `src/core/state/hash.ts`, produces a 64-bit
+fingerprint of the whole simulation. It covers the clock, the generator's position, every ant
+array and every registered state grid, such as the nest, the soil, the brood and the ground.
+Two runs are the same run if their fingerprints agree at every checkpoint, not just at the end,
+so a divergence shows up at the tick it happens rather than a simulated year later.
 
 ## Floats, not fixed point
 
-The simulation uses `Float32Array` and `Float64Array` rather than fixed-point integers.
-IEEE 754 arithmetic is exactly specified and reproduces bit-for-bit across engines, so
-fixed point would buy nothing here and would cost precision and clarity. The danger was
-never the floats. It was the library functions on top of them.
+The simulation uses `Float32Array` and `Float64Array` rather than fixed-point integers. IEEE 754
+arithmetic is exactly specified and gives the same bits on every engine, so fixed point would buy
+nothing and would cost precision and clarity. The floats were never the danger. The library
+functions built on top of them were.

@@ -2,56 +2,56 @@
 
 ```
 /src
-  /core      pure TypeScript. No DOM, no Node built-ins, no wall clock,
-             no randomness but the injected PRNG, no unspecified Math.
-  /render    Canvas 2D. Reads core state. Never writes to it.
-  /ui        HUD, controls, inspector, provenance panels.
-  /worker    hosts /core off the main thread; owns the message protocol.
-/headless    Node entry point. Runs /core with no renderer.
-/species     parameter files (JSON).
-/docs        SCIENCE.md and the rest.
+  /core      Pure TypeScript. No DOM, no Node built-ins, no clock, no randomness except the
+             injected generator, and none of the Math functions engines are free to disagree on.
+  /render    Draws core state on a 2D canvas. Reads it and never writes to it.
+  /ui        Readouts, controls, the ant inspector and the sources panels.
+  /worker    Empty for now. The core moves here, off the main thread, in a later step.
+/headless    Node entry points: one seeded run (run.ts) and a replicate study (study.ts).
+/species     The parameter file, one JSON file per species.
+/docs        The science, the decisions, the validation record and this file.
 ```
 
-The boundaries are enforced by the toolchain, not by convention. `src/core/tsconfig.json`
-compiles with `lib: ["ES2022"]` and `types: []`, so a reference to `document` or to
-`process` is a type error before it is a lint error. ESLint adds the runtime bans. See
-`eslint.config.js`.
+The toolchain enforces these boundaries, so nobody has to remember them.
+`src/core/tsconfig.json` compiles with `lib: ["ES2022"]` and `types: []`, which makes a
+reference to `document` or `process` a type error before ESLint even runs. ESLint adds the
+bans a type checker cannot express, and `test/boundaries.spec.ts` checks them a second time,
+because a lint rule can be switched off with a comment and a test cannot.
 
-## The two spatial domains
+## Two spatial domains
 
-An ant is either in the **surface domain** — plan view, (x, y) metres, where trunk trails,
-foraging range and relocation geometry live — or in the **nest domain** — vertical slice,
-(x, depth) centimetres, where excavation, chambers, brood and seed stores live. The nest
-entrance is the only point of transfer. Neither domain is a projection of a shared 3D
-model, because there is no 3D model. See `DECISIONS.md` D1.
+An ant is always in one of two places. On the **surface** it lives in plan view, measured in
+metres, among trunk trails and the foraging range. In the **nest** it lives in a vertical
+slice, measured in centimetres, among tunnels, chambers, brood and seed stores. The nest
+entrance is the only way between the two. Neither is a projection of a shared 3D world,
+because there is no 3D world. See `DECISIONS.md` D1.
 
 ## Time
 
-One tick is one simulated minute (`time.secondsPerTick`, tag **[C]**): 1440 ticks per day,
-~525,600 per year. The core advances on a fixed timestep and nothing else. Playback speed
-changes only how many ticks are run per animation frame; it never changes the size of a
-tick, and it never changes simulation fidelity. At 1x that is one simulated day per 60
-seconds of real time.
+One tick is one simulated minute (`time.secondsPerTick`, tagged **[C]**), which makes 1440
+ticks a day and 525,600 a year. The core moves forward in these fixed steps and in no other
+way. Playback speed, set in simulated days per real second, changes how many ticks run in each
+animation frame. It never changes the size of a tick, so it never changes the result.
 
-Pheromone diffusion runs on a fixed sub-schedule (every N ticks, N a parameter) rather than
-every tick. This is a performance decision, but it is identical at every playback speed and
-in headless runs, so it does not affect reproducibility.
+Pheromone diffusion runs every 10 ticks (`pheromones.diffusionIntervalTicks`) rather than every
+tick. That saves time, and because the schedule is the same at every speed and in headless
+runs, it costs nothing in reproducibility.
 
 ## State
 
-Ant state is struct-of-arrays typed arrays, not objects: `Float32Array` for positions,
-headings and fat reserves, `Uint8Array` for caste, task and age band, `Uint32Array` for ids
-and timers. This is for cache behaviour, but it also makes serialisation, hashing, save/load
-and headless output nearly free.
+Each ant property lives in its own typed array, indexed by ant, rather than in an object per
+ant. Position, fat and body length are `Float32Array`, heading is `Uint16Array`, caste, task
+and burden are `Uint8Array`, and ids, age and timers are `Uint32Array`. The layout suits the
+processor's cache, and it makes hashing, saving and headless output almost free.
 
-Environment layers — soil, moisture, temperature, stress, and each pheromone channel
-separately — are separate `Float32Array` grids at a coarser resolution than the display.
-Pheromone channels are never collapsed into one "pheromone" (`SCIENCE.md` §8).
+The environment lives in separate `Float32Array` grids, coarser than the display: soil,
+moisture, temperature, stress and one grid for each pheromone. Pheromones are never merged into
+a single channel (`SCIENCE.md` §8).
 
 ## Provenance
 
-`src/core/provenance` maps a rule id to its citation and A/B/C tag. Systems annotate the
-rule an ant is currently following; the inspector reads that annotation and shows the
-citation. The mapping lives in `/core` on purpose: a mechanic that exists in the simulation
-but has no provenance entry is a build failure, so the citation cannot drift away from the
-code that needs it.
+`src/core/provenance` maps every rule id to its citation and its A, B or C tag. Each system
+records which rule an ant is following, and the inspector reads that record to show the
+citation. Rule ids are typed constants, so a system that points at a rule nobody has
+registered does not compile. The mapping sits in `/core` for that reason: a citation cannot
+drift away from the code that depends on it.

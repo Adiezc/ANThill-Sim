@@ -1,67 +1,68 @@
 # Contributing
 
-One rule matters more than all the others, and it is the one a new contributor is most
-likely to break without noticing.
+One rule matters more than the rest, and it is the one a new contributor is most likely to
+break without noticing.
 
-## The A/B/C discipline
+## Label every number with where it came from
 
-Every mechanic in this simulator is tagged:
+Every mechanic in this simulator carries a tag:
 
-| Tag     | Meaning                                                                   |
-| ------- | ------------------------------------------------------------------------- |
-| **[A]** | Documented for _Pogonomyrmex badius_ specifically                         |
-| **[B]** | Generalised from another ant species because _badius_ data does not exist |
-| **[C]** | Invented for playability or tractability, with no direct evidential basis |
+| Tag     | Meaning                                                               |
+| ------- | --------------------------------------------------------------------- |
+| **[A]** | Measured in _Pogonomyrmex badius_ itself                              |
+| **[B]** | Borrowed from another ant, because nobody has measured it in _badius_ |
+| **[C]** | Invented to make the model work, with no direct evidence behind it    |
 
-The tags are not documentation. They are the product. A user of this simulator must never
-be unable to tell which of the three they are looking at. A plausible mechanic with no
-citation, silently mixed in among cited ones, does more damage than a missing feature.
+The tags are not paperwork. They are the point of the project. Someone using the simulator
+must always be able to tell which of the three they are looking at. A plausible mechanic with
+no citation, slipped in among cited ones, does more harm than a missing feature.
 
-### What this means in practice
+### In practice
 
-1. **No biological constant may be hard-coded.** It comes from
-   `species/pogonomyrmex-badius.json` or it does not exist. If you find yourself typing a
+1. **Never hard-code a biological constant.** It comes from
+   `species/pogonomyrmex-badius.json` or it does not exist. If you catch yourself typing a
    number that describes an ant, a nest, a seed or the weather, stop and put it in the
-   parameter file with a tag. The test suite fails the build on numeric literals in
-   `src/core/systems/`.
-2. **Adding a parameter means adding a tag.** The loader rejects any untagged constant.
-   If you cannot cite it, it is **[C]**, and **[C]** values must be exposed in the UI as
-   tunable and flagged as invented. That is not a demotion. Honest invention is fine;
-   undeclared invention is not.
-3. **Adding a mechanic means adding a row to `docs/SCIENCE.md`** — the rule as
-   implemented, the tag, and the source — and registering its rule id in
-   `src/core/provenance` so the inspector can show the citation for an ant that is
-   currently following it.
-4. **Never quietly upgrade a tag.** Promoting a **[B]** to **[A]** requires a _badius_
+   parameter file with a tag. `test/no-hardcoded-constants.spec.ts` looks for every number
+   in the parameter file as a literal in the simulation code, and fails the build naming the
+   parameter you should have used.
+2. **A new parameter needs a tag.** The loader refuses any value without one. If you cannot
+   cite it, it is **[C]**. Invented values should be easy to find and change, and flagged as
+   invented wherever they appear. Today they are tuned in the parameter file. The browser
+   does not offer sliders for them yet. Inventing a value openly is fine. Inventing one
+   quietly is not.
+3. **A new mechanic needs a row in `docs/SCIENCE.md`**, giving the rule as implemented, its
+   tag and its source. Register its rule id in `src/core/provenance` as well, so the
+   inspector can show the citation for any ant following it.
+4. **Never upgrade a tag quietly.** Promoting a **[B]** to an **[A]** needs a _badius_
    citation in the pull request. "It seems reasonable" is a **[C]**.
 
-### HARD RULE parameters
+### Rules that must not be "fixed"
 
-Some parameters are marked `HARD RULE` in the species file. These are behaviours that were
-experimentally tested in this species and **rejected**. Implementing the intuitive version
-would be a factual error, not a design choice:
+Some parameters are marked `HARD RULE` in the species file. Each describes a behaviour that
+was tested in this species and **rejected**. Building the intuitive version would be a
+factual error, not a design choice.
 
-- Foragers do not revert to inside work (`labour.taskReversionAllowed: false`).
-- Losing foragers draws no replacements from other castes; larvae starve instead
+- Foragers never go back to work inside the nest (`labour.taskReversionAllowed: false`).
+- Losing foragers does not pull in replacements from other castes. Larvae starve instead
   (`labour.backfillFromOtherCastes: false`).
-- Worker size predicts neither seed size nor foraging distance
+- A worker's size predicts neither the seeds it carries nor how far it forages
   (`foraging.workerSizePredicts*: false`).
-- Majors raise the _rate_ at which small and medium seeds are opened. They do not widen
-  the range of openable sizes (`seeds.majorsWidenOpenableSizeRange: false`).
-- There is no soldier caste, and no defensive role for majors.
+- Majors open small and medium seeds faster. They cannot open bigger ones
+  (`seeds.majorsWidenOpenableSizeRange: false`).
+- There is no soldier caste, and majors have no defensive role.
 
-Do not "fix" these. If you believe one is wrong, open an issue with the paper.
+If you think one of these is wrong, open an issue and bring the paper.
 
 ## Code boundaries
 
-- `src/core` is pure: no DOM, no `Date`, no `Math.random`, no Node built-ins, and none of
-  the transcendental `Math` functions, which are not specified to be bit-identical across
-  JavaScript engines and would silently break reproducibility. ESLint enforces all of
-  this. See `docs/DETERMINISM.md`.
-- `src/render` and `src/ui` read core state. They never write to it.
-- Randomness comes from the injected `Prng`. Adding a new consumer of randomness changes
-  the sequence and will fail the determinism test; that is the test working, and the
-  golden hash should be regenerated deliberately and mentioned in the pull request.
+- `src/core` is pure. It uses no DOM, no `Date`, no `Math.random`, no Node built-ins and none
+  of the `Math` functions that JavaScript engines are allowed to compute differently. Any of
+  those would quietly break reproducibility. ESLint enforces this, and
+  `docs/DETERMINISM.md` explains why it matters.
+- `src/render` and `src/ui` read core state and never write to it.
+- All randomness comes from the injected `Prng`. A new consumer of randomness changes every
+  random number drawn after it, so the determinism test will fail. That is the test working.
+  Update the expected values on purpose and say so in the pull request.
 
 ## Checks
 
@@ -69,4 +70,4 @@ Do not "fix" these. If you believe one is wrong, open an issue with the paper.
 npm run typecheck && npm run lint && npm run format:check && npm test
 ```
 
-CI runs the same four on every push and pull request.
+CI runs the same four on every push to `main` and on every pull request.
