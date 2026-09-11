@@ -39,7 +39,7 @@
 
   "nest": {
     "$comment": "Rewritten from docs/papers/tschinkel-2004-nest-architecture.pdf, read in full. 33 excavations and casts, 2 to 3.02 m deep, 5 to 150 chambers. Size classes: 0 under 100 workers, 1 is 101-800, 2 is 801-2000, 3 is 2001-4000, 4 is over 4000.",
-    "incipientDepthCm": { "min": 29, "max": 37, "tag": "A", "note": "CORRECTED from 40-50, which came from a secondary account. Tschinkel 2004 measured 29 to 37 cm." },
+    "incipientDepthCm": { "min": 29, "max": 37, "tag": "A", "note": "CORRECTED from 40-50, which came from a secondary account. Tschinkel 2004 measured 29 to 37 cm. The depth is [A]; giving all of it to the founding queen is not. Tschinkel does not say whether the incipient nests he measured held workers, and an incipient colony ordinarily means a queen and her first brood. Queens measured digging alone go shallower, and a shallower queen was tried and left the nest unfinished. See docs/SCIENCE.md section 1." },
     "matureDepthCm": { "min": 250, "max": 300, "tag": "A", "note": "Deepest measured was 306 cm." },
     "meanDepthAcrossColoniesCm": { "value": 135.8, "tag": "A", "note": "SD 54.2, range 40 to 270 cm, across 42 nests of all sizes (Kwapich and Tschinkel 2013). The 250-300 cm figure is a mature nest, not an average one." },
     "maxRecordedDepthCm": { "value": 306, "tag": "A" },
