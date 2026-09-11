@@ -1,18 +1,20 @@
 /**
  * The reference list, as data.
  *
- * It lives in `/core` and not in the UI because three things need the same list and must
- * not be allowed to disagree: the citations panel in the simulator, the methods report a
- * batch run writes, and `docs/SCIENCE.md`. A citation that exists in one and not the others
- * is how a model quietly loses its provenance.
+ * It lives in `/core` and not in the UI because three things need the same list and must not
+ * be allowed to disagree: the citations panel in the simulator, the methods report a batch run
+ * writes, and `docs/SCIENCE.md`. A citation that exists in one and not the others is how a model
+ * quietly loses its provenance.
  *
- * **No PDF of any of these is distributed with this software.** Most are not
- * redistributable, and the ones that are do not become more citable by being copied. Every
- * number taken from them lives in `species/pogonomyrmex-badius.json` with its own tag, and
- * the DOIs below are how a reader gets the papers themselves. See `docs/papers/README.md`.
+ * **No PDF of any of these is distributed with this software.** Most are not ours to
+ * redistribute, and the ones that are would be no more citable for being copied. Every number
+ * taken from them lives in `species/pogonomyrmex-badius.json` with its own tag, and the DOIs
+ * below are how a reader gets the papers themselves. See `docs/papers/README.md`.
  *
- * A DOI appears here only where it has been checked against the paper. Where one is absent
- * the entry is still a complete citation; an invented DOI would be worse than none.
+ * A DOI appears here only where it has been checked. The five primary DOIs were checked against
+ * Crossref on 2026-09-11, and two of them turned out to point at other papers: one on killer
+ * whales, one on desert lizards. Both are corrected. Where a DOI is absent the entry is still a
+ * complete citation, because an invented DOI would be worse than none.
  */
 
 export interface Reference {
@@ -42,7 +44,7 @@ export const REFERENCES: readonly Reference[] = [
     doi: '10.1093/jis/4.1.21',
     primary: true,
     usedFor:
-      'Nest architecture: chamber areas by depth, chamber spacing, the top-heavy distribution, shaft and chamber dimensions, and the area-to-worker relation the excavation gate is measured against. Read in full; its Figures 9, 10 and 11 corrected four values taken from secondary accounts.',
+      'The shape of the nest: chamber areas by depth, chamber spacing, the top-heavy layout, shaft and chamber sizes, and the relation between nest size and worker number that the digging checks are measured against. Read in full. Its Figures 9, 10 and 11 corrected four values taken from secondary accounts.',
   },
   {
     key: 'tschinkel-1998',
@@ -54,7 +56,7 @@ export const REFERENCES: readonly Reference[] = [
     doi: '10.1007/s000400050097',
     primary: true,
     usedFor:
-      'Worker dry masses, which set the excavation rate; the fat-by-depth and fat-by-season cycles that drive the transition to foraging; major worker proportions by month.',
+      'Worker dry masses, which set how fast the ants dig. Also the cycles of body fat by depth and by season that move workers into foraging, and the share of majors in each month.',
   },
   {
     key: 'kwapich-tschinkel-2013',
@@ -66,7 +68,7 @@ export const REFERENCES: readonly Reference[] = [
     doi: '10.1007/s00265-013-1611-9',
     primary: true,
     usedFor:
-      'Brood development schedules, age at first foraging by season of birth, forager depths, the annual proportion-foraging cycle, and colony size range.',
+      'How fast brood develops, the age at which a worker first forages depending on when it hatched, how close to the surface foragers stay, the yearly cycle in the share of workers foraging, and the range of colony sizes.',
   },
   {
     key: 'kwapich-tschinkel-2016',
@@ -75,10 +77,10 @@ export const REFERENCES: readonly Reference[] = [
     title:
       'Limited flexibility and unusual longevity shape forager allocation in the Florida harvester ant',
     journal: 'Behavioral Ecology and Sociobiology 70:221-235',
-    doi: '10.1007/s00265-015-2038-2',
+    doi: '10.1007/s00265-015-2039-1',
     primary: true,
     usedFor:
-      'The two HARD RULEs the demographic engine is built around: foragers do not revert to inside work, and the colony does not backfill from other castes when foragers are removed. Larval survival falls instead.',
+      'The two HARD RULEs the colony’s demography is built on. Foragers never return to work inside, and when foragers are removed no other workers replace them. Larval survival falls instead.',
   },
   {
     key: 'harrison-gentry-1981',
@@ -87,10 +89,10 @@ export const REFERENCES: readonly Reference[] = [
     title:
       'Foraging pattern, colony distribution, and foraging range of the Florida harvester ant, Pogonomyrmex badius',
     journal: 'Ecology 62:1467-1473',
-    doi: '10.2307/1941504',
+    doi: '10.2307/1941503',
     primary: true,
     usedFor:
-      'Trunk trails, foraging range, and the finding that ranges are used almost exclusively by one colony without being actively defended.',
+      'Trunk trails, the size of the foraging range, and the finding that a range is used almost exclusively by one colony without being defended.',
   },
 
   {
@@ -349,8 +351,8 @@ export function primaryReferences(): readonly Reference[] {
 /**
  * One line, in the form a reference list uses.
  *
- * `withDoi` is off where the panel renders the DOI separately as a link, and on in the
- * written report, where there is nothing to click and the identifier has to be in the text.
+ * `withDoi` is off where the panel renders the DOI separately as a link, and on in the written
+ * report, where there is nothing to click and the identifier has to be in the text.
  */
 export function formatReference(reference: Reference, withDoi = true): string {
   const parts = [`${reference.authors} (${reference.year})`, reference.title]
@@ -361,8 +363,8 @@ export function formatReference(reference: Reference, withDoi = true): string {
 
 /**
  * The standing notice about the papers themselves. Shown in the simulator and written into
- * every batch report, because a reader who wants the sources needs to be told plainly that
- * they are not in this repository and where they are instead.
+ * every batch report, because a reader who wants the sources needs to be told plainly that they
+ * are not in this repository, and where to find them instead.
  */
 export const SOURCES_NOTICE =
-  'No PDF of any cited paper is distributed with this software. Most are not redistributable, and copying one would not make it more citable. Every value taken from them carries its own provenance tag in the parameter file; follow the DOIs above for the papers themselves.'
+  'No PDF of any cited paper comes with this software. Most are not ours to redistribute, and a copy would be no more citable than the original. Every value taken from them carries its own provenance tag in the parameter file. Follow the DOIs above to read the papers themselves.'
