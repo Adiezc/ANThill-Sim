@@ -17,6 +17,10 @@
  *
  * The light comes from above the screen, whichever way the ant faces, so every highlight is
  * placed by turning "up" into the ant's own frame.
+ *
+ * Each ant is drawn two ways. From above, for the map of the foraging range, which is a plan.
+ * From the side, for the slice through the nest and the ground over it, which are seen side on:
+ * drawn from above there, half of each ant's legs landed in the sand of the floor or the wall.
  */
 
 import { Burden, Caste } from '../core/state/ants.js'
@@ -287,6 +291,333 @@ export function drawAnt(
 
   drawBurden(ctx, L, burden, burdenPx)
   ctx.restore()
+}
+
+/**
+ * An ant's proportions seen from the side, shared by the drawing and by the code that stands her
+ * on a floor or a wall. Appearance, like everything else in this file.
+ */
+interface SideShape {
+  readonly L: number
+  readonly hw: number
+  readonly headRx: number
+  readonly headRy: number
+  readonly headCx: number
+  readonly thoraxRx: number
+  readonly thoraxRy: number
+  readonly thoraxCx: number
+  readonly nodeR: number
+  readonly petioleCx: number
+  readonly postCx: number
+  readonly gasterRx: number
+  readonly gasterRy: number
+  readonly gasterCx: number
+  /** From the line through the middle of her body to the soles of her feet. */
+  readonly stand: number
+}
+
+function sideShape(body: AntBody): SideShape {
+  const L = Math.max(2, body.lengthPx)
+  const hw = Math.max(0.8, Math.min(body.headWidthPx, L * 0.45))
+  const heavy = body.form === 'queen' || body.form === 'winged'
+  const male = body.form === 'male'
+  // Laid out from the front: mandibles, head, thorax, the two knots of the waist, gaster.
+  const mandible = L * 0.06
+  const headRx = Math.max(L * 0.1, hw * 0.5)
+  const headRy = Math.max(L * 0.07, hw * 0.4)
+  const headCx = L / 2 - mandible - headRx
+  const thoraxRx = L * (heavy ? 0.175 : male ? 0.17 : 0.155)
+  const thoraxCx = headCx - headRx - thoraxRx * 0.9
+  const thoraxRy = L * (heavy ? 0.1 : male ? 0.085 : 0.072)
+  const nodeR = L * 0.03
+  const petioleCx = thoraxCx - thoraxRx - nodeR
+  const postCx = petioleCx - nodeR * 1.6
+  const gasterRx = Math.max(L * 0.1, (postCx - nodeR * 0.7 + L / 2) / 2)
+  const gasterCx = -L / 2 + gasterRx
+  const gasterRy = L * (heavy ? 0.15 : male ? 0.095 : 0.12)
+  return {
+    L,
+    hw,
+    headRx,
+    headRy,
+    headCx,
+    thoraxRx,
+    thoraxRy,
+    thoraxCx,
+    nodeR,
+    petioleCx,
+    postCx,
+    gasterRx,
+    gasterRy,
+    gasterCx,
+    stand: thoraxRy + L * 0.13,
+  }
+}
+
+/**
+ * How far from the middle of an ant's body her feet reach, seen from the side, in the same units
+ * as her body length. The caller stands her this far from the floor or wall.
+ */
+export function sideStandHeight(body: AntBody): number {
+  return sideShape(body).stand
+}
+
+/**
+ * An ant seen from the side, which is how the slice sees her.
+ *
+ * Drawn in her own frame: (fwdX, fwdY) is the way she faces and (downX, downY) the way her feet
+ * point, both unit vectors on the screen and at right angles to each other. Walking along a
+ * floor, down is down the screen; holding on to a shaft wall, it points into the wall. (x, y) is
+ * the middle of her body, which the caller places sideStandHeight() away from the surface.
+ *
+ * The outline is a harvester ant's: a head with heavy mandibles and, under it, the basket of long
+ * hairs the genus carries sand in; a thorax humped at the front with a short spine at the back;
+ * a waist of two knots; and the gaster.
+ */
+export function drawAntSide(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  body: AntBody,
+  fwdX: number,
+  fwdY: number,
+  downX: number,
+  downY: number,
+  colours: AntColours,
+  burden: number,
+  phase: number,
+  burdenPx: number,
+): void {
+  const shape = sideShape(body)
+  const { L, hw, headRx, headRy, headCx, thoraxRx, thoraxRy, thoraxCx, nodeR, stand } = shape
+  const { petioleCx, postCx, gasterRx, gasterRy, gasterCx } = shape
+  const winged = body.form === 'winged' || body.form === 'male'
+  const headCy = L * 0.01
+  const gasterCy = -L * 0.015
+  // "Up" on the screen, in her own frame, for placing highlights.
+  const upX = -fwdY
+  const upY = -downY
+
+  ctx.save()
+  ctx.transform(fwdX, fwdY, downX, downY, x, y)
+
+  // Her shadow, on whatever she stands on.
+  ctx.fillStyle = SHADOW
+  ellipse(ctx, -L * 0.04, stand + Math.max(0.3, L * 0.012), L * 0.42, Math.max(0.5, L * 0.035))
+
+  if (L < DETAIL_MIN_PX) {
+    ctx.fillStyle = RIM
+    ellipse(ctx, 0, 0, L / 2 + 0.6, Math.max(gasterRy, headRy) + 0.6)
+    ctx.fillStyle = colours.body
+    ellipse(ctx, gasterCx, gasterCy, gasterRx, gasterRy)
+    ellipse(ctx, thoraxCx, 0, thoraxRx, thoraxRy)
+    ctx.fillStyle = colours.head
+    ellipse(ctx, headCx, headCy, headRx, headRy)
+    drawSideBurden(ctx, L, headCy + headRy * 0.5, burden, burdenPx)
+    ctx.restore()
+    return
+  }
+
+  const fine = L >= FINE_DETAIL_MIN_PX
+  ctx.lineCap = 'round'
+  ctx.lineJoin = 'round'
+
+  // Three legs a side in an alternating tripod: front and hind legs on one side step with the
+  // middle leg on the other. Each rises from under the thorax to the knee and comes down to the
+  // foot, which lifts a little as it swings forward.
+  const reach = [0.17, 0.02, -0.18]
+  const legs = (far: boolean): void => {
+    ctx.strokeStyle = colours.limb
+    for (let pair = 0; pair < 3; pair += 1) {
+      const step = phase + pair * Math.PI + (far ? Math.PI : 0)
+      const r = reach[pair]!
+      const hipX = thoraxCx + thoraxRx * (0.45 - pair * 0.45) + (far ? L * 0.015 : 0)
+      const hipY = thoraxRy * 0.55
+      const footX = hipX + r * L + Math.sin(step) * L * 0.045
+      const footY = stand - Math.max(0, Math.cos(step)) * L * 0.025
+      const kneeX = hipX + (footX - hipX) * 0.5 + r * L * 0.3
+      const kneeY = -thoraxRy * 0.2
+      ctx.lineWidth = Math.max(0.55, hw * 0.1)
+      ctx.beginPath()
+      ctx.moveTo(hipX, hipY)
+      ctx.lineTo(kneeX, kneeY)
+      ctx.stroke()
+      ctx.lineWidth = Math.max(0.45, hw * 0.065)
+      ctx.beginPath()
+      ctx.moveTo(kneeX, kneeY)
+      ctx.lineTo(footX, footY)
+      ctx.lineTo(footX + (r >= 0 ? 1 : -1) * L * 0.05, Math.min(stand, footY + L * 0.01))
+      ctx.stroke()
+    }
+  }
+
+  // Antennae, elbowed: the first segment runs up and back from the front of the head, the rest
+  // reaches forward and ends in a slight club.
+  const antenna = (far: boolean): void => {
+    const wave = Math.sin(phase * 1.7 + (far ? 1.3 : 0)) * L * 0.025
+    const elbowX = headCx - headRx * 0.05 + (far ? L * 0.02 : 0)
+    const elbowY = headCy - headRy - L * 0.08
+    const tipX = headCx + headRx + L * 0.16 + wave
+    const tipY = headCy - headRy * 0.2 + wave * 0.5
+    ctx.strokeStyle = colours.limb
+    ctx.lineWidth = Math.max(0.45, hw * 0.07)
+    ctx.beginPath()
+    ctx.moveTo(headCx + headRx * 0.5, headCy - headRy * 0.45)
+    ctx.lineTo(elbowX, elbowY)
+    ctx.lineTo(tipX, tipY)
+    ctx.stroke()
+    if (fine) {
+      ctx.fillStyle = colours.limb
+      ellipse(ctx, tipX, tipY, hw * 0.09, hw * 0.07)
+    }
+  }
+
+  // The far side's legs and antenna, behind her and fainter.
+  ctx.globalAlpha = 0.55
+  legs(true)
+  antenna(true)
+  ctx.globalAlpha = 1
+
+  // The rim, then the body over it.
+  ctx.fillStyle = RIM
+  ellipse(ctx, gasterCx, gasterCy, gasterRx + 0.5, gasterRy + 0.5)
+  ellipse(ctx, thoraxCx, 0, thoraxRx + 0.5, thoraxRy + 0.5)
+  ellipse(ctx, headCx, headCy, headRx + 0.5, headRy + 0.5)
+
+  ctx.fillStyle = colours.body
+  ellipse(ctx, gasterCx, gasterCy, gasterRx, gasterRy)
+  ellipse(ctx, postCx, -nodeR * 0.15, nodeR, nodeR * 1.15)
+  ellipse(ctx, petioleCx, -nodeR * 0.4, nodeR * 0.8, nodeR * 1.2)
+  ellipse(ctx, (petioleCx + thoraxCx - thoraxRx) / 2, thoraxRy * 0.25, nodeR * 0.9, nodeR * 0.4)
+  ellipse(ctx, thoraxCx, 0, thoraxRx, thoraxRy)
+  // The front of the thorax rises in a hump behind the head.
+  ellipse(ctx, thoraxCx + thoraxRx * 0.35, -thoraxRy * 0.15, thoraxRx * 0.55, thoraxRy)
+  if (body.form === 'worker') {
+    ctx.strokeStyle = colours.body
+    ctx.lineWidth = Math.max(0.5, hw * 0.07)
+    ctx.beginPath()
+    ctx.moveTo(thoraxCx - thoraxRx * 0.7, -thoraxRy * 0.5)
+    ctx.lineTo(thoraxCx - thoraxRx * 1.02, -thoraxRy * 1.25)
+    ctx.stroke()
+  }
+  ctx.fillStyle = colours.head
+  ellipse(ctx, headCx, headCy, headRx, headRy)
+
+  if (fine) {
+    // Bands across the gaster, where its plates overlap.
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)'
+    ctx.lineWidth = Math.max(0.5, hw * 0.05)
+    for (const at of [0.35, -0.05, -0.45]) {
+      const bx = gasterCx + gasterRx * at
+      const span = gasterRy * Math.sqrt(Math.max(0, 1 - at * at)) * 0.92
+      ctx.beginPath()
+      ctx.moveTo(bx + gasterRx * 0.06, gasterCy - span)
+      ctx.quadraticCurveTo(bx - gasterRx * 0.08, gasterCy, bx + gasterRx * 0.06, gasterCy + span)
+      ctx.stroke()
+    }
+    // The eye.
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'
+    ellipse(ctx, headCx + headRx * 0.2, headCy - headRy * 0.2, hw * 0.12, hw * 0.09)
+    // The basket of long hairs under the head.
+    if (body.form === 'worker' || body.form === 'queen') {
+      ctx.strokeStyle = colours.limb
+      ctx.lineWidth = Math.max(0.35, hw * 0.03)
+      for (let h = 0; h < 5; h += 1) {
+        const hx = headCx - headRx * 0.35 + h * headRx * 0.22
+        ctx.beginPath()
+        ctx.moveTo(hx, headCy + headRy * 0.85)
+        ctx.quadraticCurveTo(
+          hx + L * 0.01,
+          headCy + headRy + L * 0.025,
+          hx + L * 0.025,
+          headCy + headRy + L * 0.035,
+        )
+        ctx.stroke()
+      }
+    }
+  }
+
+  // Shine, placed towards the light.
+  ctx.fillStyle = SHINE
+  ellipse(
+    ctx,
+    gasterCx + upX * gasterRx * 0.25,
+    gasterCy + upY * gasterRy * 0.4,
+    gasterRx * 0.42,
+    gasterRy * 0.28,
+  )
+  ellipse(
+    ctx,
+    thoraxCx + upX * thoraxRx * 0.25,
+    upY * thoraxRy * 0.4,
+    thoraxRx * 0.45,
+    thoraxRy * 0.3,
+  )
+  ellipse(
+    ctx,
+    headCx + upX * headRx * 0.25,
+    headCy + upY * headRy * 0.4,
+    headRx * 0.42,
+    headRy * 0.3,
+  )
+
+  // Mandibles. Broad on a broad head, which is where a major's seed-cracking power shows.
+  ctx.strokeStyle = colours.head
+  ctx.lineWidth = Math.max(0.6, hw * 0.16)
+  ctx.beginPath()
+  ctx.moveTo(headCx + headRx * 0.7, headCy + headRy * 0.35)
+  ctx.lineTo(L / 2, headCy + headRy * 0.55)
+  ctx.stroke()
+
+  if (body.form === 'queen') {
+    // A mated queen has broken off her wings. The scar stays on the thorax.
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)'
+    ellipse(ctx, thoraxCx - thoraxRx * 0.1, -thoraxRy * 0.7, hw * 0.12, hw * 0.07)
+  }
+
+  legs(false)
+  antenna(false)
+
+  if (winged) {
+    // Wings folded back along the top of the body, and longer than it.
+    ctx.fillStyle = 'rgba(236, 236, 240, 0.3)'
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)'
+    ctx.lineWidth = 0.6
+    ctx.beginPath()
+    ctx.ellipse(
+      thoraxCx - thoraxRx * 0.2 - L * 0.2,
+      -thoraxRy - L * 0.02,
+      L * 0.34,
+      Math.max(0.5, L * 0.055),
+      0.06,
+      0,
+      Math.PI * 2,
+    )
+    ctx.fill()
+    ctx.stroke()
+  }
+
+  drawSideBurden(ctx, L, headCy + headRy * 0.5, burden, burdenPx)
+  ctx.restore()
+}
+
+/** Whatever is held in the mandibles, seen from the side, just in front of the head. */
+function drawSideBurden(
+  ctx: CanvasRenderingContext2D,
+  L: number,
+  y: number,
+  burden: number,
+  burdenPx: number,
+): void {
+  if (burden === Burden.Nothing) return
+  const size = Math.max(1.2, burdenPx)
+  ctx.fillStyle = BURDEN_COLOURS[burden] ?? '#ffffff'
+  ellipse(ctx, L / 2 + size * 0.3, y, size / 2, size * 0.34)
+  if (size >= 3) {
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)'
+    ctx.lineWidth = 0.5
+    ctx.stroke()
+  }
 }
 
 /** Whatever is held in the mandibles, at its own size, just in front of the head. */

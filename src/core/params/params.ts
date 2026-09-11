@@ -168,6 +168,12 @@ export interface Params {
     readonly relayPickUpChance: Param<number>
     readonly chamberInitiationChance: Param<number>
     readonly seriesCountProbeDepthCm: Param<number>
+    /** Depth of a founding queen's nest at the end of each of her first days of digging. */
+    readonly foundingQueenDepthByDayCm: Param<readonly number[]>
+    /** How fast her shaft deepens after those days, and how fast she opens her chamber. */
+    readonly foundingQueenLateRateCmPerDay: Param<number>
+    /** Width in the slice of the one chamber she opens at the bottom of her shaft. */
+    readonly foundingChamberRunCm: Param<number>
   }
 
   readonly soil: {
@@ -581,6 +587,9 @@ export function buildParams(root: Raw): Params {
       relayPickUpChance: readScalar(root, 'excavation.relayPickUpChance'),
       chamberInitiationChance: readScalar(root, 'excavation.chamberInitiationChance'),
       seriesCountProbeDepthCm: readScalar(root, 'excavation.seriesCountProbeDepthCm'),
+      foundingQueenDepthByDayCm: readNumberList(root, 'excavation.foundingQueenDepthByDayCm'),
+      foundingQueenLateRateCmPerDay: readScalar(root, 'excavation.foundingQueenLateRateCmPerDay'),
+      foundingChamberRunCm: readScalar(root, 'excavation.foundingChamberRunCm'),
     },
 
     soil: {

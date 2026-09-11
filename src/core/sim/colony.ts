@@ -104,6 +104,9 @@ export class Colony {
       surfacePellets: 0,
       redepositedPellets: 0,
       foundingTargetDepthCm: 0,
+      foundingDigTicks: 0,
+      foundingChamberCol: -1,
+      foundingChamberRow: -1,
       occupants: new Uint16Array(this.nest.cols * this.nest.rows),
       blockAnts: new Uint16Array(this.nest.blockCols * this.nest.blockRows),
     }

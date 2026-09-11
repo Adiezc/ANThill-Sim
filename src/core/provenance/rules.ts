@@ -146,6 +146,14 @@ export const RULE = {
     '2',
     'The pattern is documented. The cue an ant uses to know its depth is not — see excavation.depthCue.',
   ),
+  digFoundingQueen: rule(
+    'excavation.foundingQueen',
+    'Digging her own shaft and first chamber, alone, from the day she landed.',
+    'B',
+    'Enzmann & Nonacs 2010 (Pogonomyrmex rugosus); incipient depth from Tschinkel 2004',
+    '1, 3',
+    'That she digs one shaft and one chamber to 29 to 37 cm is [A] for this species. How fast she gets there is borrowed from a fully claustral congener watched in sand-filled frames. While she founds, the sand she digs is counted onto the surface without her walking it up, because in this model an ant walks a cell a minute and that, not the queen, would otherwise set her depth.',
+  ),
   digDepthCue: rule(
     'excavation.depthCue',
     'Behaving differently at depth. How a real ant knows its depth is unknown.',

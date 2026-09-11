@@ -178,6 +178,15 @@ export const REFERENCES: readonly Reference[] = [
     journal: 'Behavioural Processes',
   },
   {
+    key: 'enzmann-nonacs-2010',
+    authors: 'Enzmann, B. L. & Nonacs, P.',
+    year: '2010',
+    title:
+      'Digging beneath the surface: incipient nest characteristics across three species of harvester ant that differ in colony founding strategy',
+    journal: 'Insectes Sociaux 57:115-123',
+    doi: '10.1007/s00040-009-0056-7',
+  },
+  {
     key: 'espinoza-santamarina-2010',
     authors: 'Espinoza, D. & Santamarina, J.',
     year: '2010',
@@ -258,6 +267,14 @@ export const REFERENCES: readonly Reference[] = [
     year: '2001',
     title: 'Policing in queenless ponerine ants',
     journal: 'Behavioral Ecology and Sociobiology',
+  },
+  {
+    key: 'motro-2016',
+    authors: 'Motro, M. et al.',
+    year: '2016',
+    title:
+      'Decision making by young queens of the harvester ant Messor semirufus while searching for a suitable nesting site',
+    journal: 'Insectes Sociaux',
   },
   {
     key: 'nickerson-fasulo-edis',

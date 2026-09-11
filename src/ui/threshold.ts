@@ -68,7 +68,7 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
           </button>
         </div>
         <p class="actions-note">
-          One founding queen to start. Her first workers hatch within about a minute.
+          Starts with one queen. A day takes 30 seconds while something is happening, and skips ahead while nothing is.
         </p>
         <button class="facts" id="door-sources" type="button">
           <span class="facts-grid">

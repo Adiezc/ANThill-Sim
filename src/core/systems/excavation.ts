@@ -53,6 +53,19 @@ export interface ExcavationState {
    */
   foundingTargetDepthCm: number
   /**
+   * Ticks a founding queen has spent able to dig: the clock her measured pace is read against.
+   * Ticks when the sand in front of her cannot be worked do not count, so a day of saturated
+   * sand after rain holds her up rather than letting her make it up in a sprint.
+   */
+  foundingDigTicks: number
+  /**
+   * The cell at the bottom of a founding queen's finished shaft, where her chamber opens, or -1
+   * until the shaft is finished. Fixed once. Found afresh each tick as the deepest dug cell, it
+   * slid sideways with every cell of chamber she opened, and the chamber never stopped growing.
+   */
+  foundingChamberCol: number
+  foundingChamberRow: number
+  /**
    * Per-cell ant counts, reused every tick. Allocated once: the hot path must not allocate,
    * and a Map here would also put host hashing between the simulation and its own results.
    */
@@ -207,11 +220,6 @@ function digWillingness(
   const stress = soil.stressAt(nest, col, row)
   const easeOfRemoval = pow(Math.max(0, 1 - stress), params.excavation.stressSensitivity.value)
 
-  // A founding queen digs at full effort until her nest is the depth an incipient nest is.
-  if (state.foundingTargetDepthCm > 0 && ants.caste[slot] === Caste.Queen) {
-    return nest.maxDepthCm < state.foundingTargetDepthCm ? workability * easeOfRemoval : 0
-  }
-
   // Each ant modulates its own effort by how often it has just collided with a nestmate,
   // and there is no global regulation of digging anywhere in this model.
   //
@@ -247,6 +255,132 @@ function digWillingness(
   const spoil = nest.spoil.get(col, row) * params.excavation.spoilCueWeight.value
 
   return workability * easeOfRemoval * crowding * lengthFeedback * stigmergy * (1 + spoil)
+}
+
+/**
+ * How deep a founding queen's nest should be after this many days of digging, in centimetres.
+ *
+ * The measured depths are joined by straight lines, from nothing at the moment she starts, and
+ * after the last measured day the shaft goes on deepening at the last measured rate.
+ */
+function foundingDepthAllowedCm(days: number, params: Params): number {
+  const byDay = params.excavation.foundingQueenDepthByDayCm.value
+  if (days <= 0 || byDay.length === 0) return 0
+  const whole = Math.floor(days)
+  if (whole < byDay.length) {
+    const from = whole === 0 ? 0 : byDay[whole - 1]!
+    return from + (byDay[whole]! - from) * (days - whole)
+  }
+  const last = byDay[byDay.length - 1]!
+  return last + params.excavation.foundingQueenLateRateCmPerDay.value * (days - byDay.length)
+}
+
+/**
+ * A founding queen's tick: her shaft, then her one chamber, then nothing more.
+ *
+ * She digs from the day she lands. Enzmann & Nonacs (2010) watched fully claustral
+ * *P. rugosus* queens dig in sand-filled frames: 9.3 cm down after one day, 14.3 after two,
+ * 16.3 after three, by then about 5 cm a day. No such series exists for *badius*, so the
+ * congener's is used and tagged [B]. Her shaft stops at this colony's incipient depth, which
+ * is [A] for *badius* (Tschinkel 2004, 29 to 37 cm). The *rugosus* queens stopped at 17 cm,
+ * but their frames held only 19 cm of soil, so that is not taken as a stopping depth.
+ *
+ * Her depth follows that measured course directly, rather than coming out of a rate of work,
+ * for one reason. In this model an ant walks a cell a minute, and a queen alone has nobody to
+ * hand a pellet to. Carrying each one to the surface herself, at 30 cm deep, the round trip
+ * alone would hold her to a few centimetres a week: the walking pace, not the queen, would
+ * set how deep she got. So while she founds, a pellet she digs is counted onto the surface at
+ * once. That is an abstraction, and the rule she is shown following says so.
+ *
+ * The shaft keeps the angles and the helix every other shaft in this model has. The chamber
+ * is opened sideways from the bottom of the shaft, a centimetre high, which is [A] for chambers
+ * of this species, and as wide as foundingChamberRunCm, which is invented.
+ */
+function stepFoundingQueen(sim: Simulation, state: ExcavationState, slot: number): void {
+  const { ants, params, prng, clock } = sim
+  const { nest, soil } = state
+  const cell = nest.cellSizeCm
+  const col = nest.colOfOffset(ants.x[slot]!)
+  const row = nest.rowOfDepth(ants.y[slot]!)
+  if (!nest.inBounds(col, row)) return
+
+  if (nest.maxDepthCm < state.foundingTargetDepthCm) {
+    if (!soil.isDiggable(col, row + 1)) {
+      ants.ruleId[slot] = RULE.digMoistureWindow
+      return
+    }
+    ants.ruleId[slot] = RULE.digFoundingQueen
+    state.foundingDigTicks += 1
+    const allowed = foundingDepthAllowedCm(state.foundingDigTicks / clock.ticksPerDay, params)
+    if (nest.maxDepthCm >= allowed) return
+
+    // Down the helix, at the angle for this depth. At the surface she only goes down, or she
+    // would dig a trench along the ground.
+    const depthCm = nest.depthOf(row)
+    const descent = descentTurnsAtDepth(depthCm, params, prng)
+    const along = cosTurns(descent) * cosTurns(ants.helixPhase[slot]!)
+    let dRow = prng.chance(Math.abs(sinTurns(descent))) ? 1 : 0
+    const dCol = row > 0 && prng.chance(Math.abs(along)) ? (along >= 0 ? 1 : -1) : 0
+    if (dCol === 0) dRow = 1
+    ants.helixPhase[slot] = ants.helixPhase[slot]! + helixTurnsPerCm(depthCm, params) * cell
+
+    let targetCol = col + dCol
+    let targetRow = row + dRow
+    if (!nest.isSoil(targetCol, targetRow)) {
+      targetCol = col
+      targetRow = row + 1
+    }
+    if (!nest.isSoil(targetCol, targetRow)) return
+    foundingQueenDigs(state, ants, slot, targetCol, targetRow)
+    return
+  }
+
+  // The shaft is done: open the chamber from its bottom, at the pace she was last digging at.
+  ants.ruleId[slot] = RULE.digFoundingQueen
+  const perTick = params.excavation.foundingQueenLateRateCmPerDay.value / cell / clock.ticksPerDay
+  if (!prng.chance(Math.min(1, perTick))) return
+
+  // She is standing in the cell that finished the shaft, which is where the chamber opens.
+  if (state.foundingChamberRow < 0) {
+    state.foundingChamberCol = col
+    state.foundingChamberRow = row
+  }
+  const bottom = { col: state.foundingChamberCol, row: state.foundingChamberRow }
+  const direction = cosTurns(ants.helixPhase[slot]!) >= 0 ? 1 : -1
+  const run = Math.max(1, Math.round(params.excavation.foundingChamberRunCm.value / cell))
+  const height = Math.max(1, Math.round(params.nest.chamberHeightCm.value / cell))
+  for (let k = 1; k < run; k += 1) {
+    for (let h = 0; h < height; h += 1) {
+      const c = bottom.col + direction * k
+      const r = bottom.row - h
+      if (!nest.isSoil(c, r)) continue
+      if (!soil.isDiggable(c, r)) {
+        ants.ruleId[slot] = RULE.digMoistureWindow
+        return
+      }
+      foundingQueenDigs(state, ants, slot, c, r)
+      return
+    }
+  }
+  // Nothing left to dig. She stays in her chamber until her daughters open the nest.
+}
+
+/** A founding queen removes one cell and stands in the space she made. See stepFoundingQueen. */
+function foundingQueenDigs(
+  state: ExcavationState,
+  ants: AntStore,
+  slot: number,
+  col: number,
+  row: number,
+): void {
+  const { nest, soil } = state
+  if (!nest.excavate(col, row)) return
+  soil.applyVoid(nest, col, row)
+  nest.building.add(col, row, 1)
+  state.surfacePellets += 1
+  ants.x[slot] = nest.offsetOf(col)
+  ants.y[slot] = nest.depthOf(row)
+  ants.tunnelLengthCm[slot] = ants.tunnelLengthCm[slot]! + nest.cellSizeCm
 }
 
 /**
@@ -730,6 +864,8 @@ export function makeExcavationSystem(state: ExcavationState) {
         // the nest and lays. Before this guard existed she went on wandering and digging
         // for the whole life of the colony.
         if (state.foundingTargetDepthCm <= 0) continue
+        stepFoundingQueen(sim, state, i)
+        continue
       } else if (!isDigging(sim, i)) {
         continue
       }

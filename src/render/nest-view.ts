@@ -23,16 +23,21 @@
  *   model's. The brood grid holds a total, so which glyph is an egg and which a larva follows
  *   the colony's current egg:larva:pupa proportions, and a larva's size within its stage is
  *   chosen for variety.
- * - Where in its cell an ant stands. The model puts every ant on the centre of a 5 mm cell, so
- *   two ants on one cell would be drawn exactly on top of each other. The picture spreads the
- *   ants sharing a cell across it, and in a shaft keeps ants climbing to one side and ants
- *   descending to the other, so they visibly pass. That is a drawing convention, like the
- *   walking in ant-motion.ts. It never puts an ant in sand, and no system reads it.
+ * - The outline of the burrows. The model digs in 5 mm squares; the picture traces one smooth
+ *   outline round them (see cavity.ts), so a chamber reads as a rounded pocket in the sand
+ *   rather than a row of bricks. Straight walls stay where the model's cells end.
+ * - Where in its cell an ant stands, and which way up. The model puts every ant on the centre
+ *   of a 5 mm cell and gives her no posture. The picture draws each ant from the side, as the
+ *   slice is seen, standing on the nearest floor or holding on to the nearest shaft wall, and
+ *   spreads out ants that share a cell. Ants climbing a shaft and ants going down it end up on
+ *   opposite walls, so they visibly pass. That is a drawing convention, like the walking in
+ *   ant-motion.ts. It never puts an ant in sand, and no system reads it.
  */
 
 import { Burden, Caste, Domain } from '../core/state/ants.js'
-import { coloursFor, drawAnt, drawBrood, drawSeed } from './ant-sprite.js'
+import { coloursFor, drawAntSide, drawBrood, drawSeed, sideStandHeight } from './ant-sprite.js'
 import { antBodyFor } from './body-sizes.js'
+import { CavityOutline } from './cavity.js'
 import { pheromoneColour } from './pheromones.js'
 import type { AntStore } from '../core/state/ants.js'
 import type { NestGrid } from '../core/state/nest.js'
@@ -111,6 +116,8 @@ export interface NestDrawOptions {
   readonly surface?: SurfaceGrid
   /** Diameter of the bare disc of sand round the entrance, in centimetres. */
   readonly discDiameterCm: number
+  /** Whether to put name tags on the queen, the brood and the seed store. */
+  readonly labels?: boolean
 }
 
 /** Width of the depth ruler gutter, in device-independent pixels. */
@@ -118,6 +125,9 @@ const RULER_WIDTH = 54
 
 /** Below this many pixels per cell, contents are a tint rather than countable objects. */
 const GLYPH_MIN_CELL_PX = 5
+
+/** Below this many pixels per cell the picture is too small for name tags to point at anything. */
+const LABEL_MIN_CELL_PX = 2
 
 /** Most brood and seed glyphs drawn in one cell. Past this a cell reads as a pile anyway. */
 const MAX_BROOD_GLYPHS = 16
@@ -157,14 +167,15 @@ const GROUND_BAND_PX = 84
 /** How many disc diameters of ground the band shows across its width. */
 const GROUND_BAND_DISCS = 2.2
 
-/** Below this many pixels per cell the burrows are drawn as plain cells, not traced outlines. */
-const BURROW_DETAIL_MIN_CELL_PX = 3
+/**
+ * Below this many pixels per cell the burrows are drawn as plain cells, not traced outlines. At
+ * three pixels a cell, a whole shaft seen at mid zoom was a jagged staircase; under one and a
+ * half, a cell is too small for its corners to show either way.
+ */
+const BURROW_DETAIL_MIN_CELL_PX = 1.5
 
 /** Centimetres of sand one texel of the grain texture stands for: a grain about 0.3 mm across. */
 const GRAIN_CM_PER_TEXEL = 0.03
-
-/** Outside corners of a burrow are rounded with this fraction of a cell as the radius. */
-const BURROW_CORNER_FRACTION = 0.34
 
 /**
  * Damp sand is darkened towards this colour by its moisture fraction times the strength, up to a
@@ -184,6 +195,26 @@ const SPREAD_FRACTION = 0.42
 /** How quickly an ant slides to its place among others, as a fraction of the gap per second. */
 const SPREAD_EASE_PER_SECOND = 6
 
+/** How quickly an ant turns to lie along her floor or wall, as a fraction of the turn per second. */
+const TURN_EASE_PER_SECOND = 10
+
+/**
+ * A turn sharper than this, in radians, is taken at once. An ant turning round on a floor is
+ * drawn facing the other way, rather than swung head over heels to get there.
+ */
+const SNAP_TURN_RADIANS = 2.4
+
+/** An ant heading more steeply than this, as the vertical share of her heading, climbs a wall. */
+const CLIMB_FACING = 0.6
+
+/**
+ * How far, in cells, an ant looks for a floor under her or a wall beside her. Two cells is a
+ * centimetre: the height of a chamber, and a little more than the width of a shaft.
+ */
+const SURFACE_SEARCH_CELLS = 2
+
+const MM_PER_CM = 10
+
 /**
  * Lengths of carried things that have no parameter. A pellet of sand is drawn a millimetre
  * long, a fragment of charcoal one and a half. Appearance only.
@@ -199,7 +230,13 @@ export class NestView {
   private spreadX = new Float32Array(0)
   private spreadY = new Float32Array(0)
   private spreadId = new Uint32Array(0)
+  /** The way each ant is drawn facing, in radians, and which side of her body her feet are on. */
+  private poseAngle = new Float32Array(0)
+  private poseSide = new Int8Array(0)
   private lastTimeSeconds = 0
+
+  /** The smooth outline of the burrows, traced a patch at a time and kept. */
+  private readonly cavity = new CavityOutline()
 
   /** The tiled sand grain, made once. Undefined until first asked for. */
   private grain: CanvasPattern | null | undefined
@@ -351,6 +388,9 @@ export class NestView {
     if (options.showDiggingScent) this.drawDiggingScent(nest, xOf, yOf, cellPx, view)
     this.drawContents(nest, xOf, yOf, pxPerCm, cellPx, view, options)
     this.drawAnts(nest, ants, xOf, yOf, pxPerCm, widthPx, heightPx, options)
+    if (options.labels === true) {
+      this.drawLabels(nest, ants, xOf, yOf, cellPx, view, widthPx, heightPx, options)
+    }
     if (groundY <= 0) this.drawGroundBand(nest, ants, plotWidth, heightPx, options)
     this.drawRuler(viewport, heightPx, pxPerCm, widthPx)
   }
@@ -436,18 +476,17 @@ export class NestView {
   }
 
   /**
-   * The excavated void, cell by cell at its true size, with its corners softened.
+   * The excavated void, as one smooth outline round the cells the model dug.
    *
-   * Every dug cell is drawn and every wall sits exactly on its cell edge, so a tunnel is
-   * precisely as wide as the model dug it. Only the outside corners of the cavity are rounded,
-   * with a radius of a third of a cell, under two millimetres. Two cells that touch only at a
-   * corner, which the ants do walk between, get a small bridge so the passage does not pinch
-   * to a point. An earlier version traced a smoothed outline instead, and it cut the last cell
-   * off every dead-end tunnel, leaving the digger working that face drawn in solid sand. The
-   * top row is open to the air above it, so the entrance has no wall across its mouth.
+   * Drawn square by square, a chamber the ants shaped looked built from bricks, which is the one
+   * thing a nest is not. So the outline is traced through a smooth field over the dug cells
+   * (cavity.ts). A straight wall still sits where the model's cells end, to within a tenth of a
+   * millimetre, a dead-end tunnel keeps its last cell, and two cells that touch only at a corner,
+   * which the ants do walk between, stay joined. What changes is the corners, which are rounded
+   * the way sand falls away from a pocket dug in it. The top of the entrance is open to the air.
    *
-   * Inside, the cavity darkens towards its walls, the way light falls off under a sand
-   * overhang, and a thin lit rim of packed sand runs round every wall. Both are appearance.
+   * Inside, the cavity darkens towards its walls, the way light falls off under a sand overhang,
+   * and a thin lit rim of packed sand runs round every wall. Both are appearance.
    */
   private drawBurrows(
     nest: NestGrid,
@@ -460,70 +499,7 @@ export class NestView {
     plotWidth: number,
   ): void {
     const { ctx, theme } = this
-    const cell = nest.cellSizeCm
-    const size = cell * pxPerCm
-    const r = size * BURROW_CORNER_FRACTION
-    const bridge = size * 0.3
-    const open = (col: number, row: number): boolean => {
-      if (col < 0 || col >= nest.cols || row >= nest.rows) return false
-      if (row < 0) return nest.isVoid(col, 0)
-      return nest.isVoid(col, row)
-    }
-
-    const cavity = new Path2D()
-    const walls = new Path2D()
-    for (let row = view.firstRow; row <= view.lastRow; row += 1) {
-      const y = yOf(nest.depthOf(row) - cell / 2)
-      for (let col = view.firstCol; col <= view.lastCol; col += 1) {
-        if (!nest.isVoid(col, row)) continue
-        const x = xOf(nest.offsetOf(col) - cell / 2)
-        const n = open(col, row - 1)
-        const s = open(col, row + 1)
-        const e = open(col + 1, row)
-        const w = open(col - 1, row)
-        const tl = !n && !w ? r : 0
-        const tr = !n && !e ? r : 0
-        const br = !s && !e ? r : 0
-        const bl = !s && !w ? r : 0
-        cavity.roundRect(x, y, size, size, [tl, tr, br, bl])
-
-        if (!s && !e && open(col + 1, row + 1)) diamond(cavity, x + size, y + size, bridge)
-        if (!s && !w && open(col - 1, row + 1)) diamond(cavity, x, y + size, bridge)
-
-        if (!n) {
-          walls.moveTo(x + tl, y)
-          walls.lineTo(x + size - tr, y)
-        }
-        if (!e) {
-          walls.moveTo(x + size, y + tr)
-          walls.lineTo(x + size, y + size - br)
-        }
-        if (!s) {
-          walls.moveTo(x + size - br, y + size)
-          walls.lineTo(x + bl, y + size)
-        }
-        if (!w) {
-          walls.moveTo(x, y + size - bl)
-          walls.lineTo(x, y + tl)
-        }
-        if (tl > 0) {
-          walls.moveTo(x, y + tl)
-          walls.arc(x + tl, y + tl, tl, Math.PI, Math.PI * 1.5)
-        }
-        if (tr > 0) {
-          walls.moveTo(x + size - tr, y)
-          walls.arc(x + size - tr, y + tr, tr, Math.PI * 1.5, Math.PI * 2)
-        }
-        if (br > 0) {
-          walls.moveTo(x + size, y + size - br)
-          walls.arc(x + size - br, y + size - br, br, 0, Math.PI * 0.5)
-        }
-        if (bl > 0) {
-          walls.moveTo(x + bl, y + size)
-          walls.arc(x + bl, y + size - bl, bl, Math.PI * 0.5, Math.PI)
-        }
-      }
-    }
+    const { fill, walls } = this.cavity.paths(nest, view)
 
     ctx.save()
     const clipTop = Math.max(0, groundY)
@@ -531,24 +507,30 @@ export class NestView {
     ctx.rect(RULER_WIDTH, clipTop, plotWidth, heightPx - clipTop)
     ctx.clip()
 
+    // The outline is kept in centimetres, so it is drawn through the camera, and every line
+    // width is divided by the zoom so it stays the same number of pixels.
+    ctx.translate(xOf(0), yOf(0))
+    ctx.scale(pxPerCm, pxPerCm)
+    const px = 1 / pxPerCm
+
     ctx.fillStyle = theme.voidFill
-    ctx.fill(cavity)
+    ctx.fill(fill)
 
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
     ctx.save()
-    ctx.clip(cavity)
+    ctx.clip(fill)
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.22)'
-    ctx.lineWidth = Math.max(3, pxPerCm * 0.36)
+    ctx.lineWidth = Math.max(3 * px, 0.36)
     ctx.stroke(walls)
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)'
-    ctx.lineWidth = Math.max(1.5, pxPerCm * 0.14)
+    ctx.lineWidth = Math.max(1.5 * px, 0.14)
     ctx.stroke(walls)
     ctx.restore()
 
     ctx.strokeStyle = theme.voidRoof
     ctx.globalAlpha = 0.5
-    ctx.lineWidth = Math.max(1, pxPerCm * 0.05)
+    ctx.lineWidth = Math.max(px, 0.05)
     ctx.stroke(walls)
     ctx.globalAlpha = 1
     ctx.restore()
@@ -730,13 +712,16 @@ export class NestView {
       const caste = ants.caste[i]!
       const body = antBodyFor(caste, ants.lengthMm[i]!, sizes, pxPerMm)
       const burden = ants.burden[i]!
-      drawAnt(
+      // Seen from the side, with her feet on the ground rather than in it.
+      drawAntSide(
         ctx,
         xOf(cm),
-        groundY - riseCm(cm) * pxPerCm - Math.max(1, body.headWidthPx * 0.6),
+        groundY - riseCm(cm) * pxPerCm - sideStandHeight(body),
         body,
         motion.facingX(i) >= 0 ? 1 : -1,
         0,
+        0,
+        1,
         coloursFor(caste),
         burden,
         options.timeSeconds * 9 + i * 1.7,
@@ -871,6 +856,9 @@ export class NestView {
         const brood = nest.brood.get(col, row)
         if (seeds < 0.05 && brood < 0.05) continue
         const cx = xOf(nest.offsetOf(col))
+        // Seeds and brood lie on the floor of a chamber rather than float in the middle of it.
+        const onFloor = nest.isSoil(col, row + 1)
+        const settle = (dy: number): number => (onFloor ? cellPx * 0.4 - Math.abs(dy) * 0.8 : dy)
 
         if (!glyphs) {
           // Too small to count. Tint the cell by how full it is.
@@ -898,7 +886,7 @@ export class NestView {
             drawSeed(
               ctx,
               cx + ox,
-              cy + oy,
+              cy + settle(oy),
               sizes.seedLengthMm * pxPerMm,
               sizes.seedWidthMm * pxPerMm,
               fract(col, row, k + 333) * Math.PI,
@@ -910,7 +898,7 @@ export class NestView {
           const n = Math.min(MAX_BROOD_GLYPHS, Math.round(brood))
           // Eggs are kept in a clump, so they are drawn around one point in the cell.
           const eggX = cx + (fract(col, row, 501) - 0.5) * cellPx * 0.4
-          const eggY = cy + (fract(col, row, 502) - 0.5) * cellPx * 0.4
+          const eggDy = (fract(col, row, 502) - 0.5) * cellPx * 0.4
           for (let k = 0; k < n; k += 1) {
             const r = fract(col, row, k + 128)
             const stage = r < eggShare ? 0 : r < larvaShare ? 1 : 2
@@ -921,7 +909,7 @@ export class NestView {
               drawBrood(
                 ctx,
                 eggX + ox,
-                eggY + oy,
+                cy + settle(eggDy + oy),
                 0,
                 sizes.eggLengthMm * pxPerMm,
                 sizes.eggWidthMm * pxPerMm,
@@ -932,14 +920,14 @@ export class NestView {
               const [ox, oy] = scatter(col, row, k + 64, cellPx)
               const grown = 0.35 + 0.65 * fract(col, row, k + 900)
               const length = sizes.matureLarvaLengthMm * grown * pxPerMm
-              drawBrood(ctx, cx + ox, cy + oy, 1, length, length * 0.45, angle)
+              drawBrood(ctx, cx + ox, cy + settle(oy), 1, length, length * 0.45, angle)
             } else {
               ctx.fillStyle = theme.pupa
               const [ox, oy] = scatter(col, row, k + 64, cellPx)
               drawBrood(
                 ctx,
                 cx + ox,
-                cy + oy,
+                cy + settle(oy),
                 2,
                 sizes.pupaLengthMm * pxPerMm,
                 sizes.minorHeadwidthMm * pxPerMm,
@@ -965,7 +953,7 @@ export class NestView {
   ): void {
     const { ctx } = this
     const { motion, sizes } = options
-    this.spreadAnts(nest, ants, motion, options.timeSeconds)
+    this.spreadAnts(nest, ants, motion, sizes, options.timeSeconds)
 
     const pxPerMm = pxPerCm / 10
     const drawOne = (i: number): void => {
@@ -978,13 +966,18 @@ export class NestView {
       const burden = ants.burden[i]!
       // The walking phase is per-ant, so a chamber full of workers is not a chorus line.
       const phase = options.timeSeconds * 9 + i * 1.7
-      drawAnt(
+      const fx = Math.cos(this.poseAngle[i]!)
+      const fy = Math.sin(this.poseAngle[i]!)
+      const side = this.poseSide[i]!
+      drawAntSide(
         ctx,
         x,
         y,
         body,
-        motion.facingX(i),
-        motion.facingY(i),
+        fx,
+        fy,
+        -fy * side,
+        fx * side,
         coloursFor(caste),
         burden,
         phase,
@@ -1014,23 +1007,35 @@ export class NestView {
   }
 
   /**
-   * Where in its cell each ant is drawn. A drawing convention; see the top of this file.
+   * Where each ant is drawn, and which way up. A drawing convention; see the top of this file.
    *
-   * Ants sharing a cell are spread evenly across it. In a shaft, which runs up and down, the
-   * ones climbing take one side and the ones descending the other, which is how two ants in a
-   * tunnel under a centimetre wide get past each other. In a chamber they spread along the
-   * floor. Each ant slides to its place rather than jumping, and an offset that would put an
-   * ant in sand is dropped.
+   * Ants are drawn from the side, so each needs something to stand on. An ant with sand under
+   * her within a centimetre, the height of a chamber, stands on that floor. An ant heading up or
+   * down, or with no floor near, holds on to a wall instead. Which wall follows which way up she
+   * already was: an ant that walks off the edge of a floor goes down the side of the hole she
+   * stepped off rather than flipping over, and in a shaft the ants climbing and the ants going
+   * down settle on opposite walls, which is how two ants pass in a tunnel under a centimetre
+   * wide. Ants sharing a cell are spread out along the floor or wall. Each one slides and turns
+   * to her place rather than jumping there, and a place that would stand her in sand is dropped.
    */
-  private spreadAnts(nest: NestGrid, ants: AntStore, motion: AntMotion, timeSeconds: number): void {
+  private spreadAnts(
+    nest: NestGrid,
+    ants: AntStore,
+    motion: AntMotion,
+    sizes: BodySizes,
+    timeSeconds: number,
+  ): void {
     if (this.spreadX.length < ants.capacity) {
       this.spreadX = new Float32Array(ants.capacity)
       this.spreadY = new Float32Array(ants.capacity)
       this.spreadId = new Uint32Array(ants.capacity)
+      this.poseAngle = new Float32Array(ants.capacity)
+      this.poseSide = new Int8Array(ants.capacity).fill(1)
     }
     const dt = Math.min(0.25, Math.max(0, timeSeconds - this.lastTimeSeconds))
     this.lastTimeSeconds = timeSeconds
     const ease = 1 - Math.exp(-SPREAD_EASE_PER_SECOND * dt)
+    const turn = 1 - Math.exp(-TURN_EASE_PER_SECOND * dt)
     const cell = nest.cellSizeCm
     const cols = nest.cols
 
@@ -1038,10 +1043,13 @@ export class NestView {
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
       if (this.spreadId[i] !== ants.id[i]) {
-        // A reused slot is a different ant, and starts at the centre of its cell.
+        // A reused slot is a different ant. She starts in the middle of her cell, feet down.
+        const left = motion.facingX(i) < 0
         this.spreadId[i] = ants.id[i]!
         this.spreadX[i] = 0
         this.spreadY[i] = 0
+        this.poseAngle[i] = left ? Math.PI : 0
+        this.poseSide[i] = left ? -1 : 1
       }
       const key = nest.rowOfDepth(motion.drawnY(i)) * cols + nest.colOfOffset(motion.drawnX(i))
       const group = groups.get(key)
@@ -1052,38 +1060,162 @@ export class NestView {
     for (const [key, group] of groups) {
       const col = key % cols
       const row = (key - col) / cols
-      const runsSideways = nest.isVoid(col - 1, row) || nest.isVoid(col + 1, row)
-      const runsUpDown = nest.isVoid(col, row - 1) || nest.isVoid(col, row + 1)
-      const shaft = runsUpDown && !runsSideways
+      const floorRow = soilBelow(nest, col, row)
+      const leftCol = soilBeside(nest, col, row, -1)
+      const rightCol = soilBeside(nest, col, row, 1)
 
       group.sort(
         (a, b) =>
-          (shaft ? Math.sign(motion.facingY(a)) - Math.sign(motion.facingY(b)) : 0) ||
-          ants.id[a]! - ants.id[b]!,
+          Math.sign(motion.facingY(a)) - Math.sign(motion.facingY(b)) || ants.id[a]! - ants.id[b]!,
       )
 
       const n = group.length
       for (let k = 0; k < n; k += 1) {
         const slot = group[k]!
         const id = ants.id[slot]!
-        // From -0.5 to 0.5 across the cell. A lone ant stands a little off centre, so a
-        // column of single ants does not line up like beads.
-        const across = n === 1 ? (hash(id) - 0.5) * 0.5 : k / (n - 1) - 0.5
-        let targetX = across * 2 * SPREAD_FRACTION * cell
-        let targetY = (hash(id + 17) - 0.5) * cell * (shaft ? 0.5 : 0.25)
-        // In a chamber, ants stand on the floor rather than hang from the roof.
-        if (!shaft) targetY = Math.abs(targetY)
+        // From one side of the cell to the other, along the floor or the wall. A lone ant stands
+        // a little off centre, so a line of single ants does not look like beads on a string.
+        const along =
+          (n === 1 ? (hash(id) - 0.5) * 0.5 : k / (n - 1) - 0.5) * 2 * SPREAD_FRACTION * cell
+        const fx = motion.facingX(slot)
+        const fy = motion.facingY(slot)
+        const x0 = motion.drawnX(slot)
+        const y0 = motion.drawnY(slot)
+        const body = antBodyFor(ants.caste[slot]!, ants.lengthMm[slot]!, sizes, 1)
+        const standCm = sideStandHeight(body) / MM_PER_CM
 
-        const x = motion.drawnX(slot) + targetX
-        const y = motion.drawnY(slot) + targetY
-        if (!nest.isVoid(nest.colOfOffset(x), nest.rowOfDepth(y))) {
+        let targetX = along
+        let targetY = 0
+        let angle = Math.atan2(fy, fx)
+        let downX = 0
+        let downY = 1
+
+        // Which wall, if any. Climbing, her feet stay on the side of her body they were on;
+        // going down, the same wall is on her other side.
+        let wall = 0
+        if (floorRow < 0 || Math.abs(fy) > CLIMB_FACING) {
+          const keep = fy < 0 ? this.poseSide[slot]! : -this.poseSide[slot]!
+          if ((keep < 0 ? leftCol : rightCol) >= 0) wall = keep
+          else if ((keep < 0 ? rightCol : leftCol) >= 0) wall = -keep
+        }
+
+        if (wall !== 0) {
+          const wallX = nest.offsetOf(wall < 0 ? leftCol : rightCol) - (wall * cell) / 2
+          targetX = wallX - wall * standCm - x0
+          targetY = along * 0.6
+          angle = fy < 0 ? -Math.PI / 2 : Math.PI / 2
+          downX = wall
+          downY = 0
+        } else if (floorRow >= 0) {
+          targetY = nest.depthOf(floorRow) - cell / 2 - standCm - y0
+          const facingLeft = Math.abs(fx) > 0.05 ? fx < 0 : Math.cos(this.poseAngle[slot]!) < 0
+          angle = facingLeft ? Math.PI : 0
+        }
+
+        if (!nest.isVoid(nest.colOfOffset(x0 + targetX), nest.rowOfDepth(y0 + targetY))) {
           targetX = 0
           targetY = 0
         }
+
+        const current = this.poseAngle[slot]!
+        const diff = wrapAngle(angle - current)
+        this.poseAngle[slot] =
+          Math.abs(diff) > SNAP_TURN_RADIANS ? angle : wrapAngle(current + diff * turn)
+        this.poseSide[slot] = -Math.sin(angle) * downX + Math.cos(angle) * downY < 0 ? -1 : 1
         this.spreadX[slot] = this.spreadX[slot]! + (targetX - this.spreadX[slot]!) * ease
         this.spreadY[slot] = this.spreadY[slot]! + (targetY - this.spreadY[slot]!) * ease
       }
     }
+  }
+
+  /**
+   * Name tags on the queen, the biggest pile of brood and the biggest store of seeds in view.
+   *
+   * For a reader who does not yet know an egg from a seed. Each tag points at what the model has
+   * in that place; "biggest" is only the single cell holding the most.
+   */
+  private drawLabels(
+    nest: NestGrid,
+    ants: AntStore,
+    xOf: (cm: number) => number,
+    yOf: (cm: number) => number,
+    cellPx: number,
+    view: CellWindow,
+    widthPx: number,
+    heightPx: number,
+    options: NestDrawOptions,
+  ): void {
+    if (cellPx < LABEL_MIN_CELL_PX) return
+    const { ctx } = this
+    const tags: { x: number; y: number; text: string; above: boolean }[] = []
+
+    let broodMost = 0.5
+    let seedMost = 0.5
+    let broodAt = -1
+    let seedAt = -1
+    for (let row = view.firstRow; row <= view.lastRow; row += 1) {
+      for (let col = view.firstCol; col <= view.lastCol; col += 1) {
+        const brood = nest.brood.get(col, row)
+        const seeds = nest.seeds.get(col, row)
+        if (brood >= broodMost) {
+          broodMost = brood
+          broodAt = row * nest.cols + col
+        }
+        if (seeds >= seedMost) {
+          seedMost = seeds
+          seedAt = row * nest.cols + col
+        }
+      }
+    }
+    const at = (index: number): { x: number; y: number } => {
+      const col = index % nest.cols
+      const row = (index - col) / nest.cols
+      return { x: xOf(nest.offsetOf(col)), y: yOf(nest.depthOf(row)) }
+    }
+    if (broodAt >= 0) {
+      const mix = options.broodMix
+      const text = mix.larvae + mix.pupae < 0.5 ? 'Eggs' : 'Brood'
+      tags.push({ ...at(broodAt), text, above: false })
+    }
+    if (seedAt >= 0) tags.push({ ...at(seedAt), text: 'Seed store', above: true })
+    for (let i = 0; i < ants.count; i += 1) {
+      if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
+      if (ants.caste[i] !== Caste.Queen) continue
+      tags.push({
+        x: xOf(options.motion.drawnX(i) + this.spreadX[i]!),
+        y: yOf(options.motion.drawnY(i) + this.spreadY[i]!),
+        text: 'Queen',
+        above: true,
+      })
+    }
+
+    ctx.save()
+    ctx.font = "500 11px 'Geist', ui-sans-serif, system-ui, sans-serif"
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.lineWidth = 1
+    const height = 19
+    const gap = Math.max(16, cellPx * 1.5)
+    for (const tag of tags) {
+      const centreY = tag.above ? tag.y - gap - height / 2 : tag.y + gap + height / 2
+      const width = ctx.measureText(tag.text).width + 16
+      if (tag.x < RULER_WIDTH + width / 2 || tag.x > widthPx - width / 2) continue
+      if (centreY < height || centreY > heightPx - height) continue
+      ctx.strokeStyle = 'rgba(236, 232, 223, 0.5)'
+      ctx.beginPath()
+      ctx.moveTo(tag.x, tag.above ? tag.y - 5 : tag.y + 5)
+      ctx.lineTo(tag.x, tag.above ? centreY + height / 2 : centreY - height / 2)
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.roundRect(tag.x - width / 2, centreY - height / 2, width, height, height / 2)
+      ctx.fillStyle = 'rgba(18, 17, 15, 0.8)'
+      ctx.fill()
+      ctx.strokeStyle = 'rgba(255, 244, 225, 0.18)'
+      ctx.stroke()
+      ctx.fillStyle = '#ece8df'
+      ctx.fillText(tag.text, tag.x, centreY + 0.5)
+    }
+    ctx.restore()
   }
 
   /**
@@ -1141,13 +1273,25 @@ interface CellWindow {
   readonly lastCol: number
 }
 
-/** A small diamond at a shared corner, bridging two cells that touch only there. */
-function diamond(path: Path2D, cx: number, cy: number, d: number): void {
-  path.moveTo(cx - d, cy)
-  path.lineTo(cx, cy - d)
-  path.lineTo(cx + d, cy)
-  path.lineTo(cx, cy + d)
-  path.closePath()
+/** The first row of sand under a cell, within reach of an ant standing there, or -1. */
+function soilBelow(nest: NestGrid, col: number, row: number): number {
+  for (let d = 1; d <= SURFACE_SEARCH_CELLS; d += 1) {
+    if (nest.isSoil(col, row + d)) return row + d
+  }
+  return -1
+}
+
+/** The first column of sand to one side of a cell, within reach, or -1. */
+function soilBeside(nest: NestGrid, col: number, row: number, direction: -1 | 1): number {
+  for (let d = 1; d <= SURFACE_SEARCH_CELLS; d += 1) {
+    if (nest.isSoil(col + direction * d, row)) return col + direction * d
+  }
+  return -1
+}
+
+/** An angle brought into the range from minus pi to pi. */
+function wrapAngle(radians: number): number {
+  return radians - Math.PI * 2 * Math.round(radians / (Math.PI * 2))
 }
 
 /** The length of whatever an ant is carrying, in millimetres. */

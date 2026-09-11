@@ -45,6 +45,10 @@ import {
 import { createSourcesSheet } from './ui/sources.js'
 import { createInstrumentSheet } from './ui/instrument.js'
 import { mountThreshold } from './ui/threshold.js'
+import { Timelapse, WATCH_SECONDS_PER_DAY } from './ui/pace.js'
+import { ColonyDiary } from './ui/diary.js'
+import type { DiaryEntry } from './ui/diary.js'
+import type { ColonySummary } from './core/sim/colony.js'
 import {
   currentTheme,
   initTheme,
@@ -86,35 +90,45 @@ const openSources = createSourcesSheet(counts)
 const openInstrument = createInstrumentSheet(repositoryUrl())
 
 /**
- * Simulated days per real second. Speed changes how many steps run, never their size.
+ * How fast the colony runs. Speed changes how many steps run, never their size.
  *
- * Labelled in days rather than multipliers. "16x" says nothing about what a reader is about
- * to see. "16 days/s" says the first workers are about three seconds away.
+ * The first is the time-lapse (ui/pace.ts), which has no fixed rate. The rest are simulated
+ * days per real second, labelled in days rather than multipliers, because "16x" says nothing
+ * about what a reader is about to see.
  */
-const SPEEDS: readonly { label: string; title: string; daysPerSecond: number }[] = [
-  { label: '1 day/min', title: 'One simulated day every real minute', daysPerSecond: 1 / 60 },
-  { label: '1 day/4 s', title: 'One simulated day every four seconds', daysPerSecond: 0.25 },
+const SPEEDS: readonly { label: string; title: string; daysPerSecond: number | null }[] = [
+  {
+    label: 'Time-lapse',
+    title: 'A day takes 30 seconds while something is happening, and skips ahead while nothing is',
+    daysPerSecond: null,
+  },
+  { label: '1 day/30 s', title: 'One simulated day every 30 seconds', daysPerSecond: 1 / 30 },
+  { label: '1 day/5 s', title: 'One simulated day every 5 seconds', daysPerSecond: 0.2 },
   { label: '1 day/s', title: 'One simulated day every second', daysPerSecond: 1 },
-  { label: '4 days/s', title: 'Four simulated days every second', daysPerSecond: 4 },
   { label: '16 days/s', title: 'Sixteen simulated days every second', daysPerSecond: 16 },
 ]
 
 /**
- * The speed a visitor starts at.
+ * The speed a visitor starts at: the time-lapse.
  *
- * A day a second. The queen seals herself in, digs her founding shaft over the next few
- * seconds and lays, and her first daughters hatch about forty seconds in. That is roughly
- * how long somebody will watch before deciding whether this is worth their time. Slower,
- * and the first minute is a still picture. Faster, and the founding is over before anyone
- * sees it.
+ * Somebody who opens "Watch a colony" wants to see a colony begin, the way they would watch an
+ * ant farm: the queen digging her shaft over about a week, laying, her brood growing, her first
+ * daughters hatching and starting to dig and forage. At a fixed day a second the digging is over
+ * in seconds; at a fixed thirty seconds a day the first worker is nearly half an hour away.
  */
-const DEFAULT_SPEED = 2
+const DEFAULT_SPEED = 0
 
 /** Milliseconds of simulation allowed per frame. Past this the picture slows, not the model. */
 const FRAME_BUDGET_MS = 9
 
 /** How quickly the camera catches up with where it has been told to look, per second. */
 const CAMERA_EASE_PER_SECOND = 5
+
+/**
+ * Centimetres of depth the ant-scale camera shows. About twenty body lengths of a worker, close
+ * enough to watch the queen dig and see her eggs, with her chamber in the same picture.
+ */
+const WORK_SPAN_CM = 16
 
 const INVESTMENTS: readonly {
   label: string
@@ -138,12 +152,8 @@ const INVESTMENTS: readonly {
   },
 ]
 
-/**
- * The four figures shown large at the top of the readouts. They are the ones that change from
- * one glance to the next, and the ones a reader asks about first: how big, how many out, how
- * much coming, how much put by. Everything else stays in rows with its note beside it.
- */
-const GLANCE: readonly string[] = ['Workers', 'Foragers', 'Brood', 'Seeds in store']
+/** Diary entries shown before the rest fold away under "Earlier entries". */
+const DIARY_SHOWN = 6
 
 /** Plain words for the three evidence labels, used wherever a rule is shown. */
 const TAG_WORDS: Readonly<Record<'A' | 'B' | 'C', string>> = {
@@ -221,39 +231,60 @@ function startSimulator(): void {
           </div>
         </header>
         <section class="panel-section">
+          <h2 class="panel-label">Right now</h2>
+          <p class="now-text" id="now"></p>
+          <p class="now-food" id="food"></p>
+        </section>
+        <section class="panel-section">
           <h2 class="panel-label">Speed</h2>
-          <div class="controls controls--segmented" id="speeds"></div>
+          <div class="controls controls--segmented controls--auto" id="speeds"></div>
+          <p class="control-note" id="pace"></p>
+        </section>
+        <section class="panel-section">
+          <h2 class="panel-label">At a glance</h2>
+          <div class="hud-grid glance" id="glance"></div>
+        </section>
+        <div class="inspector" id="inspector" hidden></div>
+        <section class="panel-section">
+          <h2 class="panel-label">Colony diary</h2>
+          <div id="diary" aria-live="polite"></div>
         </section>
         <section class="panel-section">
           <h2 class="panel-label">What the queen's eggs become</h2>
           <div class="controls controls--segmented controls--three" id="levers"></div>
           <p class="control-note" id="lever-note"></p>
         </section>
-        <section class="panel-section">
-          <h2 class="panel-label">Scents the ants follow</h2>
-          <ul class="scent-list" id="scents"></ul>
-        </section>
-        <div class="inspector" id="inspector" hidden></div>
         <details class="legend" id="legend">
           <summary>What am I looking at?</summary>
           <div class="legend-body" id="legend-body"></div>
         </details>
-        <div class="readouts">
-          <p class="readouts-intro">
-            The grey note under each figure is what real colonies show. A figure turns red
-            when the model is outside that.
-          </p>
-          <div id="hud"></div>
-        </div>
+        <details class="legend behind" id="behind">
+          <summary>Behind the picture</summary>
+          <div class="legend-body behind-body">
+            <section>
+              <h3 class="panel-label">Scents the ants follow</h3>
+              <ul class="scent-list" id="scents"></ul>
+            </section>
+            <div class="readouts">
+              <p class="readouts-intro">
+                The grey note under each figure is what real colonies show. A figure turns red
+                when the model is outside that.
+              </p>
+              <div id="hud"></div>
+            </div>
+            <p class="provenance">
+              This run uses seed <code>${seed}</code>, so it can be repeated exactly. Of the
+              model's ${totalValues} values, ${counts.A} are measured in this species,
+              ${counts.B} are borrowed from other ants and ${counts.C} are invented.
+            </p>
+            <div class="foot-links">
+              <button class="linkish" id="show-sources" type="button">Sources and evidence</button>
+              <button class="linkish" id="show-instrument" type="button">Run your own study</button>
+            </div>
+          </div>
+        </details>
         <footer class="panel-foot">
-          <p class="provenance">
-            This run uses seed <code>${seed}</code>, so it can be repeated exactly. Of the
-            model's ${totalValues} values, ${counts.A} are measured in this species,
-            ${counts.B} are borrowed from other ants and ${counts.C} are invented.
-          </p>
           <div class="foot-links">
-            <button class="linkish" id="show-sources" type="button">Sources and evidence</button>
-            <button class="linkish" id="show-instrument" type="button">Run your own study</button>
             <button class="linkish" id="theme-toggle" type="button"></button>
           </div>
         </footer>
@@ -272,6 +303,12 @@ function startSimulator(): void {
   const leverNote = app!.querySelector<HTMLParagraphElement>('#lever-note')!
   const cameraBar = app!.querySelector<HTMLDivElement>('#cameras')!
   const inspector = app!.querySelector<HTMLDivElement>('#inspector')!
+  const nowEl = app!.querySelector<HTMLParagraphElement>('#now')!
+  const foodEl = app!.querySelector<HTMLParagraphElement>('#food')!
+  const paceEl = app!.querySelector<HTMLParagraphElement>('#pace')!
+  const glanceEl = app!.querySelector<HTMLDivElement>('#glance')!
+  const diaryEl = app!.querySelector<HTMLDivElement>('#diary')!
+  const behind = app!.querySelector<HTMLDetailsElement>('#behind')!
 
   const nestView = new NestView(sliceCanvas, nestThemeFor(currentTheme()))
   const surfaceView = new SurfaceView(groundCanvas)
@@ -297,7 +334,7 @@ function startSimulator(): void {
    * How much depth the slice shows. Starts at ant scale: a founding chamber is 1 cm high and
    * a worker 6.35 mm long, so this is about forty body lengths of nest.
    */
-  let spanCm = 26
+  let spanCm = WORK_SPAN_CM
   let freeTopCm = 0
   let freeCentreCm = 0
   let selected = -1
@@ -344,7 +381,7 @@ function startSimulator(): void {
     button.title = option.title
     button.addEventListener('click', () => {
       camera = option.value
-      if (option.value === 'work') spanCm = 26
+      if (option.value === 'work') spanCm = WORK_SPAN_CM
       syncCameraButtons()
     })
     cameraButtons.push(button)
@@ -389,6 +426,101 @@ function startSimulator(): void {
     if (id === 'recruitment') showTrails = on
   })
   buildLegend(app!.querySelector<HTMLDivElement>('#legend-body')!)
+
+  // ---- The time-lapse, the diary and the "Right now" card ----
+
+  const timelapse = new Timelapse()
+  const diary = new ColonyDiary(params)
+
+  const diaryList = (entries: readonly DiaryEntry[], fresh: ReadonlySet<string>): HTMLElement => {
+    const list = document.createElement('ol')
+    list.className = 'diary'
+    for (const entry of entries) {
+      const item = document.createElement('li')
+      if (fresh.has(entry.key)) item.className = 'is-new'
+      const time = document.createElement('time')
+      time.textContent = entry.date
+      const text = document.createElement('p')
+      text.textContent = entry.text
+      item.append(time, text)
+      list.append(item)
+    }
+    return list
+  }
+
+  let diaryKeysShown = new Set<string>()
+  /** Newest first. Only entries not shown before get the arrival animation. */
+  function renderDiary(): void {
+    const newest = [...diary.entries].reverse()
+    const fresh = new Set(newest.map((e) => e.key).filter((key) => !diaryKeysShown.has(key)))
+    diaryKeysShown = new Set(newest.map((e) => e.key))
+    const parts: HTMLElement[] = [diaryList(newest.slice(0, DIARY_SHOWN), fresh)]
+    if (newest.length > DIARY_SHOWN) {
+      const more = document.createElement('details')
+      more.className = 'diary-more'
+      more.open = diaryEl.querySelector('details')?.open === true
+      const summary = document.createElement('summary')
+      summary.textContent = 'Earlier entries (' + String(newest.length - DIARY_SHOWN) + ')'
+      more.append(summary, diaryList(newest.slice(DIARY_SHOWN), fresh))
+      parts.push(more)
+    }
+    diaryEl.replaceChildren(...parts)
+  }
+  diary.update(colony)
+  renderDiary()
+
+  function paceText(): string {
+    if (paused) return 'Paused.'
+    const chosen = SPEEDS[speedIndex]!
+    if (chosen.daysPerSecond !== null) return chosen.title + '.'
+    return timelapse.skipping
+      ? 'Skipping ahead, because nothing new is happening. It slows down again as soon as something does.'
+      : 'A day takes ' +
+          String(WATCH_SECONDS_PER_DAY) +
+          ' seconds while something is happening, and skips ahead while nothing is.'
+  }
+
+  let nowShown = ''
+  let foodShown = ''
+  let paceShown = ''
+  let glanceShown = ''
+  /** Text is only written when it changes, so the panel is not rebuilt sixty times a second. */
+  function renderNow(summary: ColonySummary): void {
+    const { now, food } = diary.describeNow(colony)
+    if (now !== nowShown) nowEl.textContent = nowShown = now
+    if (food !== foodShown) foodEl.textContent = foodShown = food
+    const pace = paceText()
+    if (pace !== paceShown) paceEl.textContent = paceShown = pace
+
+    const tiles: readonly (readonly [string, string])[] = [
+      ['Workers', String(summary.workers)],
+      ['Brood', String(Math.round(summary.brood))],
+      ['Seeds in store', String(Math.round(summary.seedsStored))],
+      [
+        'Nest depth',
+        (summary.nestDepthCm < 10
+          ? summary.nestDepthCm.toFixed(1)
+          : String(Math.round(summary.nestDepthCm))) + ' cm',
+      ],
+    ]
+    const glance = tiles.map((tile) => tile[1]).join('|')
+    if (glance === glanceShown) return
+    glanceShown = glance
+    glanceEl.replaceChildren(
+      ...tiles.map(([label, value]) => {
+        const tile = document.createElement('div')
+        tile.className = 'hud-tile'
+        const labelEl = document.createElement('span')
+        labelEl.className = 'hud-label'
+        labelEl.textContent = label
+        const valueEl = document.createElement('span')
+        valueEl.className = 'hud-value'
+        valueEl.textContent = value
+        tile.append(labelEl, valueEl)
+        return tile
+      }),
+    )
+  }
 
   app!.querySelector('#show-sources')!.addEventListener('click', () => openSources('sources'))
   app!.querySelector('#show-instrument')!.addEventListener('click', () => openInstrument())
@@ -559,6 +691,7 @@ function startSimulator(): void {
           selected,
           sizes,
           showDiggingScent,
+          labels: true,
           surface: colony.surface,
           discDiameterCm:
             (params.nest.surfaceDiscDiameterCm.min + params.nest.surfaceDiscDiameterCm.max) / 2,
@@ -583,26 +716,22 @@ function startSimulator(): void {
       )
     }
 
-    const measurement = measureNest(colony.nest, params)
-    const colonyFigures = colonyReadings(summary, params)
-    const seedFigures = seedReadings(summary, params)
-    const allFigures = [...colonyFigures, ...seedFigures]
-    const elsewhere = (reading: { label: string }): boolean => !GLANCE.includes(reading.label)
-    renderHud(hud, [
-      {
-        title: 'At a glance',
-        layout: 'tiles',
-        readings: GLANCE.flatMap((label) => allFigures.filter((r) => r.label === label)),
-      },
-      { title: 'The colony', readings: colonyFigures.filter(elsewhere) },
-      { title: 'Seeds', readings: seedFigures.filter(elsewhere) },
-      {
-        title: 'The nest',
-        readings: nestReadings(measurement, params, summary.phase !== 'founding'),
-      },
-    ])
+    // The readouts held against real colonies sit folded away under "Behind the picture", and
+    // measuring the nest for them is not free, so they are only worked out while it is open.
+    if (behind.open) {
+      const measurement = measureNest(colony.nest, params)
+      renderHud(hud, [
+        { title: 'The colony', readings: colonyReadings(summary, params) },
+        { title: 'Seeds', readings: seedReadings(summary, params) },
+        {
+          title: 'The nest',
+          readings: nestReadings(measurement, params, summary.phase !== 'founding'),
+        },
+      ])
+    }
     dateEl.textContent = formatDate(colony.sim.clock.date())
     phaseEl.textContent = describePhase(summary)
+    renderNow(summary)
     renderInspector(sizes)
   }
 
@@ -681,7 +810,11 @@ function startSimulator(): void {
     lastFrameMs = now
 
     if (!paused && colony.alive) {
-      owedTicks += SPEEDS[speedIndex]!.daysPerSecond * elapsedSeconds * colony.sim.clock.ticksPerDay
+      // The time-lapse watches every frame, even at a fixed speed, so switching back to it
+      // picks up from what is happening now.
+      const timelapseRate = timelapse.update(colony, elapsedSeconds)
+      const daysPerSecond = SPEEDS[speedIndex]!.daysPerSecond ?? timelapseRate
+      owedTicks += daysPerSecond * elapsedSeconds * colony.sim.clock.ticksPerDay
       const deadline = now + FRAME_BUDGET_MS
       while (owedTicks >= 1 && performance.now() < deadline) {
         colony.step()
@@ -691,6 +824,12 @@ function startSimulator(): void {
       // Whatever could not be afforded this frame is dropped rather than carried. Carrying
       // it turns one slow frame into a spiral of slower ones.
       if (owedTicks > colony.sim.clock.ticksPerDay) owedTicks = 0
+
+      // A new diary entry is a moment worth seeing, so the time-lapse slows for it.
+      if (diary.update(colony).length > 0) {
+        timelapse.hold(colony)
+        renderDiary()
+      }
     }
 
     // The ants keep walking even while the model is paused mid-step, which is what makes a
@@ -840,7 +979,7 @@ function buildLegend(container: HTMLElement): void {
 
   const caveat = document.createElement('p')
   caveat.className = 'legend-caveat'
-  caveat.textContent = `In the nest, everything is drawn at its real size, so a worker fills most of a tunnel, as a real one does. Zoom in to see them. Several things are drawing conventions, not model output. The tunnels are drawn cell by cell at the width the model dug them, with their outside corners slightly rounded, and the sand is darkened where the model says it is damp. The model puts each ant in the middle of a ${discretisation.nestCellSizeCm.value * 10} mm square, so the picture spreads out ants that share one, and lets ants going up and ants going down pass on opposite sides of a shaft. Brood is counted per chamber rather than one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Above the nest the ground is seen from the side, showing the ants and seeds within a metre either side of the slice at their true size; the bare disc of sand, its charcoal and the grass round it are drawn, not modelled. When the camera is deep, a band across the top shows the ground at a smaller scale and says how much. In the map of the foraging range, ants are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use its scale bar for distance. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.`
+  caveat.textContent = `In the nest, everything is drawn at its real size, so a worker fills most of a tunnel, as a real one does. Zoom in to see them. Several things are drawing conventions, not model output. The tunnels are traced as one smooth outline round the ${discretisation.nestCellSizeCm.value * 10} mm squares the model digs, so their corners are rounded, and the sand is darkened where the model says it is damp. The model puts each ant in the middle of a square and gives her no posture, so the picture draws each ant from the side, standing on the nearest floor or holding on to the nearest shaft wall, spreads out ants that share a square, and lets ants going up and ants going down pass on opposite walls of a shaft. The name tags on the queen, her brood and the seed store point at what the model has there. Brood is counted per chamber rather than one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Above the nest the ground is seen from the side, showing the ants and seeds within a metre either side of the slice at their true size; the bare disc of sand, its charcoal and the grass round it are drawn, not modelled. When the camera is deep, a band across the top shows the ground at a smaller scale and says how much. In the map of the foraging range, ants are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use its scale bar for distance. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.`
 
   container.replaceChildren(list, slice, caveat)
 }

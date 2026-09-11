@@ -435,6 +435,9 @@ export function makeInteriorSystem(state: InteriorState) {
       // The queen. While she is founding she is digging her own shaft and excavation owns
       // her; afterwards she sits deep in the nest and lays.
       if (caste === Caste.Queen) {
+        // The guard the comment above promises. Without it she was walked back to her eggs at
+        // the entrance on every pass, and never dug her founding nest.
+        if (state.demography.phase === 'founding') continue
         // Into the brood chambers, not to the floor of the nest. Aiming her at the deepest
         // point put her and therefore every egg in the bottom cell of a three-metre shaft,
         // which is neither what the excavations found nor anywhere a reader can see.

@@ -514,5 +514,71 @@ millimetres, and a small bridge where two cells meet only at a corner. A smoothe
 tried first and rejected: it trimmed the end cell off every dead-end tunnel, so an ant digging
 at a face was drawn inside solid sand. The cavity darkens towards its walls and has a thin lit
 rim, the sand has a grain texture, and it is tinted darker where the soil model's moisture is
-higher. The moisture is the model's; the rest is appearance.
+higher. The moisture is the model's; the rest is appearance. (Superseded by D27: the burrows
+are now traced as one smooth outline, and the ants are drawn from the side.)
+
+---
+
+## D27. The founding queen digs her own nest, and the slice is drawn like an ant farm
+
+**Date.** 2026-09-11.
+
+**The founding queen never dug her founding nest.** VALIDATION.md recorded a founding nest a
+tenth of its proper size. Measured again while building a view of the founding for the
+"Watch a colony" door, over seeds 1 to 3 she dug 0.3 to 0.8 cm in the 55 days before her
+first daughters eclosed, and the 29 to 37 cm incipient depth was reached only on day 80 to 150,
+by workers. There were two causes. The interior system's queen branch walked her back to her
+brood on every pass, although its comment said excavation owned her while she founded, and
+she had laid her eggs at the entrance, so that is where she stayed. And excavation gave her a
+minor worker's rate of work, cut to a young worker's third because her age starts at zero. No
+rate of work would have been enough on its own: an ant in this model walks a cell a minute,
+and a queen alone carries every pellet up the shaft herself.
+
+**What real queens do.** Enzmann & Nonacs (2010, *Insectes Sociaux* 57: 115–123, Table 1)
+watched fully claustral *P. rugosus* foundresses dig in sand-filled frames at 30 °C. After one
+day of digging they were 9.32 cm down, after two 14.32 and after three 16.26, digging 5.25 cm
+a day between the second and third, for 7.13 days in all. Their stopping depth of 17.11 cm is
+not used, because the frames held only 17.75 to 19 cm of soil. No such series is published for
+*badius*, whose incipient depth of 29 to 37 cm stays **[A]** from Tschinkel 2004. Queens of
+another harvester ant, *Messor semirufus*, were seen to start digging between a few minutes and
+about two hours after landing (Motro et al. 2016).
+
+**Resolution.** The interior system leaves a founding queen alone. Excavation gives her her
+own rule, `excavation.foundingQueen`, tagged **[B]**. Her depth follows the measured series and
+then the last measured rate until this colony's incipient depth. She then opens one chamber
+from the cell that finished her shaft, 1 cm high **[A]** and 3 cm wide in the slice **[C]**,
+and stays in it. Her clock runs only while the sand under her can be dug, so a rained-out
+landing day costs her a day. The sand she digs while founding is counted onto the surface
+without her walking it up. That is an abstraction, it is **[C]**, and the rule she is shown
+following says so; it exists only because the walking pace would otherwise decide her depth.
+
+Seeds 1, 2 and 3 now reach 29.8, 30.3 and 35.3 cm on days 6.5, 8.6 and 6.5, and dig nothing
+more before their first daughters eclose. The chamber was first anchored at whatever was the
+deepest dug cell, which slid sideways with every cell she opened, and one queen dug 286 cells
+before it stopped; it is now fixed where the shaft finished. Every colony run changes from its
+first day. The digest pinned in `determinism.spec.ts` does not, because that run has no colony
+in it.
+
+**Not addressed here.** A queen does not plug her entrance, which most *rugosus* queens did. Once
+the nanitics work, the over-digging recorded in VALIDATION.md ("nothing stops the digging")
+is untouched and has not been re-measured.
+
+**The burrows are traced as one smooth outline.** D26 drew them cell by cell and rejected a
+smoothed outline because it cut the last cell off every dead-end tunnel. The outline is now
+traced through a field of soft bumps, one per dug cell, reaching 1.3 cells, drawn where their
+sum crosses 0.65 (render/cavity.ts). Checked numerically before use: a straight wall lands 0.52
+cells from its last cell's centre where the cell ends at 0.5, a dead end and a lone cell reach
+0.48 cells past their centre, and two cells touching only at a corner stay joined. What changes
+is that corners are rounded. The outline is traced a 32 by 32 cell patch at a time and kept
+until a patch's count of dug cells changes, which is safe because this model never puts sand
+back.
+
+**The ants are drawn from the side.** A slice is seen side on, but ants were drawn as seen from
+above, so half of every ant's legs lay across the sand of the floor, the wall or the ground.
+Each ant is now drawn in profile, standing on the floor of a chamber within a centimetre below
+her, or holding on to a shaft wall when she is heading up or down. Which wall follows which way
+up she already was, so ants climbing and ants descending a shaft settle on opposite walls and
+pass. Seeds and brood lie on chamber floors. The map of the foraging range, a plan, keeps the
+view from above. All of this is drawing: no system reads it, and headless runs are unaffected by
+it.
 

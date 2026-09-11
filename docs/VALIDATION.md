@@ -61,25 +61,26 @@ at 0.19 — as a side effect rather than as a target.
 **The figures, not just the text.** Figure 10 gives spacing by decile peaking near 12 cm,
 against the body text's 20-30. Figure 9B gives chamber area by depth, which fixes widths.
 
-### The founding nest is a tenth of the size it should be
+### The founding nest was a tenth of the size it should be (fixed 2026-09-11)
 
-Measured while making the inside of the nest visible, 2026-09-08, and not previously
-recorded. `nest.incipientDepthCm` is **[A]**: Tschinkel 2004 measured incipient nests at 29
-to 37 cm. A founding queen in this model gets to about **5 cm** before her first daughters
-eclose and founding ends.
+Recorded on 2026-09-08: a founding queen got to about 5 cm before her first daughters
+eclosed, against the **[A]** incipient depth of 29 to 37 cm (Tschinkel 2004). Measured again
+on 2026-09-11 over seeds 1 to 3, she dug only 0.3 to 0.8 cm in those 55 days, and the
+incipient depth was reached on day 80 to 150, by workers.
 
-The rate is not the reason. Her per-tick rate at a face works out to roughly 3 cells a day,
-which would sink a 30 cm shaft in about three weeks; she manages under a third of a cell a
-day. The time goes on everything that is not digging — carrying each pellet up, putting it
-down, walking back to the face, and dig attempts refused by the roof and body-size rules.
-For a colony that is one ant, there is no relay chain to hand a pellet to, so every pellet
-is her own round trip.
+The diagnosis recorded here before, that her time went on carrying pellets up rather than on
+her rate of digging, was half of it. The interior system was also walking her back to her eggs
+at the entrance on every pass, although its own comment said excavation owned her while she
+founded. And her rate was a young minor worker's, because her age starts at zero. See D27.
 
-It is worth stating what this costs a viewer, because it is the first thing anyone sees: for
-the first two months of simulated time there is a queen, a hole a centimetre deep, and a
-clutch of eggs, and nothing else. The nest only starts to look like a nest once workers
-eclose. This is a model failure and not a rendering one, and it is the first thing to fix
-in the excavation rules.
+A founding queen now has her own rule. Her depth follows what fully claustral *P. rugosus*
+queens were measured digging (Enzmann & Nonacs 2010) until her colony's incipient depth, and
+then she opens one chamber and stays in it. Seeds 1, 2 and 3 reach 29.8, 30.3 and 35.3 cm on
+days 6.5, 8.6 and 6.5, against 7.13 days of digging for *rugosus*, and dig nothing more before
+their first daughters eclose on day 55. Seed 1 lands in 12.7 mm of rain and starts a day late,
+because saturated sand cannot be dug. Two tests in `demography.spec.ts` hold this: she digs from
+her first day of workable sand, and after three weeks her nest is at the incipient depth and no
+more than a chamber's height past it.
 
 ### The central unsolved problem: nothing stops the digging
 

@@ -268,7 +268,7 @@ export function seedReadings(summary: ColonySummary, params: Params): HudReading
 export function describePhase(summary: ColonySummary): string {
   switch (summary.phase) {
     case 'founding':
-      return 'Queen sealed in, living on her reserves'
+      return 'Founding: the queen alone, living on her reserves'
     case 'growing':
       return 'Growing'
     case 'mature':
