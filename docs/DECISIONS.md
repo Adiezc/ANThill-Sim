@@ -642,3 +642,36 @@ store faster: colonies whose foragers were removed lost their larvae with full s
 beneath them **[A]**, and a model that rescued them would contradict the measurement G5 was
 built to reproduce. The forager share and the foraging range are the next step.
 
+## D25. The soil model, fitted to the soil the ants actually live in
+
+**Date.** 2026-09-11.
+
+**The measurement.** Tschinkel & Kwapich 2016 give the mean soil temperature over each
+month of their burial experiment: 11.5 °C in February 2015, about 18 early in April and 21.8
+by its end, 26.8 in June, 28 in August, 22.8 in October, 17.9 in December and 13.1 the next
+February, with the means at 5, 15, 40 and 80 cm differing by at most about 2 °C. **[A]**
+
+**The model against it.** A sinusoid driven by the thirty-year air normals, damped and lagged
+with depth, with a lag of 30 days per metre **[B]** and a surface running 2.5 °C above air
+temperature **[C]**. Against the burial means at all four depths it is off by 2.6 °C RMS,
+six degrees too warm at 80 cm in February, and it spreads the depths by 3.5 °C where the
+measurements barely separate them.
+
+**The choice.** The candidate recorded in D23, 10 days per metre with a 0.5 °C offset, scores
+best at 1.6 °C, but a damping depth of 5.8 m needs a thermal diffusivity of about
+3 × 10⁻⁶ m²/s, several times what any soil conducts. It fits by being wrong about the
+physics. The fit is shallow: **20 days per metre with a 1.0 °C offset** scores 1.8 °C, with a
+damping depth of 2.9 m and a diffusivity of about 8 × 10⁻⁷ m²/s, which damp sand can reach.
+That is adopted, and the lag is retagged **[C]**: it is now fitted to an [A] measurement, not
+measured, the same standing as the germination factor of D22.
+
+**What remains wrong.** The model runs up to 3.5 °C cold in late April and up to 2 °C cold in
+December, and up to 3.6 °C warm in February at 80 cm. The measurements are one year and the
+model is a climatology, and a sinusoid cannot take the shape of that one year; this is about
+the floor for a model of this form.
+
+**What it moved.** A cooler early spring puts the soil at forager depth at about 14 °C on
+1 March, as the measurements do. The **[B]** foraging onset threshold falls from 15 to 14 °C,
+so that foraging can still begin in early March, as it did in three of the four study years,
+and not in February. `test/soil.spec.ts` now asserts the burial measurements instead of the
+old lag.

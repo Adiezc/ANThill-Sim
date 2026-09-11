@@ -36,8 +36,10 @@ export interface NestOccupancy {
  * For a sinusoidal surface forcing, the phase lag at depth z is z / (D omega) and the
  * amplitude is damped by exp(-z / D), with the same D in both. So a lag quoted in days per
  * metre pins D exactly: D = 1 / (lag * omega), with omega = 2 pi / 365 per day. At the
- * tabulated 30 days per metre this gives about 1.94 m, which is the right order for dry
- * sand, and it means the amplitude at 3 m is about a fifth of the surface swing.
+ * tabulated 20 days per metre this gives about 2.9 m, a thermal diffusivity of about
+ * 8e-7 m²/s, which damp sand can reach, and it means the amplitude at 3 m is about a third of
+ * the surface swing. The lag is fitted to measured soil temperatures, not measured itself;
+ * see docs/DECISIONS.md D25.
  */
 export function dampingDepthCm(params: Params): number {
   const lagDaysPerMetre = params.climate.soilThermalLagDaysPerMetre.value

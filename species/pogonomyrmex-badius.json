@@ -167,7 +167,7 @@
     "taskReversionAllowed": { "value": false, "tag": "A", "note": "HARD RULE. Foragers never revert to inside work." },
     "backfillFromOtherCastes": { "value": false, "tag": "A", "note": "HARD RULE. Removing foragers draws no replacements. Larvae starve instead." },
     "foragingSeasonMonths": { "value": [3, 4, 5, 6, 7, 8, 9, 10, 11], "tag": "A", "note": "HARD RULE on the winter end. Foraging begins between late February and early April and falls to zero by December (Kwapich and Tschinkel 2013, Table 1 and Figure 3). A worker whose own schedule comes due in the winter waits for the season; it does not start foraging in January." },
-    "foragingOnsetSoilTempC": { "value": 15, "tag": "B", "note": "Soil temperature at forager depth below which a worker due to forage holds off. Foraging began within five days of 1 March in three of four study years but a full month later in 2010, so onset is clearly temperature-driven rather than calendar-driven. The threshold itself is not published." },
+    "foragingOnsetSoilTempC": { "value": 14, "tag": "B", "note": "Soil temperature at forager depth below which a worker due to forage holds off. Foraging began within five days of 1 March in three of four study years but a full month later in 2010, so onset is clearly temperature-driven rather than calendar-driven. The threshold itself is not published. It sits between the modelled soil at forager depth in February and on 5 March; the burial-experiment temperatures of Tschinkel & Kwapich 2016 put that soil at about 14 °C on 1 March. Was 15. See docs/DECISIONS.md D25." },
     "foragingOnsetTempSpanC": { "value": 10, "tag": "C", "note": "Degrees above the threshold at which the daily chance of taking up foraging saturates. This is what spreads the overwintered backlog across the spring instead of releasing it all on one day, which produced a March spike and an April trough in a species whose foraging rises steadily from March to a midsummer maximum." },
     "winterWorkerMortalityPerDay": { "value": 0.004, "tag": "C", "note": "INVENTED rate, but the pattern is [A]: spring's rise in proportion foraging is driven by an increase in forager number together with a REDUCTION in colony size, so the colony must lose workers over the winter. Tuned so that a mature colony enters spring smaller than it entered winter." },
     "autumnWorkerWeightGain": { "value": 0.24, "tag": "A", "note": "Fat stored for overwintering and next year's alates." }
@@ -395,9 +395,9 @@
   },
 
   "soil": {
-    "$comment": "No soil physics values are published for P. badius nests. The thermal model is derived from climate.soilThermalLagDaysPerMetre; the hydrology and stress values below are invented and exposed as sliders.",
+    "$comment": "No soil physics values are published for P. badius nests. The thermal model is derived from climate.soilThermalLagDaysPerMetre and fitted, with the surface offset, to the soil temperatures measured at the study site; the hydrology and stress values below are invented and exposed as sliders.",
     "bulkDensityKgPerM3": { "value": 1600, "tag": "B", "note": "Dry well-drained sand. Sets the overburden stress profile." },
-    "surfaceTemperatureOffsetC": { "value": 2.5, "tag": "C", "note": "Bare sandhill sand runs warmer than screen air temperature. Invented." },
+    "surfaceTemperatureOffsetC": { "value": 1.0, "tag": "C", "note": "Bare sandhill sand runs warmer than screen air temperature. Fitted with climate.soilThermalLagDaysPerMetre to the monthly mean soil temperatures at 5 to 80 cm in Tschinkel & Kwapich 2016. Was 2.5, invented. See docs/DECISIONS.md D25." },
     "infiltrationDepthCmPerMm": { "value": 1.0, "tag": "C", "note": "Depth of sand wetted per mm of rain, given the low water-holding capacity of sand." },
     "surfaceMoistureMax": { "value": 0.9, "tag": "C" },
     "deepMoisture": { "value": 0.30, "tag": "C", "note": "Stable moisture below the evaporation zone. Sits inside the diggable window, which is why deep excavation is not rain-gated." },
@@ -437,7 +437,7 @@
       { "month": 12, "highC": 19, "lowC": 6,  "precipMm": 86 }
     ],
     "frostPossibleMonths": [11, 12, 1, 2, 3, 4],
-    "soilThermalLagDaysPerMetre": { "value": 30, "tag": "B", "note": "Approximate. Damped, lagged sinusoid with depth." },
+    "soilThermalLagDaysPerMetre": { "value": 20, "tag": "C", "note": "Damped, lagged sinusoid with depth. Fitted to the burial-experiment soil temperatures of Tschinkel & Kwapich 2016: RMS 1.8 °C at 5 to 80 cm, from 2.6 at the earlier 30. Gives a damping depth of 2.9 m and a thermal diffusivity of about 8e-7 m2/s, which damp sand can reach. 10 fits slightly better but needs a diffusivity no soil has. See docs/DECISIONS.md D25." },
     "nuptialFlightMonths": { "value": [5, 6, 7], "tag": "A" },
     "nuptialFlightTrigger": { "value": "calm humid morning following heavy rain", "tag": "A" },
     "meanRainEventMm": { "value": 12, "tag": "C", "note": "Monthly normals give totals, not events. Rain days are drawn so the expected monthly total matches the table." },

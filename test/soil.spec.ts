@@ -96,10 +96,64 @@ describe('soil temperature', () => {
   const climate = new ClimateModel(PARAMS)
   const soil = new SoilModel(PARAMS)
 
+  /** The model's mean at a depth over the days either side of `centreDay`. */
+  const meanOver = (depthCm: number, centreDay: number, halfWidthDays: number): number => {
+    let sum = 0
+    for (let k = -halfWidthDays; k <= halfWidthDays; k += 1) {
+      sum += soil.temperatureAt(depthCm, (centreDay + k + DAYS_IN_YEAR) % DAYS_IN_YEAR, climate)
+    }
+    return sum / (2 * halfWidthDays + 1)
+  }
+
+  // Mean soil temperature over each burial period of Tschinkel & Kwapich 2016, at 5, 15, 40
+  // and 80 cm, which barely differed by depth. April is given as about 18 °C early in the
+  // month rising to 21.8 by its end, and the burial year ran from one February to the next.
+  // Each entry is [centre day, half-width in days, measured °C].
+  const MEASURED: readonly (readonly [number, number, number])[] = [
+    [45, 14, 11.5], // February 2015
+    [97, 7, 18], // early April
+    [112, 7, 21.8], // late April
+    [166, 15, 26.8], // June
+    [227, 15, 28], // August
+    [288, 15, 22.8], // October
+    [349, 15, 17.9], // December
+    [45, 14, 13.1], // February 2016
+  ]
+  const BURIAL_DEPTHS_CM = [5, 15, 40, 80]
+
+  it('reproduces the soil temperatures measured in the burial experiment', () => {
+    // The model is a damped sinusoid driven by thirty-year air normals and the measurements
+    // are one year, so it cannot match every month. It runs up to 3.5 °C cold in late April
+    // and 2 °C cold in December, and up to 3.6 °C warm in February at 80 cm. RMS 1.8 °C;
+    // before the thermal lag and surface offset were fitted to these figures it was 2.6,
+    // and 6 °C warm in February at 80 cm. See DECISIONS.md D25.
+    let squared = 0
+    let n = 0
+    for (const [day, halfWidth, measuredC] of MEASURED) {
+      for (const depth of BURIAL_DEPTHS_CM) {
+        const error = meanOver(depth, day, halfWidth) - measuredC
+        expect(Math.abs(error)).toBeLessThan(4)
+        squared += error * error
+        n += 1
+      }
+    }
+    expect(Math.sqrt(squared / n)).toBeLessThan(2)
+  })
+
+  it('keeps the monthly mean nearly the same from 5 to 80 cm, as measured', () => {
+    // Measured: at most about 2 °C between depths in any month. What falls with depth is the
+    // daily swing, not the mean. The model reaches 2.5 °C in June and December.
+    for (const [day, halfWidth] of MEASURED) {
+      const means = BURIAL_DEPTHS_CM.map((depth) => meanOver(depth, day, halfWidth))
+      expect(Math.max(...means) - Math.min(...means)).toBeLessThan(3)
+    }
+  })
+
   it('derives its damping depth from the tabulated thermal lag', () => {
-    // 30 days per metre pins the damping depth at about 1.94 m for a 365-day cycle. It is
-    // derived rather than authored so that the two cannot disagree.
-    expect(dampingDepthCm(PARAMS)).toBeCloseTo(193.6, 0)
+    // 20 days per metre pins the damping depth at about 2.9 m for a 365-day cycle, a thermal
+    // diffusivity of about 8e-7 m²/s: damp sand. It is derived rather than authored so that
+    // the two cannot disagree.
+    expect(dampingDepthCm(PARAMS)).toBeCloseTo(290.5, 0)
   })
 
   it('damps the seasonal swing with depth', () => {
@@ -118,14 +172,13 @@ describe('soil temperature', () => {
     const deep = swing(300)
     expect(surface).toBeGreaterThan(shallow)
     expect(shallow).toBeGreaterThan(deep)
-    // At 3 m the annual swing is about a fifth of the surface swing.
-    expect(deep / surface).toBeGreaterThan(0.1)
-    expect(deep / surface).toBeLessThan(0.3)
+    // At 3 m the annual swing is about a third of the surface swing.
+    expect(deep / surface).toBeGreaterThan(0.25)
+    expect(deep / surface).toBeLessThan(0.45)
   })
 
   it('lags the surface with depth', () => {
-    // This is why deep chambers are still warming in autumn when the surface has cooled,
-    // and it is what makes germination depth-dependent as well as season-dependent.
+    // This is why deep chambers are still warming in autumn when the surface has cooled.
     const peakDay = (depthCm: number): number => {
       let best = 0
       let bestT = -Infinity
@@ -141,9 +194,20 @@ describe('soil temperature', () => {
     const atSurface = peakDay(0)
     const at1m = peakDay(100)
     const at2m = peakDay(200)
-    expect(at1m - atSurface).toBeGreaterThan(20)
-    expect(at1m - atSurface).toBeLessThan(45)
+    expect(at1m - atSurface).toBeGreaterThan(15)
+    expect(at1m - atSurface).toBeLessThan(25)
     expect(at2m).toBeGreaterThan(at1m)
+  })
+
+  it('lets foraging begin in early March and not in February', () => {
+    // Foraging began within five days of 1 March in three of four study years. Onset follows
+    // the soil at forager depth crossing a [B] threshold, so that threshold has to sit
+    // between the February soil and the early-March soil.
+    const depth = PARAMS.labour.foragerDepthMaxCm.value
+    const threshold = PARAMS.labour.foragingOnsetSoilTempC.value
+    const fifthOfMarch = 63
+    expect(soil.temperatureAt(depth, fifthOfMarch, climate)).toBeGreaterThan(threshold)
+    expect(meanOver(depth, 45, 14)).toBeLessThan(threshold)
   })
 
   it('stays inside a plausible range for north Florida sand', () => {

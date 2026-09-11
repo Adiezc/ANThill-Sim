@@ -289,8 +289,8 @@ Seasonal biology to drive from this calendar:
 | Summer (Jun to Aug) | Relocation season, peaking in July. Workers at their leanest and lowest fat after alate production | **[A]** | Tschinkel 2014; Tschinkel 1998 |
 | Autumn (Sep to Nov) | Proportion foraging falls as colony size rises through new worker birth. Workers gain about 24 percent in weight by winter, storing fat for overwintering and next year's alates | **[A]** | Kwapich & Tschinkel 2013; Tschinkel 1998 |
 | Winter (Dec to Feb) | Excavation lull. Nests part-built in autumn are doubled in volume after the winter lull | **[A]** | Tschinkel & Seal 2015 |
-| Soil temperature | Follows the seasonal air cycle with depth-dependent lag and damping, and drives the seed germination rate in storage chambers | **[A]** for the germination link; **[B]** for the soil thermal model | Tschinkel & Kwapich 2016 (**[A]**) |
-| Measured soil temperature | At the study site, monthly mean soil temperature at 5, 15, 40 and 80 cm differed by at most about 2 °C between depths in any month, running from about 11 °C in February to 28 °C in August. What falls with depth is the daily swing, not the mean. This is the measurement the soil thermal model is checked against | **[A]** | Tschinkel & Kwapich 2016 |
+| Soil temperature | Follows the seasonal air cycle with depth-dependent lag and damping, and drives the seed germination rate in storage chambers | **[A]** for the germination link; **[C]** for the soil thermal model, whose lag and surface offset are fitted to the measurement below | Tschinkel & Kwapich 2016 (**[A]**) |
+| Measured soil temperature | At the study site, monthly mean soil temperature at 5, 15, 40 and 80 cm differed by at most about 2 °C between depths in any month, running from about 11 °C in February to 28 °C in August. What falls with depth is the daily swing, not the mean. The soil thermal model is fitted to this and checked against it in `test/soil.spec.ts`: 1.8 °C RMS, running cold in late April and December. See DECISIONS.md D25 | **[A]** | Tschinkel & Kwapich 2016 |
 
 ## 10. Events (v2 unless noted)
 
