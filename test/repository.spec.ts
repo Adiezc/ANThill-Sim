@@ -41,14 +41,16 @@ describe('the papers are cited, not redistributed', () => {
 
   it('keeps the notice and the DOIs that stand in for them', () => {
     const notice = readFileSync(join(ROOT, 'docs', 'papers', 'README.md'), 'utf8')
-    expect(notice).toContain('not committed')
+    expect(notice).toContain('not in this repository')
     // Every primary source has to be reachable by DOI, since the file itself is not here.
+    // Checked against Crossref on 2026-09-11. Until then this list held two wrong DOIs, one for
+    // a paper on killer whales and one for a paper on lizards, so the test was guarding the error.
     for (const doi of [
       '10.1093/jis/4.1.21',
       '10.1007/s000400050097',
       '10.1007/s00265-013-1611-9',
-      '10.1007/s00265-015-2038-2',
-      '10.2307/1941504',
+      '10.1007/s00265-015-2039-1',
+      '10.2307/1941503',
     ]) {
       expect(notice).toContain(doi)
     }
