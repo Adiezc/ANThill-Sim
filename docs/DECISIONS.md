@@ -458,3 +458,61 @@ that gives a colony of sixty workers a three-metre nest. See VALIDATION.md G1. W
 fixed, this permission should be narrowed back to the transfer task and the store should
 still fill.
 
+## D26. Everything in the nest at its real size
+
+**Date.** 2026-09-11.
+
+This branch's log stops at D20 and the seeds branch has reached D25, so this entry is numbered
+D26 and the two logs can be merged without renumbering either.
+
+The ants were already drawn at their real body length, but three things about the picture
+were wrong. Every ant stood on the centre of its 5 mm grid cell, so ants sharing a cell were
+drawn exactly on top of one another and a busy shaft looked solid. The camera followed the
+queen's position in the model, which moves half a centimetre at a time, so the whole view
+jumped every time she took a step. And nothing about a queen, a major or an egg said how big
+any of them was: the queen was simply drawn 1.4 times the size of a major, and brood were
+tokens of no particular size.
+
+**Sizes come from the species file.** Worker lengths and head widths were already there. Queen
+and male head widths are now read from Table 1 of Smith & Tschinkel 2006. Queen length comes
+from an extension sheet that names no source, and its note says so. Nobody has measured
+*badius* brood in any source found, so the egg borrows its volume from *P. rugosus* and
+invents its shape, and the larva and pupa lengths are invented fractions of a worker's
+length. All six new parameters are read only by the renderer, and each carries its tag.
+
+**Where an ant stands in its cell is a drawing decision, and is labelled as one.** Ants that
+share a cell are spread across it. In a shaft, ants climbing keep to one side and ants
+descending to the other, so two workers in a tunnel under a centimetre wide can be seen
+passing. In a chamber they spread along the floor. No offset ever puts an ant in sand. The
+model is untouched, so headless runs and their digests are the same as before.
+
+**The camera follows the queen as she is drawn, and eases after her.** The drawn position
+glides, so the camera glides with it.
+
+**Two pheromones are drawn, and the key names all four.** SCIENCE.md section 8 lists four
+chemical channels, but only the building pheromone in the nest and the recruitment trail on
+the ground have grids. Both are now drawn in their own colours and can be switched off. Alarm
+and the dead-nestmate cue have parameters that nothing reads. The key lists them as not
+simulated yet, and section 8 no longer describes them under "rule as implemented" without
+saying so.
+
+**The ground is drawn above the nest, and the map of the range becomes an inset.** There used
+to be two pictures side by side, the slice and the ground from above, and nothing connected a
+forager leaving the entrance in one to the seed arriving in a chamber in the other. Now the
+slice carries the ground on top of it, seen side on. The ants and seeds shown there are the
+model's, limited to a metre either side of the plane of the slice, because the ground is a
+plan and anything drawn from further out would put a distant forager at the entrance. The
+bare disc of sand, the charcoal on it and the grass round it are drawn and not modelled: the
+disc's diameter comes from an extension sheet and is used nowhere else. When the camera is too
+deep to see the surface, a band across the top shows it at a smaller scale and prints how much
+ground it covers. The whole range from above stays available as an inset in the corner.
+
+**The burrows are drawn to the cell, with softened corners.** Tunnels used to be stacks of
+hard squares with a lighter top edge and a darker floor. They are now filled cell by cell at
+exactly the width the model dug, with only the outside corners rounded, by under two
+millimetres, and a small bridge where two cells meet only at a corner. A smoothed outline was
+tried first and rejected: it trimmed the end cell off every dead-end tunnel, so an ant digging
+at a face was drawn inside solid sand. The cavity darkens towards its walls and has a thin lit
+rim, the sand has a grain texture, and it is tinted darker where the soil model's moisture is
+higher. The moisture is the model's; the rest is appearance.
+

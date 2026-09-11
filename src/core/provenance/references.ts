@@ -197,6 +197,13 @@ export const REFERENCES: readonly Reference[] = [
     title: 'Experimental evidence that increased surface temperature affects bioturbation by ants',
   },
   {
+    key: 'genzoni-2025',
+    authors: 'Genzoni, E. et al.',
+    year: '2025',
+    title: 'Trophic eggs affect caste determination in the ant Pogonomyrmex rugosus',
+    journal: 'eLife',
+  },
+  {
     key: 'holldobler-wilson-1970',
     authors: 'Hölldobler, B. & Wilson, E. O.',
     year: '1970',
@@ -253,6 +260,13 @@ export const REFERENCES: readonly Reference[] = [
     journal: 'Behavioral Ecology and Sociobiology',
   },
   {
+    key: 'nickerson-fasulo-edis',
+    authors: 'Nickerson, J. C. & Fasulo, T. R.',
+    year: 'n.d.',
+    title: 'Florida harvester ant, Pogonomyrmex badius',
+    journal: 'UF/IFAS Extension, EDIS publication EENY-298 (IN536). A secondary account',
+  },
+  {
     key: 'pielstrom-roces-2013',
     authors: 'Pielström, S. & Roces, F.',
     year: '2013',
@@ -266,6 +280,15 @@ export const REFERENCES: readonly Reference[] = [
     title:
       'Ant nest architecture is shaped by local adaptation and plastic response to temperature',
     journal: 'Scientific Reports',
+  },
+  {
+    key: 'smith-tschinkel-2006',
+    authors: 'Smith, C. R. & Tschinkel, W. R.',
+    year: '2006',
+    title:
+      'The sociometry and sociogenesis of reproduction in the Florida harvester ant, Pogonomyrmex badius',
+    journal: 'Journal of Insect Science 6:32',
+    doi: '10.1673/2006_06_32.1',
   },
   {
     key: 'stroeymeyt-2007',

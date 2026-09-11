@@ -77,6 +77,7 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | Mature depth | Commonly 2.5 to 3.0 m; the deepest measured was 3.06 m | **[A]** | Tschinkel 2004 |
 | Growth mode | Deepening, chamber addition and chamber enlargement happen simultaneously, so the size-free shape is the same at every colony size. Enlargement contributes more to area than addition does | **[A]** | Tschinkel 2004; Tschinkel 1999a |
 | Mound | Flattened sand crater, no surrounding vegetation, decorated with charcoal and detritus for reasons unknown | **[A]** | AntWiki; Wikipedia species account |
+| The disc, as drawn | **Drawn only; not modelled.** A very slight, flattened disc of sand 30 to 60 cm across round the entrance, often covered with small pebbles or charcoal. The picture draws it 45 cm across, rising 6 mm at the middle, scattered with charcoal and bare of grass; the rise and the amount of charcoal are appearance | **[A]** from a secondary account for the diameter; **[C]** for the rest | Nickerson & Fasulo, EDIS EENY-298, citing Smith & Whitman 1992 |
 | Chamber spacing and stability | Chambers are placed so that stress zones overlap and arching is enhanced; modelled as a soil stress field that discourages placing chambers too close vertically | **[B]** | Belachew, Arson & Frost 2025 |
 
 ## 3. Excavation
@@ -121,6 +122,9 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | How an ant reaches its depth | It walks toward a depth drawn from the distribution measured for its task, redrawn every few days. **No ant knows its depth**; this is the same invented cue as `excavation.depthCue` and carries the same caveat | **[C]** | None. See §11 and DECISIONS.md D20 |
 | Where the brood is | Brood is held as a count per chamber in the nest grid, laid where the queen is and carried deeper by brood-care workers. The demographic count in `BroodStore` remains authoritative and the two are reconciled daily | **[A]** for brood being kept deep and callows eclosing in the bottom chambers; **[C]** for the carrying mechanism | Tschinkel & Kwapich 2017; DECISIONS.md D20 |
 | Where the queen is | In the brood chambers, which is where the eggs then appear. No source in the bibliography says where in the nest she sits | **[C]** | None |
+| Worker sizes, as drawn | **Drawn only.** Minor workers 6.35 mm long and majors 9.52 mm. A minor's head width grows with the colony, from 1.15 mm in incipient colonies to 1.90 mm at seven to eight thousand workers; a major's is 2.50 to 2.75 mm whatever the colony size. The picture uses all four, so a major's broad head is visible beside a minor's | **[A]** | Tschinkel 1998 |
+| Queen and male sizes, as drawn | **Drawn only.** Head width 2.9 mm for a gyne and 1.9 mm for a male, with dry weights of 8.6 and 2.4 mg. The queen is drawn 11 mm long, the middle of the 10 to 12 mm in an extension sheet that names no source; no primary measurement of queen length was found. No male length was found either, so a male is drawn at the queen's length scaled by the ratio of their head widths | **[A]** for head widths; **[A]** from a secondary account for queen length; **[C]** for male length | Smith & Tschinkel 2006, Table 1; Nickerson & Fasulo, EDIS EENY-298 |
+| Brood sizes, as drawn | **Drawn only.** An egg has the measured volume of a *P. rugosus* egg, 63.3 nl, drawn as an oval 1.6 times as long as it is wide, which makes it about 0.68 by 0.42 mm. A fully fed larva is drawn at 0.8 of a minor worker's length and a pupa at the length of the worker it will become. No source found measures any stage of *badius* brood | **[B]** for the egg volume; **[C]** for the egg's shape and both lengths | Genzoni et al. 2025 |
 
 ## 5. Foraging
 
@@ -183,8 +187,8 @@ and diffusion kernel. Do not collapse them into one "pheromone".
 |---|---|---|---|
 | Recruitment trail | Deposited on the return leg. Response is **non-linear**: strong trails elicit disproportionately stronger responses, producing winner-take-all trail selection | **[A]** that *badius* lays recruitment trails; **[B]** for the non-linear response function | Hölldobler & Wilson 1970 (**[A]**); Sumpter & Beekman 2003 (**[B]**) |
 | Deposition modulation | More pheromone is deposited near a food source than near the nest, and more for distant sources than near ones | **[B]** | Czaczkes et al. 2024 (*Lasius niger*) |
-| Alarm | Short-lived, fast-diffusing, radial. Drives defensive recruitment | **[B]** | General |
-| Necrophoric cue | Corpse recognition via cuticular fatty acids, driving removal | **[B]** | Diez et al. 2012, 2014; Zhang et al. 2025 |
+| Alarm | **Not implemented.** The species file has decay and diffusion parameters for it and nothing reads them; the simulator's key lists it as not simulated yet. What it should be: short-lived, fast-diffusing, radial, driving defensive recruitment | **[B]** | General |
+| Necrophoric cue | **Not implemented.** Parameters exist and nothing reads them; the key lists it as not simulated yet. What it should be: corpse recognition via cuticular fatty acids, driving removal | **[B]** | Diez et al. 2012, 2014; Zhang et al. 2025 |
 | Building pheromone | Added to excavated material, amplifying deposition where deposition already happened. Lifetime governs architecture | **[B]** | Khuong et al. 2016 |
 | Path integration | Foragers also hold a homing vector and use landmarks. They do not navigate by trail alone | **[B]** | General *Pogonomyrmex* and desert ant literature |
 | Decay and deposition constants | **No published values exist for *badius*.** These are tuned parameters, exposed in the UI and flagged as such | **[C]** | None |
@@ -275,6 +279,7 @@ Diez, L. et al. (2015) Emergency measures. *Behavioural Processes*.
 Espinoza, D. & Santamarina, J. (2010) Ant tunneling, a granular media perspective.
 Ferster, B. & Traniello, J. (1995) Polymorphism and foraging behavior in *Pogonomyrmex badius*. *Environmental Entomology*.
 García Ibarra, F. A. et al. (2023) Experimental evidence that increased surface temperature affects bioturbation by ants.
+Genzoni, E. et al. (2025) Trophic eggs affect caste determination in the ant *Pogonomyrmex rugosus*. *eLife*.
 Harrison, J. & Gentry, J. (1981) Foraging pattern, colony distribution, and foraging range of the Florida harvester ant. *Ecology*.
 Hölldobler, B. & Wilson, E. O. (1970) Recruitment trails in the harvester ant *Pogonomyrmex badius*. *Psyche*.
 Khuong, A. et al. (2016) Stigmergic construction and topochemical information shape ant nest architecture. *PNAS*.
@@ -286,8 +291,10 @@ Leclerc, J.-B. & Detrain, C. (2016) Ants detect but do not discriminate diseased
 Leclerc, J.-B. et al. (2017) Impact of colony size on survival and sanitary strategies. *Behav. Ecol. Sociobiol.*
 Monaenkova, D. et al. (2015) Behavioral and mechanical determinants of collective subsurface nest excavation. *J. Exp. Biol.*
 Monnin, T. & Ratnieks, F. (2001) Policing in queenless ponerine ants. *Behav. Ecol. Sociobiol.*
+Nickerson, J. C. & Fasulo, T. R. Florida harvester ant, *Pogonomyrmex badius*. UF/IFAS Extension, EDIS publication EENY-298 (IN536). A secondary account, cited only for queen length and the surface disc.
 Pielström, S. & Roces, F. (2013) Sequential soil transport. *PLoS ONE*.
 Sankovitz, M. & Purcell, J. (2021) Ant nest architecture is shaped by local adaptation and plastic response to temperature. *Scientific Reports*.
+Smith, C. R. & Tschinkel, W. R. (2006) The sociometry and sociogenesis of reproduction in the Florida harvester ant. *Journal of Insect Science*.
 Stroeymeyt, N. et al. (2007) Selfish worker policing. *Behav. Ecol. Sociobiol.*
 Sumpter, D. & Beekman, M. (2003) From nonlinearity to optimality. *Animal Behaviour*.
 Tschinkel, W. (1998) Sociometry and sociogenesis of *Pogonomyrmex badius*, worker characteristics. *Insectes Sociaux*.

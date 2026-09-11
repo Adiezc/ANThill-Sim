@@ -32,6 +32,8 @@ import { SurfaceView } from './render/surface-view.js'
 import { AntMotion } from './render/ant-motion.js'
 import { CASTE_COLOURS, BURDEN_COLOURS, coloursFor } from './render/ant-sprite.js'
 import { DEFAULT_THEME } from './render/nest-view.js'
+import { antBodyFor, bodySizesFor } from './render/body-sizes.js'
+import { PHEROMONES } from './render/pheromones.js'
 import {
   colonyReadings,
   describePhase,
@@ -52,6 +54,8 @@ import {
   toggleTheme,
 } from './ui/theme.js'
 import type { NestViewport } from './render/nest-view.js'
+import type { BodySizes } from './render/body-sizes.js'
+import type { PheromoneId } from './render/pheromones.js'
 import type { BroodInvestmentValue } from './core/systems/demography.js'
 
 initTheme()
@@ -108,6 +112,9 @@ const DEFAULT_SPEED = 2
 
 /** Milliseconds of simulation allowed per frame. Past this the picture slows, not the model. */
 const FRAME_BUDGET_MS = 9
+
+/** How quickly the camera catches up with where it has been told to look, per second. */
+const CAMERA_EASE_PER_SECOND = 5
 
 const INVESTMENTS: readonly {
   label: string
@@ -176,23 +183,29 @@ function startSimulator(): void {
   app!.innerHTML = `
     <main class="layout">
       <section class="stage">
+        <div class="stage-core">
         <div class="views">
           <div class="view view--nest">
-            <canvas id="slice" aria-label="The nest, as a vertical slice through the sand"></canvas>
-            <p class="view-label">The nest, as a slice through the sand</p>
+            <canvas
+              id="slice"
+              aria-label="The nest, as a vertical slice through the sand, with the ground above it"
+            ></canvas>
+            <p class="view-label">The nest, with the ground above</p>
             <div class="view-tools" id="cameras"></div>
-          </div>
-          <div class="view view--surface">
-            <canvas id="ground" aria-label="The ground around the nest, from above"></canvas>
-            <p class="view-label">The ground, from above</p>
+            <figure class="map-inset">
+              <canvas id="ground" aria-label="The foraging range, from above"></canvas>
+              <figcaption class="map-inset-label">The foraging range, from above</figcaption>
+            </figure>
           </div>
         </div>
         <p class="stage-note">
           Scroll to zoom and drag to move. Click an ant to see what it is doing and which
           study says so.
         </p>
+        </div>
       </section>
       <aside class="panel">
+        <div class="panel-core">
         <header class="panel-head">
           <h1>Anthill</h1>
           <p class="subtitle"><i>Pogonomyrmex badius</i>. ${params.species.habitat}.</p>
@@ -201,7 +214,10 @@ function startSimulator(): void {
               <p class="date" id="date"></p>
               <p class="phase" id="phase"></p>
             </div>
-            <button class="control-pause" id="pause" type="button">Pause</button>
+            <button class="control-pause" id="pause" type="button" data-state="running">
+              <span class="control-pause-label">Pause</span>
+              <span class="control-pause-icon" aria-hidden="true"></span>
+            </button>
           </div>
         </header>
         <section class="panel-section">
@@ -212,6 +228,10 @@ function startSimulator(): void {
           <h2 class="panel-label">What the queen's eggs become</h2>
           <div class="controls controls--segmented controls--three" id="levers"></div>
           <p class="control-note" id="lever-note"></p>
+        </section>
+        <section class="panel-section">
+          <h2 class="panel-label">Scents the ants follow</h2>
+          <ul class="scent-list" id="scents"></ul>
         </section>
         <div class="inspector" id="inspector" hidden></div>
         <details class="legend" id="legend">
@@ -237,6 +257,7 @@ function startSimulator(): void {
             <button class="linkish" id="theme-toggle" type="button"></button>
           </div>
         </footer>
+        </div>
       </aside>
     </main>
   `
@@ -265,6 +286,10 @@ function startSimulator(): void {
     themeButton.textContent = themeToggleLabel()
   })
 
+  // Which scents are drawn. Both start on, because they are half of what the colony is doing.
+  let showDiggingScent = true
+  let showTrails = true
+
   let speedIndex = DEFAULT_SPEED
   let paused = false
   let camera: Camera = 'work'
@@ -280,12 +305,15 @@ function startSimulator(): void {
 
   // Pause sits beside the date, where a person looks when they want the colony to stop.
   const pauseButton = app!.querySelector<HTMLButtonElement>('#pause')!
+  const pauseLabel = pauseButton.querySelector<HTMLSpanElement>('.control-pause-label')!
   pauseButton.addEventListener('click', () => {
     paused = !paused
-    pauseButton.textContent = paused ? 'Resume' : 'Pause'
+    pauseLabel.textContent = paused ? 'Resume' : 'Pause'
+    pauseButton.dataset.state = paused ? 'paused' : 'running'
     pauseButton.ariaPressed = String(paused)
   })
 
+  const speedThumb = addThumb(speedBar)
   const speedButtons: HTMLButtonElement[] = []
   SPEEDS.forEach((speed, index) => {
     const button = document.createElement('button')
@@ -295,11 +323,13 @@ function startSimulator(): void {
     button.addEventListener('click', () => {
       speedIndex = index
       for (const [i, b] of speedButtons.entries()) b.ariaPressed = String(i === index)
+      syncThumb(speedThumb, button)
     })
     speedButtons.push(button)
     speedBar.append(button)
   })
   speedButtons[speedIndex]!.ariaPressed = 'true'
+  syncThumb(speedThumb, speedButtons[speedIndex]!)
 
   // Camera. The default is ant scale, around the queen. One click shows the whole nest.
   const cameraButtons: HTMLButtonElement[] = []
@@ -331,6 +361,7 @@ function startSimulator(): void {
   // The one lever a person is given. It biases what the queen's eggs are raised into and
   // acts on development only. It cannot reassign an adult, and nothing in the UI may ever
   // offer to: foragers in this species never go back inside and the colony never backfills.
+  const leverThumb = addThumb(leverBar)
   const leverButtons: HTMLButtonElement[] = []
   INVESTMENTS.forEach((investment) => {
     const button = document.createElement('button')
@@ -348,10 +379,15 @@ function startSimulator(): void {
     const chosen = INVESTMENTS.find((i) => i.value === colony.demography.investment)!
     for (const [i, b] of leverButtons.entries())
       b.ariaPressed = String(INVESTMENTS[i]!.value === colony.demography.investment)
+    syncThumb(leverThumb, leverButtons[INVESTMENTS.indexOf(chosen)]!)
     leverNote.textContent = `${chosen.note} Adults keep their jobs whatever you choose, because a forager in this species never goes back to work inside.`
   }
   syncLever()
 
+  buildScentKey(app!.querySelector<HTMLUListElement>('#scents')!, (id, on) => {
+    if (id === 'building') showDiggingScent = on
+    if (id === 'recruitment') showTrails = on
+  })
   buildLegend(app!.querySelector<HTMLDivElement>('#legend-body')!)
 
   app!.querySelector('#show-sources')!.addEventListener('click', () => openSources('sources'))
@@ -436,8 +472,9 @@ function startSimulator(): void {
     let bestDistance = reach * reach
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
-      const dx = motion.drawnX(i) - offsetCm
-      const dy = motion.drawnY(i) - depthCm
+      const spread = nestView.spreadOf(i)
+      const dx = motion.drawnX(i) + spread.x - offsetCm
+      const dy = motion.drawnY(i) + spread.y - depthCm
       const d = dx * dx + dy * dy
       if (d < bestDistance) {
         bestDistance = d
@@ -463,18 +500,52 @@ function startSimulator(): void {
   function viewportFor(): NestViewport {
     if (camera === 'nest') return NestView.frameNest(colony.nest)
     if (camera === 'work') {
-      return NestView.frameWork(colony.nest, colony.sim.ants, spanCm, colony.demography.queenSlot)
+      return NestView.frameWork(colony.sim.ants, motion, spanCm, colony.demography.queenSlot)
     }
     return { topCm: freeTopCm, spanCm, centreCm: freeCentreCm }
+  }
+
+  /**
+   * The viewport actually drawn: the one asked for, eased toward over a few frames.
+   *
+   * A camera that jumps to wherever it is told is the stutter this replaces. Free movement is
+   * not eased, because a drag or a scroll that lags behind the hand feels broken, and a jump of
+   * more than a screen is taken at once rather than swept through.
+   */
+  let easedViewport: NestViewport | null = null
+  let lastEaseMs = performance.now()
+  function easeViewport(target: NestViewport): NestViewport {
+    const now = performance.now()
+    const dt = Math.min(0.25, (now - lastEaseMs) / 1000)
+    lastEaseMs = now
+    const from = easedViewport
+    if (
+      camera === 'free' ||
+      from === null ||
+      Math.abs(target.topCm - from.topCm) > from.spanCm ||
+      Math.abs(target.centreCm - from.centreCm) > from.spanCm * 2
+    ) {
+      easedViewport = target
+      return target
+    }
+    const k = 1 - Math.exp(-CAMERA_EASE_PER_SECOND * dt)
+    easedViewport = {
+      topCm: from.topCm + (target.topCm - from.topCm) * k,
+      spanCm: from.spanCm + (target.spanCm - from.spanCm) * k,
+      centreCm: from.centreCm + (target.centreCm - from.centreCm) * k,
+    }
+    return easedViewport
   }
 
   function redraw(): void {
     const timeSeconds = (performance.now() - startedAtMs) / 1000
     const brood = colony.demography.brood
+    const summary = colony.summary()
+    const sizes = bodySizesFor(params, summary.workers)
     const sliceSize = fit(sliceCanvas)
     if (sliceSize !== null) {
       lastSliceSize = sliceSize
-      lastViewport = viewportFor()
+      lastViewport = easeViewport(viewportFor())
       nestView.draw(
         colony.nest,
         colony.soil,
@@ -486,6 +557,11 @@ function startSimulator(): void {
           motion,
           timeSeconds,
           selected,
+          sizes,
+          showDiggingScent,
+          surface: colony.surface,
+          discDiameterCm:
+            (params.nest.surfaceDiscDiameterCm.min + params.nest.surfaceDiscDiameterCm.max) / 2,
           broodMix: {
             eggs: brood.eggCount,
             larvae: brood.larvaCount,
@@ -503,11 +579,10 @@ function startSimulator(): void {
         groundSize.width,
         groundSize.height,
         params.foraging.foragingRangeMetres.value * 2.2,
-        { motion, timeSeconds },
+        { motion, timeSeconds, sizes, showTrails },
       )
     }
 
-    const summary = colony.summary()
     const measurement = measureNest(colony.nest, params)
     const colonyFigures = colonyReadings(summary, params)
     const seedFigures = seedReadings(summary, params)
@@ -528,11 +603,11 @@ function startSimulator(): void {
     ])
     dateEl.textContent = formatDate(colony.sim.clock.date())
     phaseEl.textContent = describePhase(summary)
-    renderInspector()
+    renderInspector(sizes)
   }
 
   /** The card that appears when a reader clicks an ant. The citation is the point of it. */
-  function renderInspector(): void {
+  function renderInspector(sizes: BodySizes): void {
     const { ants } = colony.sim
     if (selected < 0 || selected >= ants.count || !ants.isAlive(selected)) {
       inspector.hidden = true
@@ -558,8 +633,10 @@ function startSimulator(): void {
 
     const where = document.createElement('p')
     where.className = 'inspector-where'
+    // Her length in millimetres, at scale 1 pixel per millimetre.
+    const lengthMm = antBodyFor(ants.caste[selected]!, ants.lengthMm[selected]!, sizes, 1).lengthPx
     where.textContent =
-      `${depth.toFixed(1)} cm down` +
+      `${lengthMm.toFixed(1)} mm long, ${depth.toFixed(1)} cm down` +
       (carrying === '' ? '' : `, carrying ${carrying}`) +
       `, ${(ants.ageTicks[selected]! / colony.sim.clock.ticksPerDay).toFixed(0)} days old`
 
@@ -638,6 +715,25 @@ function startSimulator(): void {
         colony.run(colony.sim.clock.ticksPerDay * days)
         redraw()
       },
+      /** Centimetres of depth the ant-scale camera shows, for a screenshot at a chosen zoom. */
+      zoom: (cm: number) => {
+        spanCm = cm
+        camera = 'work'
+        syncCameraButtons()
+        // Jump straight there. Easing runs on real time, which a hidden tab barely gives it.
+        easedViewport = null
+        redraw()
+      },
+      /** Points the camera at a place in the nest, for a screenshot of something specific. */
+      lookAt: (offsetCm: number, depthCm: number, span: number) => {
+        spanCm = span
+        freeTopCm = depthCm - span / 2
+        freeCentreCm = offsetCm
+        camera = 'free'
+        syncCameraButtons()
+        easedViewport = null
+        redraw()
+      },
     }
   }
 }
@@ -675,33 +771,55 @@ const BURDEN_NAMES: Record<number, string> = {
  * brood stages and the queen's size are both conventions of the renderer.
  */
 function buildLegend(container: HTMLElement): void {
+  const { colony, brood, nest, seeds, discretisation } = params
+  const young = bodySizesFor(params, 10)
+  const mature = bodySizesFor(params, colony.meanMatureWorkers.value)
+  const mm = (n: number): string => `${n.toFixed(n < 1 ? 2 : 1)} mm`
+
   const entries: readonly { colour: string; label: string }[] = [
     {
       colour: coloursFor(Caste.Queen).body,
-      label: 'The queen. A colony has one, and never gets another.',
+      label: `The queen, ${colony.queenLengthMm.min} to ${colony.queenLengthMm.max} mm long, with a head ${colony.queenHeadwidthMm.value} mm wide and a broad thorax that still carries the scars of her wings. A colony has one, and never gets another.`,
     },
     {
       colour: CASTE_COLOURS[Caste.MinorWorker]!.body,
-      label: 'Minor worker, 6.35 mm long. Most of the colony.',
+      label: `Minor worker, ${colony.minorWorkerLengthMm.value} mm long. Most of the colony. Her head is ${mm(young.minorHeadwidthMm)} wide in a young colony and ${mm(mature.minorHeadwidthMm)} in a mature one.`,
     },
     {
       colour: CASTE_COLOURS[Caste.MajorWorker]!.body,
-      label: 'Major worker, 9.52 mm long. About one in 14, and they crack seeds.',
+      label: `Major worker, ${colony.majorWorkerLengthMm.value} mm long, with a head ${colony.majorHeadwidthMm.min} to ${colony.majorHeadwidthMm.max} mm wide. About one worker in ${Math.round(1 / colony.majorWorkerFraction.value)}. Majors speed up the opening of seeds.`,
     },
     {
       colour: CASTE_COLOURS[Caste.Callow]!.body,
-      label: 'Callow, a newly hatched worker. It darkens over its first days.',
+      label: `Callow, a newly hatched worker. Pale, and not yet working, for her first ${brood.callowDurationDays.value} days.`,
+    },
+    {
+      colour: CASTE_COLOURS[Caste.Male]!.body,
+      label: `Male, winged, with a head ${colony.maleHeadwidthMm.value} mm wide. Raised in spring for the mating flight. Nobody has measured his length, so he is drawn at the queen's length scaled by head width.`,
+    },
+    {
+      colour: CASTE_COLOURS[Caste.Alate]!.body,
+      label: 'Winged queen, raised in spring for the mating flight. Drawn at the queen’s size.',
+    },
+    {
+      colour: DEFAULT_THEME.egg,
+      label: `Egg, about ${mm(young.eggLengthMm)} long, kept in clumps. Its size is borrowed from a related harvester ant.`,
+    },
+    {
+      colour: DEFAULT_THEME.larva,
+      label: `Larva, a curled grub up to about ${mm(young.matureLarvaLengthMm)} long when fully fed. Estimated: no one has measured one.`,
+    },
+    {
+      colour: DEFAULT_THEME.pupa,
+      label: `Pupa, already shaped like the ${mm(young.pupaLengthMm)} worker it will become.`,
+    },
+    {
+      colour: DEFAULT_THEME.seed,
+      label: `Stored seed, in chambers ${seeds.seedChamberDepthCm.min} to ${seeds.seedChamberDepthCm.max} cm down. Drawn ${mm(young.seedWidthMm)} wide, the widest seed a worker can open.`,
     },
     {
       colour: BURDEN_COLOURS[Burden.SoilPellet]!,
       label: 'A pellet of sand on its way up and out.',
-    },
-    { colour: BURDEN_COLOURS[Burden.Seed]!, label: 'A seed. Harvester ants live on seeds.' },
-    { colour: DEFAULT_THEME.egg, label: 'Eggs, larvae and pupae, kept in the deep chambers.' },
-    { colour: DEFAULT_THEME.seed, label: 'The seed store, in chambers 20 to 80 cm down.' },
-    {
-      colour: '#3f7d6a',
-      label: 'Trail scent on the ground, laid by foragers walking home. Nobody draws the trails.',
     },
   ]
 
@@ -718,15 +836,84 @@ function buildLegend(container: HTMLElement): void {
 
   const slice = document.createElement('p')
   slice.className = 'legend-caveat'
-  slice.textContent =
-    'Real shafts spiral down and are 4 to 6 cm wide. The left-hand view cuts through one like a knife through a cake, so you see a slice of the nest rather than a flattened map of it.'
+  slice.textContent = `Real shafts spiral down in a helix ${nest.shaftHelixDiameterCm.min} to ${nest.shaftHelixDiameterCm.max} cm across, and the shaft itself is about ${nest.shaftBoreDiameterCm.value} cm wide. The left-hand view cuts through one like a knife through a cake, so you see a slice of the nest rather than a flattened map of it.`
 
   const caveat = document.createElement('p')
   caveat.className = 'legend-caveat'
-  caveat.textContent =
-    'Three things here are drawing conventions, not model output. Ants on the ground are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use the scale bar for distance. The queen is drawn larger than her workers, but nobody has published her body length. And brood is counted per chamber rather than tracked one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.'
+  caveat.textContent = `In the nest, everything is drawn at its real size, so a worker fills most of a tunnel, as a real one does. Zoom in to see them. Several things are drawing conventions, not model output. The tunnels are drawn cell by cell at the width the model dug them, with their outside corners slightly rounded, and the sand is darkened where the model says it is damp. The model puts each ant in the middle of a ${discretisation.nestCellSizeCm.value * 10} mm square, so the picture spreads out ants that share one, and lets ants going up and ants going down pass on opposite sides of a shaft. Brood is counted per chamber rather than one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Above the nest the ground is seen from the side, showing the ants and seeds within a metre either side of the slice at their true size; the bare disc of sand, its charcoal and the grass round it are drawn, not modelled. When the camera is deep, a band across the top shows the ground at a smaller scale and says how much. In the map of the foraging range, ants are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use its scale bar for distance. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.`
 
   container.replaceChildren(list, slice, caveat)
+}
+
+/**
+ * The scent key: every chemical channel in SCIENCE.md section 8, in the colour it is drawn,
+ * with a switch for each one the model simulates. The ones it does not simulate are listed
+ * too, and say so.
+ */
+function buildScentKey(
+  container: HTMLElement,
+  onToggle: (id: PheromoneId, on: boolean) => void,
+): void {
+  container.replaceChildren(
+    ...PHEROMONES.map((scent) => {
+      const item = document.createElement('li')
+      item.className = scent.simulated ? 'scent' : 'scent scent--absent'
+
+      const swatch = document.createElement('span')
+      swatch.className = 'scent-swatch'
+      swatch.style.background = scent.colour
+
+      const text = document.createElement('div')
+      const name = document.createElement('p')
+      name.className = 'scent-name'
+      name.textContent = scent.name
+      const where = document.createElement('span')
+      where.className = 'scent-where'
+      where.textContent = scent.where
+      name.append(where)
+      const what = document.createElement('p')
+      what.className = 'scent-what'
+      what.textContent = scent.what
+      text.append(name, what)
+
+      item.append(swatch, text)
+      if (scent.simulated) {
+        const toggle = document.createElement('input')
+        toggle.type = 'checkbox'
+        toggle.checked = true
+        toggle.className = 'scent-toggle'
+        toggle.ariaLabel = `Show the ${scent.name.toLowerCase()}`
+        toggle.addEventListener('change', () => onToggle(scent.id, toggle.checked))
+        item.append(toggle)
+      }
+      return item
+    }),
+  )
+}
+
+/**
+ * The sliding selection behind a segmented control.
+ *
+ * One raised pill glides to the chosen option, rather than each option lighting up in place,
+ * so a change of speed or of what the eggs become reads as one control moving. It follows the
+ * chosen button's box whenever the control changes size.
+ */
+function addThumb(bar: HTMLElement): HTMLSpanElement {
+  const thumb = document.createElement('span')
+  thumb.className = 'seg-thumb'
+  thumb.ariaHidden = 'true'
+  bar.prepend(thumb)
+  new ResizeObserver(() => {
+    const chosen = bar.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
+    if (chosen !== null) syncThumb(thumb, chosen)
+  }).observe(bar)
+  return thumb
+}
+
+function syncThumb(thumb: HTMLSpanElement, chosen: HTMLButtonElement): void {
+  thumb.style.width = `${chosen.offsetWidth}px`
+  thumb.style.transform = `translateX(${chosen.offsetLeft}px)`
+  thumb.dataset.ready = 'true'
 }
 
 startThreshold()

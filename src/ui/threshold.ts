@@ -14,6 +14,7 @@ import { NestView } from '../render/nest-view.js'
 import { AntMotion } from '../render/ant-motion.js'
 import { createNestHarness } from '../core/sim/nest-harness.js'
 import { measureNest } from '../core/state/nest.js'
+import { bodySizesFor } from '../render/body-sizes.js'
 import {
   currentTheme,
   nestThemeFor,
@@ -57,9 +58,13 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
         </header>
         <p class="lede">${OPENING}</p>
         <div class="actions">
-          <button class="btn btn--primary" id="door-watch" type="button">Watch a colony</button>
+          <button class="btn btn--primary" id="door-watch" type="button">
+            Watch a colony
+            <span class="btn-icon" aria-hidden="true">→</span>
+          </button>
           <button class="btn btn--secondary" id="door-instrument" type="button">
             Run your own study
+            <span class="btn-icon" aria-hidden="true">↗</span>
           </button>
         </div>
         <p class="actions-note">
@@ -110,6 +115,7 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
   // reproducible. Small enough to dig visibly while somebody reads a paragraph.
   const harness = createNestHarness({ seed: 7, params, workers: 240 })
   const motion = new AntMotion(harness.sim.ants.capacity)
+  const sizes = bodySizesFor(options.params, harness.sim.ants.count)
   let lastDrawMs = performance.now()
   let frame = 0
   let running = true
@@ -135,6 +141,12 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
       motion,
       timeSeconds: now / 1000,
       selected: -1,
+      sizes,
+      showDiggingScent: true,
+      discDiameterCm:
+        (options.params.nest.surfaceDiscDiameterCm.min +
+          options.params.nest.surfaceDiscDiameterCm.max) /
+        2,
       // The demonstration is a nest dug by a synthetic workforce. It has no queen and no
       // brood, so there is no mix to draw.
       broodMix: { eggs: 0, larvae: 0, pupae: 0 },
