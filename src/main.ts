@@ -2,21 +2,21 @@
  * The page.
  *
  * Two screens: the threshold a reader meets on arrival, and the simulator itself. Nothing
- * here contains any biology. It reads core state and draws it, and the one thing it is
- * allowed to write is the brood investment lever, which is one of the two decisions a
- * person is permitted to make about this colony.
+ * here contains any biology. It reads core state and draws it, and the one thing it may
+ * write is the brood investment lever, one of the two decisions a person is allowed to make
+ * about this colony.
  *
  * **The simulation runs on the main thread, time-sliced.** A colony of a few hundred costs
- * about a tenth of a second per simulated day, so at the speeds offered here the frame
- * budget below is never spent; a mature colony of several thousand at the highest speed
- * will spend it and the picture will slow rather than the simulation losing fidelity. That
- * is the correct trade of the two, and it is the reason speed is expressed as simulated
- * days per real second and never as a step size. Moving the core into a Worker is the next
- * step and changes nothing about the model: `/core` already imports no DOM.
+ * about a tenth of a second per simulated day, so at the speeds offered here the frame budget
+ * below is rarely spent. A mature colony of several thousand at the highest speed will spend
+ * it, and the picture will slow rather than the simulation losing fidelity. That is the right
+ * trade, and it is why speed is expressed as simulated days per real second and never as a
+ * step size. Moving the core into a Worker is the next step and changes nothing about the
+ * model, because `/core` already imports no DOM.
  *
  * **Drawing and stepping are separate clocks.** The ants are eased toward their simulated
- * positions every frame (see render/ant-motion.ts), so the picture is continuous even when
- * the model is taking one step a second. That is a property of the drawing only; delete it
+ * positions every frame (see render/ant-motion.ts), so the picture stays continuous even
+ * when the model takes one step a second. That is a property of the drawing only. Delete it
  * and the run is identical.
  */
 
@@ -32,7 +32,14 @@ import { SurfaceView } from './render/surface-view.js'
 import { AntMotion } from './render/ant-motion.js'
 import { CASTE_COLOURS, BURDEN_COLOURS, coloursFor } from './render/ant-sprite.js'
 import { DEFAULT_THEME } from './render/nest-view.js'
-import { colonyReadings, describePhase, formatDate, nestReadings, renderHud } from './ui/hud.js'
+import {
+  colonyReadings,
+  describePhase,
+  formatDate,
+  nestReadings,
+  renderHud,
+  seedReadings,
+} from './ui/hud.js'
 import { createSourcesSheet } from './ui/sources.js'
 import { createInstrumentSheet } from './ui/instrument.js'
 import { mountThreshold } from './ui/threshold.js'
@@ -67,29 +74,29 @@ const openInstrument = createInstrumentSheet(repositoryUrl())
 /**
  * Simulated days per real second. Speed changes how many steps run, never their size.
  *
- * Labelled in days rather than in multipliers. "16x" says nothing about what a reader is
- * about to see; "16 days a second" says that the first workers are about three seconds
- * away.
+ * Labelled in days rather than multipliers. "16x" says nothing about what a reader is about
+ * to see. "16 days/s" says the first workers are about three seconds away.
  */
-const SPEEDS: readonly { label: string; daysPerSecond: number }[] = [
-  { label: '1 day/min', daysPerSecond: 1 / 60 },
-  { label: '1 day/4s', daysPerSecond: 0.25 },
-  { label: '1 day/s', daysPerSecond: 1 },
-  { label: '4 days/s', daysPerSecond: 4 },
-  { label: '16 days/s', daysPerSecond: 16 },
+const SPEEDS: readonly { label: string; title: string; daysPerSecond: number }[] = [
+  { label: '1 day/min', title: 'One simulated day every real minute', daysPerSecond: 1 / 60 },
+  { label: '1 day/4 s', title: 'One simulated day every four seconds', daysPerSecond: 0.25 },
+  { label: '1 day/s', title: 'One simulated day every second', daysPerSecond: 1 },
+  { label: '4 days/s', title: 'Four simulated days every second', daysPerSecond: 4 },
+  { label: '16 days/s', title: 'Sixteen simulated days every second', daysPerSecond: 16 },
 ]
 
 /**
  * The speed a visitor starts at.
  *
  * A day a second. The queen seals herself in, digs her founding shaft over the next few
- * seconds, lays, and her first daughters eclose about forty seconds in — which is roughly
- * how long someone will watch before deciding whether this is worth their time. Slower and
- * the first minute is a still picture; faster and the founding is over before it is seen.
+ * seconds and lays, and her first daughters hatch about forty seconds in. That is roughly
+ * how long somebody will watch before deciding whether this is worth their time. Slower,
+ * and the first minute is a still picture. Faster, and the founding is over before anyone
+ * sees it.
  */
 const DEFAULT_SPEED = 2
 
-/** Milliseconds of simulation permitted per frame. Past this the picture slows, not the model. */
+/** Milliseconds of simulation allowed per frame. Past this the picture slows, not the model. */
 const FRAME_BUDGET_MS = 9
 
 const INVESTMENTS: readonly {
@@ -100,19 +107,26 @@ const INVESTMENTS: readonly {
   {
     label: 'Workers',
     value: BroodInvestment.Workers,
-    note: 'Every egg is raised as a worker. The colony grows as fast as its foragers can feed the brood, and produces almost no winged reproductives.',
+    note: 'Every egg becomes a worker. The colony grows as fast as its food allows and raises almost no queens or males.',
   },
   {
     label: 'Balanced',
     value: BroodInvestment.Balanced,
-    note: 'Most eggs become workers. Once the colony is past 700 workers, a small share of the spring brood is raised into winged queens and males instead.',
+    note: 'Most eggs become workers. Once the colony passes 700 workers, part of each spring brood becomes winged queens and males.',
   },
   {
-    label: 'Alates',
+    label: 'Queens and males',
     value: BroodInvestment.Alates,
-    note: 'As much of the spring brood as the season allows is raised into winged queens and males. That is the colony reproducing, and it is paid for out of the fat its workers stored last autumn.',
+    note: 'As much of the spring brood as the season allows becomes winged queens and males, paid for with fat the workers stored last autumn.',
   },
 ]
+
+/** Plain words for the three evidence labels, used wherever a rule is shown. */
+const TAG_WORDS: Readonly<Record<'A' | 'B' | 'C', string>> = {
+  A: 'Measured in this species',
+  B: 'Borrowed from another ant',
+  C: 'Invented',
+}
 
 function startThreshold(): void {
   const teardown = mountThreshold(app!, {
@@ -130,70 +144,79 @@ function startThreshold(): void {
   })
 }
 
-/** Camera modes for the slice. "Free" is whatever the reader has zoomed or dragged to. */
+/** Camera modes for the slice. "Free" is wherever the reader has zoomed or dragged to. */
 type Camera = 'work' | 'nest' | 'free'
 
 function startSimulator(): void {
   // A colony seed drawn once per visit, so two people who open the page do not watch the
-  // same nest. It is printed in the panel, so any run a person likes can be repeated here
-  // or handed to the headless runner and reproduced exactly.
+  // same nest. It is printed in the panel, so any run a person likes can be repeated here or
+  // handed to the headless runner and reproduced exactly.
   const seed = Math.floor(Math.random() * 2 ** 31) || 1
   const colony = new Colony({ seed, params })
   const motion = new AntMotion(colony.sim.ants.capacity)
+  const totalValues = counts.A + counts.B + counts.C
 
   app!.innerHTML = `
     <main class="layout">
       <section class="stage">
         <div class="views">
           <div class="view view--nest">
-            <canvas id="slice"></canvas>
-            <p class="view-label">nest, vertical slice</p>
+            <canvas id="slice" aria-label="The nest, as a vertical slice through the sand"></canvas>
+            <p class="view-label">The nest, as a slice through the sand</p>
             <div class="view-tools" id="cameras"></div>
           </div>
           <div class="view view--surface">
-            <canvas id="ground"></canvas>
-            <p class="view-label">ground, from above</p>
+            <canvas id="ground" aria-label="The ground around the nest, from above"></canvas>
+            <p class="view-label">The ground, from above</p>
           </div>
         </div>
         <p class="stage-note">
-          Scroll to zoom the slice, drag to move it. Click an ant to see the rule it is
-          following. Real shafts are helices 4 to 6 cm across; the slice is a plane cut
-          through one, not a flattened nest. The lines on the ground are not drawn: they are
-          recruitment pheromone, left by foragers walking home.
+          Scroll to zoom and drag to move. Click an ant to see what it is doing and which
+          study says so.
         </p>
       </section>
       <aside class="panel">
-        <div class="panel-head">
+        <header class="panel-head">
           <h1>Anthill</h1>
-          <p class="subtitle">Pogonomyrmex badius, ${params.species.habitat}</p>
-          <p class="clock">
-            <span id="date"></span>
-            <span class="phase" id="phase"></span>
-          </p>
-        </div>
-        <div class="controls" id="speeds"></div>
-        <div class="controls" id="levers"></div>
-        <p class="control-note" id="lever-note"></p>
+          <p class="subtitle"><i>Pogonomyrmex badius</i>. ${params.species.habitat}.</p>
+          <div class="clock">
+            <div>
+              <p class="date" id="date"></p>
+              <p class="phase" id="phase"></p>
+            </div>
+            <button class="control-pause" id="pause" type="button">Pause</button>
+          </div>
+        </header>
+        <section class="panel-section">
+          <h2 class="panel-label">Speed</h2>
+          <div class="controls controls--segmented" id="speeds"></div>
+        </section>
+        <section class="panel-section">
+          <h2 class="panel-label">What the queen's eggs become</h2>
+          <div class="controls" id="levers"></div>
+          <p class="control-note" id="lever-note"></p>
+        </section>
         <div class="inspector" id="inspector" hidden></div>
         <details class="legend" id="legend">
           <summary>What am I looking at?</summary>
           <div class="legend-body" id="legend-body"></div>
         </details>
-        <div class="readouts" id="hud"></div>
-        <div class="panel-foot">
-          <p class="provenance">
-            seed ${seed}<br />
-            ${counts.A} measured in this species [A]<br />
-            ${counts.B} from another ant [B]<br />
-            ${counts.C} invented [C]
+        <div class="readouts">
+          <p class="readouts-intro">
+            The grey note under each figure is what real colonies show. A figure turns red
+            when the model is outside that.
           </p>
-          <button class="linkish" id="show-sources" type="button">
-            Sources, provenance, and what this refuses to model
-          </button>
-          <button class="linkish" id="show-instrument" type="button">
-            Running this as an instrument
-          </button>
+          <div id="hud"></div>
         </div>
+        <footer class="panel-foot">
+          <p class="provenance">
+            This run uses seed <code>${seed}</code>, so it can be repeated exactly. Of the
+            model's ${totalValues} values, ${counts.A} are measured in this species,
+            ${counts.B} are borrowed from other ants and ${counts.C} are invented.
+          </p>
+          <button class="linkish" id="show-sources" type="button">Sources and evidence</button>
+          <button class="linkish" id="show-instrument" type="button">Run your own study</button>
+        </footer>
       </aside>
     </main>
   `
@@ -216,8 +239,8 @@ function startSimulator(): void {
   let paused = false
   let camera: Camera = 'work'
   /**
-   * How much depth the slice shows. Starts at ant scale — a founding chamber is 1 cm high
-   * and a worker 6.35 mm long, so this is about forty body lengths of nest.
+   * How much depth the slice shows. Starts at ant scale: a founding chamber is 1 cm high and
+   * a worker 6.35 mm long, so this is about forty body lengths of nest.
    */
   let spanCm = 26
   let freeTopCm = 0
@@ -225,22 +248,20 @@ function startSimulator(): void {
   let selected = -1
   const startedAtMs = performance.now()
 
-  // Speed controls. Pause first, because it is the one a person reaches for in a hurry.
-  const pauseButton = document.createElement('button')
-  pauseButton.type = 'button'
-  pauseButton.textContent = 'Pause'
+  // Pause sits beside the date, where a person looks when they want the colony to stop.
+  const pauseButton = app!.querySelector<HTMLButtonElement>('#pause')!
   pauseButton.addEventListener('click', () => {
     paused = !paused
-    pauseButton.textContent = paused ? 'Run' : 'Pause'
+    pauseButton.textContent = paused ? 'Resume' : 'Pause'
     pauseButton.ariaPressed = String(paused)
   })
-  speedBar.append(pauseButton)
 
   const speedButtons: HTMLButtonElement[] = []
   SPEEDS.forEach((speed, index) => {
     const button = document.createElement('button')
     button.type = 'button'
     button.textContent = speed.label
+    button.title = speed.title
     button.addEventListener('click', () => {
       speedIndex = index
       for (const [i, b] of speedButtons.entries()) b.ariaPressed = String(i === index)
@@ -250,10 +271,10 @@ function startSimulator(): void {
   })
   speedButtons[speedIndex]!.ariaPressed = 'true'
 
-  // Camera. The default is ant scale, over the deepest work; one click gives the whole nest.
+  // Camera. The default is ant scale, around the queen. One click shows the whole nest.
   const cameraButtons: HTMLButtonElement[] = []
   const CAMERAS: readonly { label: string; value: Camera; title: string }[] = [
-    { label: 'Follow the ants', value: 'work', title: 'Ant scale, over the deepest digging' },
+    { label: 'Follow the ants', value: 'work', title: 'Close up, around the queen and her brood' },
     { label: 'Whole nest', value: 'nest', title: 'Everything dug so far, to scale' },
   ]
   CAMERAS.forEach((option) => {
@@ -277,14 +298,9 @@ function startSimulator(): void {
   }
   syncCameraButtons()
 
-  // The one lever a person is given. It biases the queen's egg laying and acts on
-  // developmental scheduling only. It cannot reassign an adult, and nothing in the UI may
-  // ever offer to: foragers in this species do not revert and the colony does not backfill.
-  const leverLabel = document.createElement('span')
-  leverLabel.className = 'hud-expected'
-  leverLabel.textContent = 'Brood investment'
-  leverBar.append(leverLabel)
-
+  // The one lever a person is given. It biases what the queen's eggs are raised into and
+  // acts on development only. It cannot reassign an adult, and nothing in the UI may ever
+  // offer to: foragers in this species never go back inside and the colony never backfills.
   const leverButtons: HTMLButtonElement[] = []
   INVESTMENTS.forEach((investment) => {
     const button = document.createElement('button')
@@ -302,7 +318,7 @@ function startSimulator(): void {
     const chosen = INVESTMENTS.find((i) => i.value === colony.demography.investment)!
     for (const [i, b] of leverButtons.entries())
       b.ariaPressed = String(INVESTMENTS[i]!.value === colony.demography.investment)
-    leverNote.textContent = `${chosen.note} It changes what the queen's eggs are raised into, and nothing else: a worker already alive is never reassigned, because in this species a forager never returns to inside work and no shortage recruits a replacement.`
+    leverNote.textContent = `${chosen.note} Adults keep their jobs whatever you choose, because a forager in this species never goes back to work inside.`
   }
   syncLever()
 
@@ -464,8 +480,12 @@ function startSimulator(): void {
     const summary = colony.summary()
     const measurement = measureNest(colony.nest, params)
     renderHud(hud, [
-      ...colonyReadings(summary, params),
-      ...nestReadings(measurement, params, summary.workers, summary.phase !== 'founding'),
+      { title: 'The colony', readings: colonyReadings(summary, params) },
+      { title: 'Seeds', readings: seedReadings(summary, params) },
+      {
+        title: 'The nest',
+        readings: nestReadings(measurement, params, summary.phase !== 'founding'),
+      },
     ])
     dateEl.textContent = formatDate(colony.sim.clock.date())
     phaseEl.textContent = describePhase(summary)
@@ -493,7 +513,7 @@ function startSimulator(): void {
     title.append(
       swatch,
       document.createTextNode(
-        `${CASTE_NAMES[ants.caste[selected]!] ?? 'ant'}, ${TASK_NAMES[ants.task[selected]!] ?? 'no task yet'}`,
+        `${CASTE_NAMES[ants.caste[selected]!] ?? 'Ant'}, ${TASK_NAMES[ants.task[selected]!] ?? 'no job yet'}`,
       ),
     )
 
@@ -510,7 +530,7 @@ function startSimulator(): void {
 
     const cite = document.createElement('p')
     cite.className = 'inspector-cite'
-    cite.textContent = `[${rule.tag}] ${rule.citation} · SCIENCE.md §${rule.section}`
+    cite.textContent = `${TAG_WORDS[rule.tag]} [${rule.tag}]. ${rule.citation}. Details in SCIENCE.md, section ${rule.section}.`
 
     const close = document.createElement('button')
     close.type = 'button'
@@ -535,9 +555,9 @@ function startSimulator(): void {
 
   function frame(): void {
     // The clock is read here rather than taken from the animation frame's own timestamp.
-    // That timestamp is when the frame began, which can already be several milliseconds in
-    // the past by the time this callback runs, and measuring a nine millisecond budget from
-    // it meant the budget was often spent before the first step and the colony never moved.
+    // That timestamp is when the frame began, which can be several milliseconds in the past
+    // by the time this callback runs. Measuring a nine-millisecond budget from it meant the
+    // budget was often spent before the first step, and the colony never moved.
     const now = performance.now()
     const elapsedSeconds = Math.min(0.25, (now - lastFrameMs) / 1000)
     lastFrameMs = now
@@ -566,10 +586,9 @@ function startSimulator(): void {
   redraw()
   window.requestAnimationFrame(frame)
 
-  // A handle on the running colony, for the development server only. Vite removes this
-  // whole block from a production build. It exists so the simulation can be driven and
-  // inspected from a console during development without the page growing a debug surface
-  // that ships.
+  // A handle on the running colony, for the development server only. Vite removes this whole
+  // block from a production build. It lets the simulation be driven and inspected from a
+  // console during development without the page growing a debug surface that ships.
   if (import.meta.env.DEV) {
     ;(window as unknown as Record<string, unknown>).anthill = {
       colony,
@@ -588,13 +607,13 @@ const CASTE_NAMES: Record<number, string> = {
   [Caste.Male]: 'Male',
   [Caste.MinorWorker]: 'Minor worker',
   [Caste.MajorWorker]: 'Major worker',
-  [Caste.Callow]: 'Callow, newly eclosed',
+  [Caste.Callow]: 'Callow (newly hatched)',
 }
 
 const TASK_NAMES: Record<number, string> = {
-  [Task.None]: 'not yet working',
-  [Task.BroodCare]: 'brood care',
-  [Task.Transfer]: 'transfer work',
+  [Task.None]: 'no job yet',
+  [Task.BroodCare]: 'caring for brood',
+  [Task.Transfer]: 'moving seeds and brood',
   [Task.Excavator]: 'digging',
   [Task.Forager]: 'foraging',
 }
@@ -610,38 +629,38 @@ const BURDEN_NAMES: Record<number, string> = {
 /**
  * The key to the picture.
  *
- * It exists because a reader cannot be expected to infer that a pale blob is a callow and a
- * cream oval is a larva. Where the drawing makes a distinction the model does not, this
- * says so — the brood stages and the queen's size are both conventions of the renderer.
+ * A reader cannot be expected to infer that a pale blob is a callow and a cream oval is a
+ * larva. Where the drawing makes a distinction the model does not, the key says so: the
+ * brood stages and the queen's size are both conventions of the renderer.
  */
 function buildLegend(container: HTMLElement): void {
   const entries: readonly { colour: string; label: string }[] = [
     {
       colour: coloursFor(Caste.Queen).body,
-      label: 'The queen. One per colony, and there is never another.',
+      label: 'The queen. A colony has one, and never gets another.',
     },
     {
       colour: CASTE_COLOURS[Caste.MinorWorker]!.body,
-      label: 'Minor worker, 6.35 mm. Most of the colony.',
+      label: 'Minor worker, 6.35 mm long. Most of the colony.',
     },
     {
       colour: CASTE_COLOURS[Caste.MajorWorker]!.body,
-      label: 'Major worker, 9.52 mm. About one in fourteen; they crack seeds.',
+      label: 'Major worker, 9.52 mm long. About one in 14, and they crack seeds.',
     },
     {
       colour: CASTE_COLOURS[Caste.Callow]!.body,
-      label: 'Callow: newly eclosed and still pale. It darkens over its first days.',
+      label: 'Callow, a newly hatched worker. It darkens over its first days.',
     },
     {
       colour: BURDEN_COLOURS[Burden.SoilPellet]!,
-      label: 'A pellet of sand, on its way up and out.',
+      label: 'A pellet of sand on its way up and out.',
     },
-    { colour: BURDEN_COLOURS[Burden.Seed]!, label: 'A seed. Seeds are what this species eats.' },
+    { colour: BURDEN_COLOURS[Burden.Seed]!, label: 'A seed. Harvester ants live on seeds.' },
     { colour: DEFAULT_THEME.egg, label: 'Eggs, larvae and pupae, kept in the deep chambers.' },
-    { colour: DEFAULT_THEME.seed, label: 'The seed store, in the chambers at 20 to 80 cm.' },
+    { colour: DEFAULT_THEME.seed, label: 'The seed store, in chambers 20 to 80 cm down.' },
     {
       colour: '#3f7d6a',
-      label: 'Recruitment pheromone on the ground. Not drawn: left by foragers walking home.',
+      label: 'Trail scent on the ground, laid by foragers walking home. Nobody draws the trails.',
     },
   ]
 
@@ -656,12 +675,17 @@ function buildLegend(container: HTMLElement): void {
     list.append(item)
   }
 
+  const slice = document.createElement('p')
+  slice.className = 'legend-caveat'
+  slice.textContent =
+    'Real shafts spiral down and are 4 to 6 cm wide. The left-hand view cuts through one like a knife through a cake, so you see a slice of the nest rather than a flattened map of it.'
+
   const caveat = document.createElement('p')
   caveat.className = 'legend-caveat'
   caveat.textContent =
-    'Three things in this picture are the renderer’s doing rather than the model’s. On the ground, seen from above, the ants are drawn far larger than life: at a scale that fits a 20 metre foraging range on screen, a 6.35 mm worker is a fiftieth of a pixel. Use the scale bar for distances, and the nest slice — where body length is drawn true — for size. The queen is drawn larger than her daughters because she is larger, but no body length for a badius queen appears in the bibliography, so her size on screen is a convention. And the nest tracks brood as a count per chamber, not as individuals, so which glyph is an egg and which a larva is assigned in the colony’s current proportions. Everything else — where each ant is, what it carries, how many seeds are in that chamber — is the model’s.'
+    'Three things here are drawing conventions, not model output. Ants on the ground are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use the scale bar for distance. The queen is drawn larger than her workers, but nobody has published her body length. And brood is counted per chamber rather than tracked one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.'
 
-  container.replaceChildren(list, caveat)
+  container.replaceChildren(list, slice, caveat)
 }
 
 startThreshold()

@@ -1,11 +1,11 @@
 /**
  * One palette, one radius scale, one accent, defined as tokens and swapped for dark mode.
  *
- * The colours are the sand and ink of the longleaf pine sandhills the species lives in,
- * which is not decoration: the nest slice and the plan view are drawn in the same family,
- * so the chrome around a reading does not fight the reading.
+ * The colours are the sand and ink of the longleaf pine sandhills the species lives in. That
+ * is not decoration: the nest slice and the ground are drawn in the same family, so the
+ * chrome around a reading does not fight the reading.
  *
- * Numbers are set in a monospaced face throughout. A figure that is going to be held
+ * Numbers are set in a monospaced face with tabular figures. A figure that will be held
  * against a measurement in a paper should line up in a column.
  */
 
@@ -14,48 +14,46 @@
 
   --sand-50: #f4efe5;
   --sand-100: #e9e1d2;
-  --sand-200: #d9cdb6;
-  --sand-400: #a89272;
-  --ink-700: #4a3d2e;
   --ink-900: #241c13;
-  --ink-950: #16110b;
 
   --bg: var(--sand-50);
   --bg-raised: #fbf8f2;
   --bg-sunken: var(--sand-100);
   --text: var(--ink-900);
-  --text-dim: #6d5f4c;
-  --text-faint: #8d7f6b;
-  --line: #d5c9b4;
+  --text-dim: #66584a;
+  --text-faint: #7f7160;
+  --line: #d9cebb;
   --line-strong: #bdad92;
 
-  /* One accent for the whole application. Used for the primary action, the live-run
-     indicator, and nothing else. */
-  --accent: #9a5a24;
+  /* One accent for the whole application: the primary action, pressed controls and focus
+     rings. Nothing else. */
+  --accent: #8f5220;
   --accent-text: #fdf9f3;
   /* A reading outside what the papers report. Never used decoratively. */
   --flag: #a03a2c;
 
-  --radius: 4px;
-  --radius-lg: 8px;
+  --radius: 6px;
+  --radius-lg: 10px;
 
   --mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
   --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #16110b;
-    --bg-raised: #1f1810;
-    --bg-sunken: #100c07;
+    --bg: #17120c;
+    --bg-raised: #201911;
+    --bg-sunken: #110d08;
     --text: #ece3d3;
-    --text-dim: #b3a68f;
-    --text-faint: #8a7d68;
-    --line: #362c1e;
-    --line-strong: #4b3d2a;
-    --accent: #d08b46;
+    --text-dim: #b8ab94;
+    --text-faint: #968971;
+    --line: #342a1d;
+    --line-strong: #4d3f2c;
+    --accent: #d38f4b;
     --accent-text: #1a1309;
-    --flag: #d97a63;
+    --flag: #e08672;
   }
 }
 
@@ -76,10 +74,25 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+p {
+  text-wrap: pretty;
+}
+
 button {
   font: inherit;
   color: inherit;
   cursor: pointer;
+}
+
+/* The hidden attribute has to win over any display rule below, or a hidden panel still
+   takes up room. */
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ---------------------------------------------------------------------------------------
@@ -90,7 +103,7 @@ button {
   position: relative;
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
 }
 
@@ -100,8 +113,8 @@ button {
   }
 }
 
-/* The left half is a colony actually digging. Not a screenshot and not a stock photograph:
-   the same renderer, the same core, seeded and running while the reader reads. */
+/* The left half is a colony actually digging: the same renderer and core, seeded and
+   running while the reader reads. */
 .threshold-stage {
   position: relative;
   background: var(--bg-sunken);
@@ -130,10 +143,10 @@ button {
   right: 0;
   bottom: 0;
   margin: 0;
-  padding: 10px 16px;
+  padding: 10px 18px;
   font-size: 12px;
   color: var(--text-dim);
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
   border-top: 1px solid var(--line);
 }
 
@@ -141,68 +154,59 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 26px;
-  padding: 56px clamp(24px, 5vw, 64px);
-  max-width: 720px;
+  gap: 28px;
+  padding: 56px clamp(24px, 5vw, 72px) 48px;
+  max-width: 680px;
 }
 
 .threshold h1 {
   margin: 0;
-  font-size: clamp(2rem, 4.2vw, 3rem);
-  line-height: 1.04;
-  letter-spacing: -0.02em;
-  font-weight: 600;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  font-weight: 650;
+  text-wrap: balance;
 }
 
-.threshold h1 .binomial {
-  display: block;
-  margin-top: 10px;
-  font-size: 0.4em;
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: 0;
-  color: var(--text-dim);
-}
-
-.threshold blockquote {
-  margin: 0;
-  padding-left: 18px;
-  border-left: 2px solid var(--line-strong);
-  color: var(--text-dim);
+.threshold .binomial {
+  margin: 10px 0 0;
   font-size: 15px;
-  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+.threshold .lede {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.65;
   max-width: 58ch;
 }
 
 .doors {
   display: grid;
-  gap: 14px;
+  gap: 10px;
 }
 
 .door {
   display: grid;
-  gap: 6px;
-  padding: 18px 20px;
+  gap: 4px;
+  padding: 16px 20px;
   text-align: left;
   background: var(--bg-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   transition:
-    border-color 0.18s ease,
-    transform 0.18s ease;
+    border-color 0.2s var(--ease),
+    transform 0.2s var(--ease),
+    background-color 0.2s var(--ease);
 }
 
 .door:hover {
   border-color: var(--line-strong);
+  transform: translateY(-1px);
 }
 
 .door:active {
   transform: translateY(1px);
-}
-
-.door:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 
 .door--primary {
@@ -211,8 +215,13 @@ button {
   color: var(--accent-text);
 }
 
+.door--primary:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 90%, var(--text));
+}
+
 .door--primary .door-note {
-  color: color-mix(in srgb, var(--accent-text) 78%, transparent);
+  color: color-mix(in srgb, var(--accent-text) 82%, transparent);
 }
 
 .door-title {
@@ -228,22 +237,20 @@ button {
 }
 
 .threshold-foot {
+  margin: 0;
   font-size: 12px;
   color: var(--text-faint);
   line-height: 1.6;
-}
-
-.threshold-foot a {
-  color: inherit;
+  max-width: 58ch;
 }
 
 /* ---------------------------------------------------------------------------------------
-   The simulator. Cockpit density: hairlines, no card boxes, monospaced figures.
+   The simulator. Dense but calm: hairlines, grouped readouts, monospaced figures.
    --------------------------------------------------------------------------------------- */
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) 360px;
   height: 100dvh;
 }
 
@@ -302,11 +309,11 @@ button {
   top: 10px;
   left: 12px;
   margin: 0;
-  padding: 3px 8px;
-  font-family: var(--mono);
-  font-size: 11px;
+  padding: 4px 9px;
+  font-size: 12px;
+  font-weight: 500;
   color: var(--text);
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
@@ -338,38 +345,81 @@ button {
 }
 
 .panel-head {
-  padding: 16px 18px 12px;
+  padding: 18px 20px 14px;
   border-bottom: 1px solid var(--line);
 }
 
 .panel-head h1 {
   margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.015em;
 }
 
 .panel-head .subtitle {
-  margin: 3px 0 0;
+  margin: 2px 0 0;
   font-size: 12px;
-  font-style: italic;
   color: var(--text-dim);
 }
 
 .clock {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   margin: 12px 0 0;
+}
+
+.clock p {
+  margin: 0;
+}
+
+.clock .date {
   font-family: var(--mono);
   font-size: 13px;
+  font-variant-numeric: tabular-nums;
 }
 
 .clock .phase {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  margin-top: 1px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.control-pause {
+  flex: none;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color 0.15s var(--ease);
+}
+
+.control-pause:hover {
+  border-color: var(--line-strong);
+}
+
+.control-pause:active {
+  transform: translateY(1px);
+}
+
+.control-pause[aria-pressed='true'] {
+  color: var(--accent-text);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.panel-section {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-label {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-dim);
 }
 
@@ -377,20 +427,18 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  padding: 12px 18px;
-  border-bottom: 1px solid var(--line);
 }
 
 .controls button {
-  padding: 6px 11px;
-  font-family: var(--mono);
+  padding: 6px 10px;
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
   background: var(--bg-raised);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   transition:
-    border-color 0.15s ease,
-    background 0.15s ease;
+    border-color 0.15s var(--ease),
+    background-color 0.15s var(--ease);
 }
 
 .controls button:hover:not(:disabled) {
@@ -399,11 +447,6 @@ button {
 
 .controls button:active:not(:disabled) {
   transform: translateY(1px);
-}
-
-.controls button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
 }
 
 .controls button[aria-pressed='true'] {
@@ -417,17 +460,71 @@ button {
   cursor: not-allowed;
 }
 
+/* Speeds as one segmented row: five choices of one thing, not five separate buttons. */
+.controls--segmented {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+}
+
+.controls--segmented button {
+  margin-left: -1px;
+  padding: 6px 2px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  border-radius: 0;
+}
+
+.controls--segmented button:first-child {
+  margin-left: 0;
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.controls--segmented button:last-child {
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.controls--segmented button:hover:not(:disabled),
+.controls--segmented button[aria-pressed='true'] {
+  position: relative;
+}
+
+.control-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
 .readouts {
-  padding: 4px 18px 12px;
+  padding: 4px 20px 16px;
+}
+
+.readouts-intro {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-faint);
+}
+
+.hud-group h2 {
+  margin: 20px 0 2px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
 }
 
 .hud-row {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: baseline;
-  gap: 4px 12px;
-  padding: 9px 0;
-  border-bottom: 1px solid var(--line);
+  gap: 2px 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+}
+
+.hud-row:last-child {
+  border-bottom: none;
 }
 
 .hud-label {
@@ -443,7 +540,8 @@ button {
 
 .hud-expected {
   grid-column: 1 / -1;
-  font-size: 11px;
+  font-size: 11.5px;
+  line-height: 1.45;
   color: var(--text-faint);
 }
 
@@ -452,13 +550,13 @@ button {
 }
 
 .hud-row--out .hud-expected::after {
-  content: ' (outside what the papers report)';
+  content: ' Outside the measured range.';
   color: var(--flag);
 }
 
 .panel-foot {
   margin-top: auto;
-  padding: 14px 18px 18px;
+  padding: 14px 20px 20px;
   border-top: 1px solid var(--line);
   display: grid;
   gap: 10px;
@@ -466,21 +564,26 @@ button {
 
 .provenance {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 11px;
-  line-height: 1.7;
+  font-size: 12px;
+  line-height: 1.55;
   color: var(--text-dim);
+}
+
+.provenance code {
+  font-family: var(--mono);
+  font-size: 11.5px;
 }
 
 .linkish {
   padding: 0;
-  font-size: 12px;
+  font-size: 13px;
   text-align: left;
   color: var(--text);
   background: none;
   border: none;
   border-bottom: 1px solid var(--line-strong);
   justify-self: start;
+  transition: border-color 0.15s var(--ease);
 }
 
 .linkish:hover {
@@ -502,7 +605,7 @@ dialog.sheet {
 }
 
 dialog.sheet::backdrop {
-  background: rgb(0 0 0 / 0.45);
+  background: rgb(20 14 8 / 0.5);
 }
 
 .sheet-head {
@@ -512,66 +615,76 @@ dialog.sheet::backdrop {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 16px 20px;
+  padding: 16px 22px;
   background: var(--bg-raised);
   border-bottom: 1px solid var(--line);
 }
 
 .sheet-head h2 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 17px;
+  font-weight: 650;
 }
 
 .sheet-close {
-  padding: 5px 10px;
-  font-family: var(--mono);
+  padding: 5px 12px;
   font-size: 12px;
   background: var(--bg);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
 
+.sheet-close:hover {
+  border-color: var(--line-strong);
+}
+
 .sheet-body {
-  padding: 4px 20px 24px;
+  padding: 6px 22px 26px;
   overflow-y: auto;
-  max-height: calc(88dvh - 58px);
+  max-height: calc(88dvh - 60px);
 }
 
 .sheet-body h3 {
-  margin: 22px 0 8px;
-  font-size: 13px;
-  font-weight: 600;
+  margin: 24px 0 8px;
+  font-size: 14px;
+  font-weight: 650;
 }
 
 .sheet-body p {
   margin: 0 0 10px;
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.65;
   color: var(--text-dim);
-  max-width: 72ch;
+  max-width: 70ch;
 }
 
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
-  padding: 10px 20px 0;
+  padding: 10px 22px 0;
+  border-bottom: 1px solid var(--line);
 }
 
 .tabs button {
-  padding: 6px 12px;
-  font-size: 12px;
+  margin-bottom: -1px;
+  padding: 7px 12px;
+  font-size: 13px;
   background: none;
   border: 1px solid transparent;
   border-radius: var(--radius) var(--radius) 0 0;
   color: var(--text-dim);
 }
 
+.tabs button:hover {
+  color: var(--text);
+}
+
 .tabs button[aria-selected='true'] {
   color: var(--text);
-  background: var(--bg);
+  background: var(--bg-raised);
   border-color: var(--line);
-  border-bottom-color: var(--bg);
+  border-bottom-color: var(--bg-raised);
 }
 
 .ref {
@@ -588,7 +701,7 @@ dialog.sheet::backdrop {
 
 .ref .used-for {
   margin: 5px 0 0;
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--text-dim);
 }
 
@@ -604,13 +717,13 @@ dialog.sheet::backdrop {
 }
 
 .refused-claim {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
 }
 
 .refused-why {
   margin: 4px 0 0;
-  font-size: 12.5px;
+  font-size: 13px;
   line-height: 1.6;
   color: var(--text-dim);
 }
@@ -624,12 +737,10 @@ dialog.sheet::backdrop {
 
 .tested {
   display: inline-block;
-  margin-left: 6px;
-  padding: 1px 6px;
-  font-family: var(--mono);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin-left: 8px;
+  padding: 1px 7px;
+  font-size: 11px;
+  font-weight: 500;
   color: var(--accent-text);
   background: var(--accent);
   border-radius: var(--radius);
@@ -651,7 +762,7 @@ pre.command {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 1px;
   margin: 12px 0 4px;
   background: var(--line);
@@ -666,19 +777,19 @@ pre.command {
 }
 
 .summary-cell .k {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-dim);
 }
 
 .summary-cell .v {
   margin-top: 3px;
   font-family: var(--mono);
-  font-size: 19px;
+  font-size: 20px;
   font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------------------------------------
-   Camera tools on the slice, the note under the lever, the inspector and the legend.
+   Camera tools on the slice, the inspector and the legend.
    --------------------------------------------------------------------------------------- */
 
 .view-tools {
@@ -690,11 +801,10 @@ pre.command {
 }
 
 .view-tools button {
-  padding: 4px 9px;
-  font-family: var(--mono);
-  font-size: 11px;
+  padding: 4px 10px;
+  font-size: 12px;
   color: var(--text);
-  background: color-mix(in srgb, var(--bg) 84%, transparent);
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
   border: 1px solid var(--line);
   border-radius: var(--radius);
 }
@@ -718,17 +828,8 @@ pre.command {
   cursor: grabbing;
 }
 
-.control-note {
-  margin: 0;
-  padding: 10px 18px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--text-dim);
-  border-bottom: 1px solid var(--line);
-}
-
 .inspector {
-  padding: 12px 18px 14px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--line);
   background: var(--bg-sunken);
   display: grid;
@@ -740,27 +841,26 @@ pre.command {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
 }
 
 .inspector-where {
   margin: 0;
-  font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-dim);
 }
 
 .inspector-rule {
   margin: 0;
   font-size: 13px;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 .inspector-cite,
 .inspector-caveat {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   color: var(--text-dim);
 }
@@ -775,7 +875,7 @@ pre.command {
   flex: none;
   width: 11px;
   height: 11px;
-  border-radius: 2px;
+  border-radius: 3px;
   border: 1px solid color-mix(in srgb, var(--text) 25%, transparent);
 }
 
@@ -784,22 +884,23 @@ pre.command {
 }
 
 .legend > summary {
-  padding: 11px 18px;
-  font-size: 12px;
-  color: var(--text-dim);
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
   cursor: pointer;
 }
 
 .legend > summary:hover {
-  color: var(--text);
+  color: var(--accent);
 }
 
 .legend-body {
-  padding: 0 18px 14px;
+  padding: 0 20px 16px;
 }
 
 .legend-list {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   padding: 0;
   list-style: none;
   display: grid;
@@ -810,14 +911,14 @@ pre.command {
   display: flex;
   align-items: baseline;
   gap: 9px;
-  font-size: 12px;
+  font-size: 12.5px;
   line-height: 1.45;
   color: var(--text-dim);
 }
 
 .legend-caveat {
-  margin: 0;
-  font-size: 11px;
+  margin: 0 0 8px;
+  font-size: 12px;
   line-height: 1.55;
   color: var(--text-faint);
 }

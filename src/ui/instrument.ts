@@ -1,10 +1,10 @@
 /**
  * The panel for the second audience.
  *
- * A browser tab runs one colony well and cannot run a study, and saying so plainly is
- * better than letting somebody discover it after leaving thirty tabs open overnight. So
- * this panel states the limit, states the reproducibility guarantee that makes the limit
- * bearable, and hands over the command that does the thing the tab cannot.
+ * A browser tab runs one colony well and cannot run a study. Saying so plainly beats letting
+ * somebody find out after leaving thirty tabs open overnight. So this panel states the
+ * limit, explains the reproducibility guarantee that makes the limit bearable, and hands
+ * over the command that does what the tab cannot.
  */
 
 import { SOURCES_NOTICE } from '../core/provenance/index.js'
@@ -20,10 +20,16 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node
 }
 
+/** The folder `git clone` creates, which is the last part of the repository address. */
+function cloneFolder(repoUrl: string): string {
+  const last = repoUrl.replace(/\/+$/, '').split('/').pop()
+  return last !== undefined && last !== '' && !last.includes('.') ? last : 'ANThill-Sim'
+}
+
 export function createInstrumentSheet(repoUrl: string): () => void {
   const studyCommand = [
     `git clone ${repoUrl}`,
-    'cd anthill-sim',
+    `cd ${cloneFolder(repoUrl)}`,
     'npm install',
     'npm run study -- --replicates 30 --years 12 --out out/my-study',
   ].join('\n')
@@ -34,46 +40,45 @@ export function createInstrumentSheet(repoUrl: string): () => void {
   const close = el('button', 'sheet-close', 'Close')
   close.type = 'button'
   close.addEventListener('click', () => dialog.close())
-  head.append(el('h2', undefined, 'Using this as an instrument'), close)
+  head.append(el('h2', undefined, 'Run your own study'), close)
 
   const body = el('div', 'sheet-body')
 
   body.append(
-    el('h3', undefined, 'What a browser tab can and cannot do'),
+    el('h3', undefined, 'Why the browser runs only one colony'),
     el(
       'p',
       undefined,
-      'This page runs one colony, and runs it properly: the same core, the same parameter file, the same seeded arithmetic as a headless run. What it cannot do is run a study. A colony of a few thousand workers on a one-minute timestep is on the order of a billion agent updates per simulated year, and replicates want a machine and a shell, not a tab and a laptop lid.',
+      'This page runs exactly the same model as the command line, with the same parameters and the same random numbers. What it cannot do is run many colonies. A colony of a few thousand workers, each moving once a simulated minute, makes around a billion updates a year, and a study needs dozens of colonies.',
     ),
-    el('h3', undefined, 'Why a result here can be reproduced there'),
+    el('h3', undefined, 'Your computer will get the same answer'),
     el(
       'p',
       undefined,
-      'One seeded generator, injected and never ambient. A fixed timestep. A system order fixed at construction. No unspecified maths: the trigonometric and exponential functions are the project’s own, because the standard library’s are not specified to be bit-identical between engines. The same seed and the same parameter file give a byte-identical run in Chrome, in Firefox and in Node, and a test asserts it rather than a README claiming it.',
+      'Every run draws on one seeded random number generator and moves forward in fixed one-minute steps, in a fixed order. The project even carries its own maths functions, because browsers are not required to compute a sine or an exponential identically. The same seed and parameter file give a byte-for-byte identical run in Chrome, Firefox and Node, and a test checks this on every change.',
     ),
     el('h3', undefined, 'Running a study'),
     el(
       'p',
       undefined,
-      'Replicate runs are sharded by seed and are embarrassingly parallel. Every run writes its state digest at each checkpoint, so a reviewer can re-run one seed and verify it reproduces byte for byte.',
+      'Each replicate is one seed, so a study splits across as many machines as you have and the pieces join up afterwards. Every run records a fingerprint of its state at each checkpoint, so anyone can rerun a seed and confirm it matches.',
     ),
   )
 
-  const pre = el('pre', 'command', studyCommand)
-  body.append(pre)
+  body.append(el('pre', 'command', studyCommand))
 
   body.append(
-    el('h3', undefined, 'What comes out'),
+    el('h3', undefined, 'What you get'),
     el(
       'p',
       undefined,
-      'A methods report in Markdown, a tidy CSV with one row per run-year, and the raw per-run records. The report states the parameter-file hash, the commit, the seed list, every invented value the run relied on, and the validation gates this model meets and the ones it does not, taken from the project’s own record rather than written fresh for the occasion.',
+      'A methods report in Markdown, a spreadsheet-ready CSV with one row per colony per year, and the full record of every run. The report lists the code version, the fingerprint of the parameter file, the seeds, every invented value the results depend on, and which of the model’s own validation checks it currently passes and fails.',
     ),
-    el('h3', undefined, 'On what is not yet modelled'),
+    el('h3', undefined, 'What the model gets wrong'),
     el(
       'p',
       undefined,
-      'Read the validation gates before using output for anything. Seed stores, germination and annual relocation are not built yet, and the food account that ought to connect foraging to larval survival is still a proxy. These are stated in the report the run writes, not buried.',
+      'Check the validation record before relying on any output. Nests do not yet move house each year, stored seeds do not germinate, and nothing eats from the seed store. Larval survival still depends on a simple count of foragers rather than on food. The report every run writes says all of this too.',
     ),
     el('h3', undefined, 'Sources'),
     el('p', undefined, SOURCES_NOTICE),
@@ -85,7 +90,7 @@ export function createInstrumentSheet(repoUrl: string): () => void {
   link.target = '_blank'
   link.textContent = repoUrl
   const linkLine = el('p')
-  linkLine.append(document.createTextNode('Source, licence and citation file: '), link)
+  linkLine.append(document.createTextNode('Code, licence and citation details at '), link)
   body.append(linkLine)
 
   dialog.append(head, body)
