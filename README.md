@@ -39,14 +39,18 @@ simulated year. Replicates are independent, sharded by seed, and embarrassingly 
 
 ## Status
 
-Early, and honest about it. Founding, excavation, the demographic engine, climate, foraging
-and the inside of the nest are built: ants move around underground, the queen sits in the
-brood chambers, brood is kept somewhere rather than merely counted, and seeds a forager
-brings home are put down in the top chambers for other workers to carry toward the seed
-chambers. Germination, seed size classes and annual relocation are not built, and nothing
-eats a seed yet, so larval survival is still a forager-to-larva proxy.
+Early, and honest about it. Founding, excavation, the demographic engine, climate, foraging,
+the inside of the nest and the seed store are built: ants move around underground, the queen
+sits in the brood chambers, brood is kept somewhere rather than merely counted, and seeds come
+home in four measured sizes, are carried down toward the seed chambers, germinate with the
+temperature of the soil they lie in, and feed the larvae. Annual relocation is not built.
 
-Two failures are worth knowing before you watch it. A founding queen digs about 5 cm before
+The largest failure is the newest. Larvae now eat only what the foragers bring home, and too
+few workers forage over too large a range to feed them, so a colony that grew past a thousand
+workers in four years on the old stand-in for feeding now stalls at a few dozen. See
+`docs/DECISIONS.md` D24.
+
+Two older failures are worth knowing before you watch it. A founding queen digs about 5 cm before
 her first daughters eclose, against the 29 to 37 cm the species digs, so the opening minutes
 are quiet. And colonies dig far deeper than their worker number warrants, which leaves most
 of the workforce at a dig face: the vertical sorting of workers by task barely shows in a

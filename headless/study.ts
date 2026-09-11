@@ -130,6 +130,13 @@ interface YearRecord {
   nestDepthCm: number
   soilMovedCells: number
   seedsCollected: number
+  seedsStored: number
+  /** Share of stored seed mass in sizes the ants cannot open. */
+  unopenableShareOfStore: number
+  seedsGerminated: number
+  seedsOpened: number
+  fedToLarvaeMg: number
+  germinatedFedToLarvaeMg: number
   meanTripTicks: number
   digest: string
 }
@@ -210,6 +217,12 @@ function summaryToYear(
     nestDepthCm: s.nestDepthCm,
     soilMovedCells: s.soilMovedCells,
     seedsCollected: s.totalSeedsCollected,
+    seedsStored: Number(s.seedsStored.toFixed(1)),
+    unopenableShareOfStore: Number(s.unopenableShareOfStore.toFixed(4)),
+    seedsGerminated: Number(s.totalSeedsGerminated.toFixed(1)),
+    seedsOpened: Number(s.totalSeedsOpened.toFixed(1)),
+    fedToLarvaeMg: Number(s.totalFedToLarvaeMg.toFixed(1)),
+    germinatedFedToLarvaeMg: Number(s.totalGerminatedFedToLarvaeMg.toFixed(1)),
     meanTripTicks: Number(s.meanTripTicks.toFixed(2)),
     digest,
   }
@@ -230,6 +243,8 @@ const LOAD_BEARING_INVENTED = [
   'foraging.seedPatchCount',
   'foraging.speedMetresPerTick',
   'foraging.departureChancePerTick',
+  'seeds.inNestGerminationFactor',
+  'brood.larvalSeedConversionEfficiency',
   'time.secondsPerTick',
 ]
 
@@ -387,10 +402,16 @@ function report(
   L('  every colony size. Deriving the area-to-worker law from local rules alone is an open')
   L('  problem in this literature, and a colony-level regulator would fix it in an afternoon')
   L('  while contradicting the premise the model exists to demonstrate. It is left failing.')
-  L('- **Foraging feeds nothing.** Seeds are delivered and counted, and no other system')
-  L('  draws on them. Larval survival is still a forager-to-larva proxy.')
-  L('- **No seed store, no germination, no relocation.** These are unbuilt, not merely')
-  L('  unvalidated.')
+  L('- **Germination in a chamber is calibrated, not measured.** The laboratory rates of')
+  L('  Tschinkel & Kwapich 2016 are scaled down to reproduce the germinating seeds they')
+  L('  counted in natural chambers the ants could not reach. What the larvae eat rests on')
+  L('  that factor, and on an invented efficiency with which seed becomes ant.')
+  L('- **Colonies starve on what their foragers bring home.** Larvae eat only what the')
+  L('  store yields, and too few workers forage over too large a range to feed a growing')
+  L('  brood. On the same seeds a colony reaches a few dozen workers by its fourth year,')
+  L('  where it reached several hundred to well over a thousand before the food account')
+  L('  existed. Colony size, brood and alate output from this build are not the species’.')
+  L('- **No relocation.** Annual nest relocation is unbuilt, not merely unvalidated.')
   L('- **Path integration does not drift.** The homing vector is accumulated from the')
   L('  ant’s own steps rather than read off the world, but the accumulation is exact.')
   L('- Chamber height is not yet independent of depth, and branch depth exceeds the 40 cm')

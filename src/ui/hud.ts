@@ -165,9 +165,10 @@ export function renderHud(container: HTMLElement, readings: readonly HudReading[
  * The colony readings: what the demographic engine and the foragers are doing.
  *
  * Held against the same measured ranges the nest readings are, and flagged the same way
- * when the model is outside them. Two of these are deliberately unflattering. Peak
- * proportion foraging comes out low, and the seed store is a number nothing draws on yet.
- * Both are stated here rather than left for a reader to discover.
+ * when the model is outside them. Peak proportion foraging comes out low, and that is
+ * stated here rather than left for a reader to discover. The seed readings show the store as
+ * the ants' food: what share of it they cannot open, what is germinating, and whether the
+ * larvae got what they needed.
  */
 export function colonyReadings(summary: ColonySummary, params: Params): HudReading[] {
   const proportionForaging = summary.workers > 0 ? summary.foragers / summary.workers : 0
@@ -220,7 +221,29 @@ export function colonyReadings(summary: ColonySummary, params: Params): HudReadi
     {
       label: 'Seeds brought home',
       value: `${summary.totalSeedsCollected}`,
-      expected: 'total ever collected. Nothing eats them yet',
+      expected: 'total ever collected, of every size',
+      tag: 'C',
+    },
+    {
+      label: 'Store they cannot open',
+      value:
+        summary.seedsStored >= 1
+          ? `${(summary.unopenableShareOfStore * 100).toFixed(0)}% by weight`
+          : 'no store yet',
+      expected: `about ${(params.seeds.largeSeedStoreFractionByWeight.value * 100).toFixed(0)}% or more, eaten only once germinated`,
+      tag: 'A',
+    },
+    {
+      label: 'Germinating now',
+      value: `${Math.round(summary.seedsGerminating)}`,
+      expected: 'found within days and fed to the larvae first',
+      tag: 'A',
+    },
+    {
+      label: 'Larvae fed',
+      value: `${Math.round((1 - summary.larvalFoodShortfall) * 100)}% of need`,
+      expected: 'a shortfall starves larvae; nothing else answers it',
+      outOfRange: summary.larvalFoodShortfall > 0.5,
       tag: 'C',
     },
     {

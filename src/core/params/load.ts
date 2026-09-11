@@ -41,8 +41,78 @@ export function loadSpecies(raw: unknown): LoadedSpecies {
   const params = buildParams(root)
 
   checkHardRules(params)
+  checkSeedClasses(params)
 
   return { params, provenance: validation.entries, counts: validation.counts }
+}
+
+/**
+ * The seed size classes are described by several parallel lists. A list one entry short
+ * would not fail loudly: it would read as `undefined`, which becomes NaN somewhere in a
+ * store a simulated year later. So the shape is checked here, where the file can still be
+ * named.
+ */
+function checkSeedClasses(params: Params): void {
+  const seeds = params.seeds
+  const classes = seeds.sizeClassNames.value.length
+  const problems: string[] = []
+
+  const perClass = [
+    seeds.sizeClassSieveNumbers,
+    seeds.sizeClassMinWidthMm,
+    seeds.sizeClassMassMg,
+    seeds.collectedFractionByClass,
+    seeds.openingChancePerDay,
+  ]
+  for (const list of perClass) {
+    if (list.value.length !== classes) {
+      problems.push(`${list.path} has ${list.value.length} entries for ${classes} size classes`)
+    }
+  }
+  if (seeds.germinationByClass.length !== classes) {
+    problems.push(
+      `there are ${seeds.germinationByClass.length} germination lists for ${classes} size classes`,
+    )
+  }
+
+  const temperatures = seeds.germinationTestTemperaturesC.value
+  for (let k = 1; k < temperatures.length; k += 1) {
+    if (temperatures[k]! <= temperatures[k - 1]!) {
+      problems.push(
+        `${seeds.germinationTestTemperaturesC.path} must rise from one entry to the next`,
+      )
+    }
+  }
+  for (const list of seeds.germinationByClass) {
+    if (list.value.length !== temperatures.length) {
+      problems.push(
+        `${list.path} has ${list.value.length} entries for ${temperatures.length} test temperatures`,
+      )
+    }
+  }
+
+  const shares = seeds.collectedFractionByClass.value.reduce((sum, share) => sum + share, 0)
+  if (Math.abs(shares - 1) > 0.01) {
+    problems.push(`${seeds.collectedFractionByClass.path} sums to ${shares.toFixed(3)}, not to 1`)
+  }
+
+  // A seed too wide to open cannot be given a rate of opening. Majors raise the rate at which
+  // small and medium seeds are opened; nothing widens the range.
+  for (let c = 0; c < classes; c += 1) {
+    const tooWide =
+      seeds.sizeClassMinWidthMm.value[c]! >= params.foraging.maxOpenableSeedWidthMm.value
+    if (tooWide && (seeds.openingChancePerDay.value[c] ?? 0) > 0) {
+      problems.push(
+        `${seeds.openingChancePerDay.path} gives ${seeds.sizeClassNames.value[c]} seeds an opening rate, but they are wider than foraging.maxOpenableSeedWidthMm. Workers cannot open them until they germinate (Tschinkel & Kwapich 2016).`,
+      )
+    }
+  }
+
+  if (problems.length > 0) {
+    throw new ParamError(
+      `The seed size classes in this parameter file are inconsistent.\n  - ${problems.join('\n  - ')}`,
+    )
+  }
 }
 
 /**

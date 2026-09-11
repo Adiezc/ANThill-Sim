@@ -458,3 +458,187 @@ that gives a colony of sixty workers a three-metre nest. See VALIDATION.md G1. W
 fixed, this permission should be narrowed back to the transfer task and the store should
 still fill.
 
+## D21. The papers, read to the end, and what they corrected
+
+**Date.** 2026-09-10.
+
+**The files are gone; the findings are not.** The five PDFs added in D10 had been committed
+once, on 2026-09-06, and deleted from the tree a day later, which left them in the history.
+Before the repository was first pushed, the history was rewritten so that no commit contains
+one: every tree is otherwise byte-identical and the commit messages and dates are unchanged,
+but the hashes of every commit from 5b6da8c onward changed. The local copies were then
+deleted as well. The project cites its sources the way a paper does — findings written up in
+its own words in `SCIENCE.md`, numbers in the parameter file, DOIs in
+`docs/papers/README.md` — and has no need to hold the papers themselves.
+
+Before the files went, the three that had not been read in full were read, and the
+germination paper, which had not been on hand at all, was fetched from the publisher (it is
+open access) and read cover to cover. Five corrections came out of it.
+
+- **One of the five files was not the paper it was filed as.**
+  `kwapich-tschinkel-seasonal-labour-allocation.pdf` was catalogued as Kwapich & Tschinkel
+  2016, *Limited flexibility and unusual longevity*. It was a sixteen-page ProQuest preview
+  of Kwapich's 2014 dissertation, from which that paper was later published. What it
+  supplied — foragers confined to the top 12 cm, a 57 percent gain in forager longevity when
+  range is restricted, neighbours causing about 30 percent of spring forager deaths — is now
+  cited to the dissertation. The 2016 paper itself has still not been read, and
+  `docs/papers/README.md` says so.
+- **Burial depth does not drive germination.** `seeds.germinationDrivenBy` listed it. The
+  burial experiment it came from found no significant effect of depth at 5, 15, 40 and 80
+  cm, and the paper's own summary names species, temperature and elapsed time. Depth now
+  acts only through the soil temperature at that depth.
+- **The widest seed collected is measured.** `foraging.maxCollectableSeedWidthMm` was
+  tagged **[C]** and described as tuned. The paper reports the largest stored seeds as almost
+  4 mm across, which is the value it already had. The tag is now **[A]**, with the citation;
+  the store's make-up comes from the measured mix of sizes foragers carry, not from this
+  limit.
+- **The foraging range is several times too large, and is left so for now.**
+  `foraging.foragingRangeMetres` is 20 m, **[B]**, from *P. barbatus*. Harrison & Gentry
+  measured *badius* ranges of 66 to 186 m² with trails averaging 3.4 m — a circle of 136 m²
+  has a radius under 7 m, and a 20 m radius encloses nearly ten times that. Their population
+  was unusually dense, one colony per 220 m² on an old field in South Carolina; at Kwapich's
+  Florida sandhills site it was one per 670 m², which caps a tiled range at a radius of
+  about 15 m. Either way 20 m is too large. It is not changed here because foraging is not
+  this step and every foraging test is tuned against the current range; it is the next
+  foraging correction, and `SCIENCE.md` §5 now says so where the value is described.
+- **Relocation distance depends on the population.** Tschinkel 2014 gives a mean of about
+  4 m in Florida; Harrison & Gentry measured 2.2 to 2.5 m in three separate years in their
+  denser population. Both are now in `SCIENCE.md` §7, and the parameter keeps the Florida
+  figure because the model is of the Florida site.
+
+## D22. A seed germinates a hundred times more slowly in a chamber than on damp plaster
+
+**Date.** 2026-09-10.
+
+**The conflict.** Tschinkel & Kwapich 2016 measured germination for each seed size at four
+temperatures, one month at a time, on damp plaster with no ants. Large seeds reached 62
+percent at 15 °C. Taken as they stand, those rates have a mature store — half a kilogram,
+most of it large seed — sprouting several grams of food a day, enough to raise a colony's
+brood with no foraging at all. But colonies kept from foraging were observed to lose their
+larvae within about a week with their stores untouched beneath them (Kwapich & Tschinkel
+2013 and Smith 2007, as reported in the same paper). Both findings are **[A]**, and a model
+using the laboratory rates directly reproduces the first and contradicts the second.
+
+**The evidence that settles it.** The same paper measured germination inside natural
+chambers. Nine seed chambers were split with a metal strip so that the ants could reach only
+one side, and opened again after two to three weeks, between December and April. The side
+the ants could not reach held a mean of 21 germinating seeds among about 4400: about half a
+percent.
+
+At the soil temperatures of those months, around 15 to 18 °C, and for a store made up the way
+the 2014–15 stores were — by number roughly a third very large, half large and the rest
+medium and small, converted from the weights in Figure 21 — the laboratory rates predict
+that about a third of the seeds would germinate in seventeen days. The chamber count is
+about a seventieth of that. `seeds.inNestGerminationFactor` is set to 0.015 so that the
+model reproduces the chamber count, and is tagged **[C]**: it is calibrated against a
+measurement, not measured.
+
+**Why the factor might be wrong.** The authors note that germinating seeds are uncommon in
+excavated stores and suggest that densely packed seeds may inhibit one another's
+germination; if that is the cause, the factor stands. If instead germinating seeds rot or are
+eaten by something else before a chamber is opened, the count understates germination and the
+factor is too small. The paper cannot distinguish the two. The authors also estimate, from
+the plaster rates, that large and medium seeds turn over at 50 to 80 percent a month in
+spring and autumn, and say plainly that this has not been tested in a nest. The model does not
+adopt that estimate, because the one measurement made in a nest contradicts it.
+
+**What follows.** With the factor, a store of three hundred thousand seeds yields tens of
+milligrams of germinating seed a day in a good month: enough for a few hundred larvae, not
+for a mature colony's brood. A colony that stops foraging starves most of its larvae within
+a week, as the real ones did, and large seeds accumulate over years, which is what makes a
+store as big as the ones excavated. `test/seeds.spec.ts` holds the model to the first of
+those.
+
+**The food account this completes.** The forager-to-larva ratio that had stood in for
+feeding since D8 is gone. Larvae now eat what the store yields each day — small and medium
+seeds the workers open at the measured rates, and germinating seeds of any size — and a day
+on which that falls short of their need kills a share of them. The need is built from what a
+worker is made of: a minor's dry mass of 3.1 mg **[A]**, over a larval period of 22 days
+**[B]**, at an efficiency of 0.4 **[C]**, about a third of a milligram of seed a larva a day.
+`brood.starvationSeverityPerDay` was 0.08 against the old proxy and is now 0.48, which kills
+99 percent of larvae given nothing within the week the literature reports.
+
+## D23. Session boundary, 2026-09-10
+
+`main` is on GitHub, with the paper PDFs removed from its history (D21), and the browser
+build is live on GitHub Pages. Step 7, seeds and germination, is built on
+`feat/seeds-germination` and **not yet committed**. Where it stands:
+
+- **Built and passing.** Seed size classes, the measured forager load, opening rates and the
+  majors effect, temperature-driven germination scaled to the chamber count (D22), the
+  larval food account, and fourteen tests in `test/seeds.spec.ts`. Typecheck, lint and
+  formatting are clean, and every fast spec passes.
+- **Not yet run on this code.** `test/demography.spec.ts` and `test/nest-signature.spec.ts`,
+  which take about twenty minutes together. The food account changes demography, so these
+  have to pass before this is committed.
+- **Recruitment gate now recorded as unmet.** On `main` a colony finds the same number of
+  seeds with trail following as without (682 against 681). The test had been passing by one
+  seed. See VALIDATION.md G4b.
+
+Open, in the order to pick them up:
+
+1. **Does the food account starve colony growth?** In a single-seed run of four years, a G5
+   colony had 34 workers in its fourth August and had starved 1160 larvae against 84
+   eclosed, with only 2 of its workers foraging. That looks like the low forager share of
+   D16 and D18 now costing real food rather than a proxy, but it has not been compared with
+   `main` on the same seeds. A replicate study was started to do that — seeds 2 to 7, four
+   years, on `main`, on this branch, and on this branch with the calibrated soil below. It
+   was stopped at the end of the session with ten of its eighteen runs finished: this branch
+   on seeds 2 to 5, the calibrated variant on seeds 2 to 5, and `main` on seeds 2 and 3 only.
+   Those are kept in `out/g5-study-2026-09-10/`, which is not committed, with the calibrated
+   parameter file beside them. `main` on seeds 4 to 7 is what the comparison still lacks.
+2. **The soil thermal model disagrees with the measured soil temperatures.** Against the
+   monthly means at 5, 15, 40 and 80 cm in Figure 13 of Tschinkel & Kwapich 2016, the model
+   is off by 2.6 °C RMS, four degrees too warm in February, and shows depth differences the
+   measurements do not. A thermal lag of 10 days per metre instead of 30, with a surface
+   offset of 0.5 °C instead of 2.5, brings that to 1.7 °C and moves the large-seed
+   germination peaks to December and March–April, nearer the measured April and December.
+   But it cools early spring enough that foraging would not start until April, unless the
+   **[B]** onset threshold of 15 °C falls to about 13 °C — which the measured soil
+   temperatures around 1 March support. `test/soil.spec.ts` asserts the old lag and would
+   need rewriting against the measurements. Not decided.
+3. `VALIDATION.md` G5 and the README status still describe the store as unbuilt.
+4. The foraging range is several times too large for this species (D21). The likely reason
+   recruitment does nothing, untested.
+
+## D24. The food account starves the colony, and the proxy had been hiding why
+
+**Date.** 2026-09-11.
+
+**What was run.** The replicate study D23 left unfinished, completed: four years a seed, on
+`main` at `cb71b26` with its own parameter file, and on this branch. Workers at the end of
+the fourth year:
+
+| Seed | `main` (forager-to-larva proxy) | This branch (food account) | This branch, soil lag 10 d/m |
+|---|---|---|---|
+| 2 | 1349 | 84 | 37 |
+| 3 | 1133 | 59 | 56 |
+| 4 | 1736 | 61 | 95 |
+| 5 | 508 | 49 | 51 |
+| 6 | 1117 | — | — |
+| 7 | 804, queen dead, peak 1676 | — | — |
+
+So on every seed the food account cuts a fourth-year colony by a factor of ten to twenty-eight,
+and the soil variant makes no consistent difference. The slow demography and nest-signature
+specs pass on this code, but they would not have caught it: the one test that follows a
+colony to maturity is skipped for its running time.
+
+**Why it is not a defect in the food account.** A minor worker costs about 7.75 mg of seed
+(3.1 mg dry mass at an efficiency of 0.4, D22). `main`'s colonies eclosed 925 to 3683
+workers by their fourth year, which is 7 to 29 g of seed, and the proxy fed every one of
+them from nothing. On this branch the larvae ate 1.9 to 5.7 g over the same four years —
+enough for 250 to 730 workers — and that is nearly all the openable seed the foragers
+delivered; germinating seed was 3 to 5 percent of it. The colony is not wasting its food.
+It is not being brought enough.
+
+**The likely cause, untested.** Two deficits already on record: too few workers forage
+(D16, D18), and they search a range several times too large for this species (D21). Under the
+proxy both were cosmetic. Now they cost the brood.
+
+**What was decided.** G5 is committed on `feat/seeds-germination` and not merged to `main`
+until foraging can feed a growing colony, because `main` is what the public build deploys. The
+fix is not to keep the proxy beside the food account, or to let a starving colony draw on its
+store faster: colonies whose foragers were removed lost their larvae with full stores
+beneath them **[A]**, and a model that rescued them would contradict the measurement G5 was
+built to reproduce. The forager share and the foraging range are the next step.
+

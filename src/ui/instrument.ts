@@ -73,7 +73,7 @@ export function createInstrumentSheet(repoUrl: string): () => void {
     el(
       'p',
       undefined,
-      'Read the validation gates before using output for anything. Seed stores, germination and annual relocation are not built yet, and the food account that ought to connect foraging to larval survival is still a proxy. These are stated in the report the run writes, not buried.',
+      'Read the validation gates before using output for anything. Annual relocation is not built yet. Seeds now germinate and feed the larvae, but how fast a seed germinates in a packed chamber is calibrated against one field count rather than measured, and how much seed makes an ant is invented. Colonies now grow far too slowly, because too few workers forage to feed the brood. These are stated in the report the run writes, not buried.',
     ),
     el('h3', undefined, 'Sources'),
     el('p', undefined, SOURCES_NOTICE),

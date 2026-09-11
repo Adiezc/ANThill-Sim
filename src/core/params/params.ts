@@ -280,8 +280,9 @@ export interface Params {
     readonly queenEggsPerDayFounding: Param<number>
     readonly queenEggsPerWorkerPerDay: Param<number>
     readonly nanaticsForageImmediately: Param<boolean>
-    readonly starvationForagerRatioTolerance: Param<number>
     readonly starvationSeverityPerDay: Param<number>
+    /** [C]. Sets how much seed a larva needs each day; see systems/seeds.ts. */
+    readonly larvalSeedConversionEfficiency: Param<number>
     readonly alateShareBalanced: Param<number>
     readonly alateShareWorkerBias: Param<number>
     readonly alateShareAlateBias: Param<number>
@@ -328,6 +329,27 @@ export interface Params {
     readonly germinationDrivenBy: Param<readonly string[]>
     readonly germinatedSeedsFedToLarvaePreferentially: Param<boolean>
     readonly largeSeedNutritionalValueInSmallSeeds: Param<number>
+    /**
+     * The four size classes of Tschinkel & Kwapich 2016. Every per-class list below is in
+     * this order, and the loader refuses a file whose lists disagree in length.
+     */
+    readonly sizeClassNames: Param<readonly string[]>
+    readonly sizeClassSieveNumbers: Param<readonly number[]>
+    readonly sizeClassMinWidthMm: Param<readonly number[]>
+    readonly sizeClassMassMg: Param<readonly number[]>
+    readonly collectedFractionByClass: Param<readonly number[]>
+    readonly openingChancePerDay: Param<readonly number[]>
+    readonly openingRateFractionWithoutMajors: Param<number>
+    readonly openingMajorReferenceFraction: Param<number>
+    readonly seedsOpenedOnlyInActiveSeason: Param<boolean>
+    readonly germinationTestTemperaturesC: Param<readonly number[]>
+    /** One list per size class: the fraction germinating in a one-month test at each temperature. */
+    readonly germinationByClass: readonly Param<readonly number[]>[]
+    readonly germinationTestDurationDays: Param<number>
+    /** [C], calibrated. Laboratory germination is far faster than germination in a packed chamber. */
+    readonly inNestGerminationFactor: Param<number>
+    readonly germinatingRemovalChancePerDay: Param<number>
+    readonly germinationOutsideActiveSeasonIsLost: Param<boolean>
   }
 
   readonly relocation: {
@@ -682,7 +704,7 @@ export function buildParams(root: Raw): Params {
       queenEggsPerDayFounding: readScalar(root, 'brood.queenEggsPerDayFounding'),
       queenEggsPerWorkerPerDay: readScalar(root, 'brood.queenEggsPerWorkerPerDay'),
       nanaticsForageImmediately: readFlag(root, 'brood.nanaticsForageImmediately'),
-      starvationForagerRatioTolerance: readScalar(root, 'brood.starvationForagerRatioTolerance'),
+      larvalSeedConversionEfficiency: readScalar(root, 'brood.larvalSeedConversionEfficiency'),
       starvationSeverityPerDay: readScalar(root, 'brood.starvationSeverityPerDay'),
       alateShareBalanced: readScalar(root, 'brood.alateShareBalanced'),
       alateShareWorkerBias: readScalar(root, 'brood.alateShareWorkerBias'),
@@ -728,6 +750,31 @@ export function buildParams(root: Raw): Params {
       largeSeedNutritionalValueInSmallSeeds: readScalar(
         root,
         'seeds.largeSeedNutritionalValueInSmallSeeds',
+      ),
+      sizeClassNames: readStringList(root, 'seeds.sizeClassNames'),
+      sizeClassSieveNumbers: readNumberList(root, 'seeds.sizeClassSieveNumbers'),
+      sizeClassMinWidthMm: readNumberList(root, 'seeds.sizeClassMinWidthMm'),
+      sizeClassMassMg: readNumberList(root, 'seeds.sizeClassMassMg'),
+      collectedFractionByClass: readNumberList(root, 'seeds.collectedFractionByClass'),
+      openingChancePerDay: readNumberList(root, 'seeds.openingChancePerDay'),
+      openingRateFractionWithoutMajors: readScalar(root, 'seeds.openingRateFractionWithoutMajors'),
+      openingMajorReferenceFraction: readScalar(root, 'seeds.openingMajorReferenceFraction'),
+      seedsOpenedOnlyInActiveSeason: readFlag(root, 'seeds.seedsOpenedOnlyInActiveSeason'),
+      germinationTestTemperaturesC: readNumberList(root, 'seeds.germinationTestTemperaturesC'),
+      // In the order of sizeClassNames. The file names each list rather than nesting a table,
+      // so that every list carries its own note saying which figure it was read from.
+      germinationByClass: [
+        readNumberList(root, 'seeds.germinationSmallByTemperature'),
+        readNumberList(root, 'seeds.germinationMediumByTemperature'),
+        readNumberList(root, 'seeds.germinationLargeByTemperature'),
+        readNumberList(root, 'seeds.germinationVeryLargeByTemperature'),
+      ],
+      germinationTestDurationDays: readScalar(root, 'seeds.germinationTestDurationDays'),
+      inNestGerminationFactor: readScalar(root, 'seeds.inNestGerminationFactor'),
+      germinatingRemovalChancePerDay: readScalar(root, 'seeds.germinatingRemovalChancePerDay'),
+      germinationOutsideActiveSeasonIsLost: readFlag(
+        root,
+        'seeds.germinationOutsideActiveSeasonIsLost',
       ),
     },
 

@@ -261,6 +261,18 @@ function search(sim: Simulation, state: ForagingState, slot: number): void {
   ants.burden[slot] = Burden.Seed
   state.totalSeedsCollected += 1
 
+  // Which size of seed it is. Drawn from the mix foragers were measured bringing home, and
+  // from nothing about the forager: worker size predicts nothing about seed size (HARD
+  // RULE), so neither caste nor body length is read here.
+  const shares = params.seeds.collectedFractionByClass.value
+  let pick = prng.nextFloat()
+  let sizeClass = 0
+  while (sizeClass < shares.length - 1 && pick >= shares[sizeClass]!) {
+    pick -= shares[sizeClass]!
+    sizeClass += 1
+  }
+  ants.seedClass[slot] = sizeClass
+
   // Site fidelity: remember where this came from, and come back to within half a metre of
   // it next time. Stored as the position rather than as a heading, so a remembered site
   // stays put when the ant does not.

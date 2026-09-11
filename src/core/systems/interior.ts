@@ -302,6 +302,35 @@ function placeInCell(
   return false
 }
 
+/**
+ * Puts one seed of a size class down here if the cell has room, spilling into a neighbour if
+ * not. The same rule as `placeInCell`, written through the nest so that the per-class layers
+ * and the all-class total move together.
+ */
+function placeSeed(
+  nest: NestGrid,
+  col: number,
+  row: number,
+  sizeClass: number,
+  capacity: number,
+): boolean {
+  if (nest.seeds.get(col, row) + 1 <= capacity) {
+    nest.addSeed(sizeClass, col, row, 1)
+    return true
+  }
+  for (let dRow = -1; dRow <= 1; dRow += 1) {
+    for (let dCol = -1; dCol <= 1; dCol += 1) {
+      const c = col + dCol
+      const r = row + dRow
+      if (!nest.isVoid(c, r)) continue
+      if (nest.seeds.get(c, r) + 1 > capacity) continue
+      nest.addSeed(sizeClass, c, r, 1)
+      return true
+    }
+  }
+  return false
+}
+
 /** A returning forager, carrying a seed, looking for the topmost chamber to drop it in. */
 function depositSeed(
   sim: Simulation,
@@ -329,7 +358,7 @@ function depositSeed(
     return
   }
 
-  if (placeInCell(nest, nest.seeds, col, row, 1, params.seeds.maxSeedsPerCell.value)) {
+  if (placeSeed(nest, col, row, ants.seedClass[slot]!, params.seeds.maxSeedsPerCell.value)) {
     ants.burden[slot] = Burden.Nothing
     state.seedsInStore += 1
     state.seedsCarried = Math.max(0, state.seedsCarried - 1)
@@ -361,7 +390,7 @@ function carrySeedDown(
     return
   }
 
-  if (placeInCell(nest, nest.seeds, col, row, 1, params.seeds.maxSeedsPerCell.value)) {
+  if (placeSeed(nest, col, row, ants.seedClass[slot]!, params.seeds.maxSeedsPerCell.value)) {
     ants.burden[slot] = Burden.Nothing
     state.seedsInStore += 1
     state.seedsCarried = Math.max(0, state.seedsCarried - 1)
@@ -467,7 +496,7 @@ export function makeInteriorSystem(state: InteriorState) {
       if (task !== Task.Forager && depthCm < seedBand.top) {
         const from = withinReach(state, nest.seeds, col, row)
         if (from !== null && prng.chance(params.seeds.downwardTransportChancePerTick.value)) {
-          nest.seeds.add(from.col, from.row, -1)
+          ants.seedClass[i] = nest.takeSeed(from.col, from.row, prng.nextFloat())
           ants.burden[i] = Burden.Seed
           state.seedsInStore = Math.max(0, state.seedsInStore - 1)
           state.seedsCarried += 1

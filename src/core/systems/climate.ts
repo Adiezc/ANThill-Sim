@@ -17,7 +17,7 @@
 
 import { ln } from '../math/approx.js'
 import { cosTurns } from '../math/trig.js'
-import { DAYS_IN_MONTH, DAYS_IN_YEAR, MONTH_START } from '../sim/calendar.js'
+import { DAYS_IN_MONTH, DAYS_IN_YEAR, HOURS_IN_DAY, MONTH_START } from '../sim/calendar.js'
 import type { Params } from '../params/params.js'
 import type { Prng } from '../math/prng.js'
 
@@ -176,7 +176,7 @@ export class ClimateModel {
    */
   at(dayFraction: number): Weather {
     const peakHour = this.params.climate.dailyTemperaturePeakHour.value
-    const phase = dayFraction - peakHour / 24
+    const phase = dayFraction - peakHour / HOURS_IN_DAY
     const swing = ((this.today.dailyHighC - this.today.dailyLowC) / 2) * cosTurns(phase)
     return { ...this.today, airTemperatureC: this.today.dailyMeanC + swing }
   }

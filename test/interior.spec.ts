@@ -112,24 +112,33 @@ describe('a seed a forager brings home', () => {
   })
 
   it('is carried down into the seed chambers by transfer workers', () => {
-    const colony = colonyWithNest(13)
-    // Seeds sitting in the top chambers, as foragers would have left them.
-    const shallowRow = colony.nest.rowOfDepth(2)
-    colony.nest.seeds.set(colony.nest.entranceCol, shallowRow, 60)
-    for (let n = 0; n < 30; n += 1) addWorker(colony, Task.Transfer, 2 + (n % 10))
-
-    colony.run(colony.sim.clock.ticksPerDay * 3)
-
-    const band = seedBandCm(colony.sim, colony.nest)
+    // Summed over several colonies. In any one colony, three days of thirty ants is a small
+    // enough sample that the wave may or may not have passed: measured on six seeds before
+    // seeds had sizes, the share that reached the band ran from 18 to 100 percent, and one
+    // colony in three had more above it than in it. What is claimed is that the wave moves
+    // down, not that it arrives on schedule in every nest.
     let inBand = 0
     let aboveBand = 0
-    for (let row = 0; row < colony.nest.rows; row += 1) {
-      const depth = colony.nest.depthOf(row)
-      for (let col = 0; col < colony.nest.cols; col += 1) {
-        const seeds = colony.nest.seeds.get(col, row)
-        if (seeds <= 0) continue
-        if (depth >= band.top) inBand += seeds
-        else aboveBand += seeds
+    for (const seed of [13, 14, 15, 16, 17, 18]) {
+      const colony = colonyWithNest(seed)
+      // Seeds sitting in the top chambers, as foragers would have left them. Large seeds,
+      // which nobody can open, so what is measured is where they were carried rather than
+      // how many were eaten on the way.
+      const shallowRow = colony.nest.rowOfDepth(2)
+      colony.nest.addSeed(2, colony.nest.entranceCol, shallowRow, 60)
+      for (let n = 0; n < 30; n += 1) addWorker(colony, Task.Transfer, 2 + (n % 10))
+
+      colony.run(colony.sim.clock.ticksPerDay * 3)
+
+      const band = seedBandCm(colony.sim, colony.nest)
+      for (let row = 0; row < colony.nest.rows; row += 1) {
+        const depth = colony.nest.depthOf(row)
+        for (let col = 0; col < colony.nest.cols; col += 1) {
+          const seeds = colony.nest.seeds.get(col, row)
+          if (seeds <= 0) continue
+          if (depth >= band.top) inBand += seeds
+          else aboveBand += seeds
+        }
       }
     }
     expect(inBand).toBeGreaterThan(aboveBand)

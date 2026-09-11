@@ -14,6 +14,12 @@ export const DAYS_IN_MONTH: readonly number[] = [31, 28, 31, 30, 31, 30, 31, 31,
 
 export const DAYS_IN_YEAR = 365
 
+/**
+ * Hours in a day. A clock fact like the month lengths, and here for the same reason: 24 is
+ * also one of the temperatures seeds were germinated at.
+ */
+export const HOURS_IN_DAY = 24
+
 /** First day-of-year, zero-based, for each month. Derived, not authored. */
 export const MONTH_START: readonly number[] = (() => {
   const starts: number[] = []

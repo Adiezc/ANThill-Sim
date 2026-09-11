@@ -7,6 +7,11 @@ harvester ant *Pogonomyrmex badius*, as observed in the longleaf pine sandhills 
 Apalachicola National Forest near Tallahassee, north Florida, which is where almost all
 of the field work cited below was done.
 
+The papers themselves are not in this repository. Findings are summarised here in this
+project's own words and cited to their authors, the way one paper cites another; the DOIs
+are in [`docs/papers/README.md`](papers/README.md), together with a record of how deeply each
+primary source has actually been read.
+
 ## Tag key
 
 | Tag | Meaning |
@@ -42,10 +47,10 @@ labelled as such wherever the simulator surfaces it.
 ## 2. Nest architecture
 
 **Rewritten from the primary source.** Everything in this section and the next now comes
-from `docs/papers/tschinkel-2004-nest-architecture.pdf`, read in full, rather than from
-secondary accounts. Rows marked **(corrected)** disagree with what this file previously
-said. The study is 33 complete excavations and plaster, zinc and aluminium casts, from 2 to
-3.02 m deep, of 5 to 150 chambers.
+from Tschinkel 2004, read in full, rather than from secondary accounts. Rows marked
+**(corrected)** disagree with what this file previously said. The study is 33 complete
+excavations and plaster, zinc and aluminium casts, from 2 to 3.02 m deep, of 5 to 150
+chambers.
 
 Colony size classes used throughout are Tschinkel's: class 0, under 100 workers; class 1,
 101–800; class 2, 801–2000; class 3, 2001–4000; class 4, over 4000.
@@ -108,14 +113,17 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | Mechanic | Rule as implemented | Tag | Source |
 |---|---|---|---|
 | Vertical stratification | Foragers occupy the top 15 cm; only 5 percent are found below 20 cm. Transfer workers range widely, about 30 percent found below 20 cm. Below 70 cm, 90 percent of workers are brood-care workers | **[A]** | Tschinkel & Kwapich 2017 |
+| Where foragers live | Marked foragers were found only in the top 12 cm of nests that may be more than 200 cm deep | **[A]** | Kwapich 2014; Kwapich & Tschinkel 2013 |
 | Caste proportions | In summer, foragers are about 40 percent of the nest population and transfer workers about 25 percent | **[A]** | Tschinkel & Kwapich 2017 |
 | Age progression | Workers eclose deep, work as nurses, become transfer workers, migrate upward, then forage until they die. The progression is one-way | **[A]** | Tschinkel & Kwapich 2017; Tschinkel 2004 |
 | Trigger for foraging | A worker becomes a forager when its fat content falls below about 10 percent | **[A]** | Tschinkel 1998 |
-| Development rate | Summer-born workers begin foraging at about 43 days old. Autumn-born workers need 200 days or more | **[A]** | Kwapich & Tschinkel 2013 |
+| Development rate | Summer-born workers begin foraging at about 43 days old. Autumn-born workers need 200 days or more. Slow-developing workers, produced from late August to mid-October, dominate the forager population from the following March to mid-July; fast developers appear in early June and forage the month after | **[A]** | Kwapich & Tschinkel 2013; Kwapich 2014 |
 | **No task reversion** | Foragers do **not** revert to inside work. Raising forager number, body fat or the larva-to-forager ratio induces no reversion, and increased mortality or starvation does not recruit replacements | **[A]** | Kwapich & Tschinkel 2016 |
 | Forager lifespan | Foragers die within 27 days of their first foraging trip. Baseline loss 3 to 4 percent per day. Forager population declines once loss exceeds 4 percent per day | **[A]** | Kwapich & Tschinkel 2013, 2016 |
-| Longevity feedback | Increased forager survival *inhibits* the movement of new workers into foraging | **[A]** | Kwapich & Tschinkel 2016 |
-| Response to forager loss | Removing 50 percent of foragers does **not** draw workers from other castes. Larval survival suffers instead | **[A]** | Kwapich & Tschinkel 2013 |
+| The short life is risk, not age | The same foragers that lived an average maximum of 27 days in the field survived for hundreds of days in the laboratory, and restricting the foraging range of wild foragers raised their longevity by 57 percent. Death in the forager caste is a cost of foraging, not senescence. The model applies it as a daily hazard for that reason | **[A]** | Kwapich 2014 |
+| Neighbours kill foragers | Interactions with neighbouring colonies account for about 30 percent of forager mortality in spring. **Not modelled**: there are no neighbouring colonies, so the whole forager hazard is applied without a neighbour term | **[A]**, not implemented | Kwapich 2014 |
+| Longevity feedback | Increased forager survival *inhibits* the movement of new workers into foraging | **[A]** | Kwapich & Tschinkel 2016; Kwapich 2014 |
+| Response to forager loss | Removing 50 percent of foragers does **not** draw workers from other castes, and neither does doubling the larval population: neither raised the daily rate at which new foragers appeared within seven days. Larval survival suffers instead | **[A]** | Kwapich & Tschinkel 2013; Kwapich 2014 |
 | Worker castes | Minor and major workers. Majors average about 7 percent of the colony regardless of colony size, rising slightly in midsummer. Minors grow larger as the colony grows; majors do not | **[A]** | Tschinkel 1998 |
 | Vertical age sorting is active | Older workers actively move upward and choose their position. It is not passive | **[A]** | Tschinkel 2004 |
 | How an ant reaches its depth | It walks toward a depth drawn from the distribution measured for its task, redrawn every few days. **No ant knows its depth**; this is the same invented cue as `excavation.depthCue` and carries the same caveat | **[C]** | None. See §11 and DECISIONS.md D20 |
@@ -124,21 +132,30 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 
 ## 5. Foraging
 
+Harrison & Gentry 1981 is the one full study of trails and ranges in this species, and it
+was done in a dense population on an old field near Aiken, South Carolina — 254 colonies on
+5.6 ha, each of 1500 to 10 000 workers — not in the Florida sandhills. Density there was about
+one colony per 220 m²; in Kwapich's Apalachicola sandhills site it was one per 670 m². Range
+sizes in particular should be read with that difference in mind.
+
 | Mechanic | Rule as implemented | Tag | Source |
 |---|---|---|---|
-| Trunk trails | The colony forages from a small number of short trunk trails radiating into a surrounding foraging range | **[A]** | Harrison & Gentry 1981 |
-| Trail direction | Trail direction is shaped by the position of neighbouring colonies | **[A]** | Harrison & Gentry 1981 |
-| Range defence | Foraging ranges are **not** actively defended, but are used almost exclusively by one colony. A range expands into ground abandoned by a neighbour | **[A]** | Harrison & Gentry 1981 |
+| Trunk trails | Each colony establishes three or four trails in late spring, and they persist through the summer into autumn. Most foragers walk to the end of a trail before they begin searching, so trails direct foragers into three or four general areas rather than confining them to a strip. Foraging off any trail is rare, and happens mostly early in the morning and late in the evening | **[A]** | Harrison & Gentry 1981 |
+| Trail length | Mean trail length at the peak of daily activity was 3.4 m (SD 0.5); a few trails reached 7 m and some were only 1 m. An isolated colony has been seen to run one or two long trails, up to 30 m, to a large seed patch | **[A]** | Harrison & Gentry 1981 (the 30 m trails are Gentry's personal observation, reported there) |
+| Trail fidelity | Trails are kept over winter. Of 41 trails marked in autumn 1974, 75 percent were in use the following spring; 70 percent of the 1975 trails were in use in 1976. In this model trail directions are fixed for the life of the colony, which is more faithful than the ants | **[A]** | Harrison & Gentry 1981 |
+| Trail direction | Trail direction is shaped by the position of neighbouring colonies, and the main trails of adjacent colonies rarely cross into each other's ranges | **[A]** | Harrison & Gentry 1981 |
+| Foraging range | Ranges of ten adjacent colonies were 66 to 186 m², mean 136 m², tightly packed with little overlap. Smaller colonies have smaller ranges. **The model uses a 20 m range from *P. barbatus*, which is an area several times larger than any measured *badius* range**; see DECISIONS.md D21 | **[A]** for the measurement; the model's value is still **[B]** | Harrison & Gentry 1981 |
+| Range defence | Foraging ranges are **not** actively defended, but are used almost exclusively by one colony. Foragers of neighbouring colonies meeting at a range edge become agitated and run off or avoid each other; no fighting was ever seen there. The nest mound and its trails *are* defended: a worker from another colony put on them is attacked at once | **[A]** | Harrison & Gentry 1981 |
+| Range dynamics | A range expands into ground abandoned by a neighbour that died or was removed, and shifts with the colony when it relocates, by about the distance and in the direction of the move | **[A]** | Harrison & Gentry 1981 |
 | Recruitment | *P. badius* lays recruitment trails and is capable of mass recruitment | **[A]** | Hölldobler & Wilson 1970 |
 | Site fidelity | A forager returns to within about 0.5 m of its previous site on successive trips. Trip duration depends on search time, not on distance | **[B]** | Beverly et al. 2009 (*P. barbatus*) |
-| Trail length | Trails extend up to about 20 m | **[B]** | Beverly et al. 2009 (*P. barbatus*) |
 | **Worker size and load** | Worker size does **not** predict seed size collected or foraging distance. Do not implement the intuitive "majors fetch big seeds from far away" rule | **[A]** | Ferster & Traniello 1995 |
 | Diet | Seeds and insects, with a preference for protein items | **[A]** | Wikipedia species account |
 | Water budget | Foragers carry a water budget; foraging is throttled under heat to limit water loss | **[B]** | Harvester ant water-loss plasticity literature (desert *Pogonomyrmex*) |
 | Walking speed, search pattern, trip budget | About 5 cm/s, a random-turn search, and a 90-minute budget before an ant gives up and comes home | **[C]** | None. No value is published for this species. Tuned so that trip duration is dominated by search rather than by walking, which is the [B] finding |
 | Seeds on the ground | A patchy standing crop, replenished daily towards its ceiling | **[C]** | None. No seed rain is published for these sandhills. Patchiness is what gives searching a cost, and therefore what makes site fidelity and recruitment worth anything |
 | Diurnal window | Foraging between about 06:00 and 20:00 | **[C]** | None. That these are diurnal ants is not in doubt; the hours are invented |
-| What a delivered seed does | Nothing yet. Seeds accumulate in a store that no other system draws on | **[C]** | Larval survival is still the forager-to-larva proxy described in section 4. The food account arrives with the seed store in section 6 |
+| What a delivered seed does | It is carried in and stored, and it is eaten either when a worker opens it or, if it is too large to open, once it germinates. What is eaten feeds the larvae, and larvae that are not fed starve. See section 6 | **[A]** | Tschinkel & Kwapich 2016 |
 
 ## 6. Seed stores and germination
 
@@ -147,31 +164,78 @@ process, not a container.
 
 | Mechanic | Rule as implemented | Tag | Source |
 |---|---|---|---|
-| Seed chamber depth | Seed chambers sit 20 to 80 cm below the surface, in damp soil | **[A]** | Tschinkel & Kwapich 2017; Tschinkel & Kwapich 2016 |
+| Seed chamber depth | Seed chambers sit 20 to 80 cm below the surface, in damp soil. The germination paper gives the band two ways itself — "usually between 40 and 100 cm" citing Tschinkel 1999, and mostly 30 to 80 cm citing Tschinkel 2004 — so the model keeps the 20 to 80 cm of the chamber-by-chamber census | **[A]** | Tschinkel & Kwapich 2017; Tschinkel & Kwapich 2016 |
 | Task partitioning | Foragers deposit seeds only in the topmost chambers. A separate class of workers moves them downward, visible as a travelling "wave" | **[A]** | Tschinkel & Seal 2015 |
 | Task partitioning, as implemented | **Implemented.** A returning forager carries its seed in and puts it down in the first chamber it meets, and never takes one deeper. Any worker that is *not* a forager will pick up a seed lying above the store and carry it down toward 20 to 80 cm. The prohibition is the documented half; leaving the permission open to any non-forager is a workaround, and DECISIONS.md D20 says what for | **[A]** prohibition, **[C]** permission | Tschinkel & Seal 2015 |
 | The store, as implemented | **Implemented.** Seeds are counts per cell in the nest grid — a place in the nest a reader can point at, not a global total | **[A]** | Tschinkel & Kwapich 2017 |
-| Seed size classes, germination, and eating | **Still not implemented.** A seed is a seed, nothing germinates, and nothing eats one. Larval survival remains the forager-to-larva proxy of §4 | — | — |
-| Size limit on opening | Workers collect a wide range of seed sizes but can only open small ones. Large seeds accumulate to 70 percent or more of stores by weight | **[A]** | Tschinkel & Kwapich 2016 |
-| Size limit on collection | The widest seed a worker will carry home is a separate and larger limit than the widest it can open. Tuned so that large seeds reach the observed 70 percent of stores by weight | **[C]** (D2) | None |
-| Majors and seed opening | Majors increase the *rate* at which small and medium seeds are opened, but do **not** widen the size range that can be opened | **[A]** | Tschinkel & Kwapich 2016 |
-| Germination in storage | Stored seeds germinate. Germination rate depends on seed species, soil temperature and burial depth, so it follows the seasonal soil temperature cycle | **[A]** | Tschinkel & Kwapich 2016 |
-| Exploiting germination | Ants remove germinating seeds promptly and preferentially feed them to larvae, which unlocks large seeds they could not otherwise open | **[A]** | Tschinkel & Kwapich 2016 |
-| Consequence | Large seeds are a delayed store that cannot be drawn on quickly in a crisis | **[A]** | Tschinkel & Kwapich 2016 |
+| Seed size classes | **Implemented.** Four classes — small, medium, large and very large, by the sieve that retains them (20, 18, 14 and 12) — each with its measured mass: 0.65, 1.49, 2.61 and 10.9 mg. The store is a count per cell per class, and a carried seed remembers its class | **[A]** | Tschinkel & Kwapich 2016, Table 1 |
+| What foragers bring home | **Implemented.** Each seed's class is drawn from the measured loads of returning foragers, about 61 percent small, 33 percent medium, 1 percent large and 5 percent very large by number, and from nothing about the forager | **[A]**, read from a figure | Tschinkel & Kwapich 2016, Figure 4; Ferster & Traniello 1995 for the prohibition |
+| Size limit on opening | **Implemented.** Only classes narrower than 1.4 mm can be opened, which is small and medium. Large and very large seeds are never opened, and the loader refuses a parameter file that says otherwise | **[A]** | Tschinkel & Kwapich 2016 |
+| Size limit on collection | The widest seed carried home is about 4 mm, a separate and larger limit than the widest opened | **[A]** (D2; tag corrected in D21) | Tschinkel & Kwapich 2016 |
+| Opening rate | **Implemented.** Each day a stored small seed is opened with a chance of 0.235 and a medium one 0.142, the daily equivalents of 80 and 60 percent within six days. The rates are applied whatever the size of the store. No seed is opened outside the active season | **[A]** for the rates; **[C]** for holding them constant and for the winter pause | Tschinkel & Kwapich 2016, Figure 6 |
+| Majors and seed opening | **Implemented.** Majors increase the *rate* at which small and medium seeds are opened, but do **not** widen the size range that can be opened. With no majors the rate is 0.34 of the full rate; with one worker in twenty or more it is the full rate; the straight line between is invented | **[A]**; **[C]** for the interpolation | Tschinkel & Kwapich 2016, Figure 8 |
+| Germination in storage | **Implemented.** Each day a stored seed germinates with a chance taken from the laboratory fraction of its class germinating in a month at the soil temperature of its depth, interpolated between 10, 15, 24 and 32 °C and held beyond them. Depth has no effect of its own (corrected in D21). Class stands in for species | **[A]** | Tschinkel & Kwapich 2016, Figure 12B |
+| Germination in a chamber | **Implemented.** The laboratory chance is multiplied by 0.015, so that a chamber the ants cannot reach shows the half percent of seeds germinating after two to three weeks that was counted in the field. The most consequential number in the store | **[C]** (D22), calibrated against **[A]** | Tschinkel & Kwapich 2016, Figure 15 |
+| Exploiting germination | **Implemented.** Each day 40 percent of the germinating seeds in the store are found, opened and fed out, and germinating seed is offered to the larvae before anything else | **[A]** | Tschinkel & Kwapich 2016, Figures 9 and 11 |
+| Winter | **Implemented.** Outside the active season whatever germinates, and whatever is still germinating when the season ends, is lost rather than eaten | **[C]** for an **[A]** observation | Wheeler 1910 and Tschinkel 1999, as reported by Tschinkel & Kwapich 2016 |
+| What a larva needs | **Implemented.** About 0.35 mg of seed a day: a minor worker's 3.1 mg dry mass, over 22 days as a larva, at an efficiency of 0.4. Every larva is fed as a worker larva, though an alate larva needs more | **[A]** for the mass; **[B]** for the duration; **[C]** for the efficiency | Tschinkel 1998; Kwapich & Tschinkel 2013 |
+| Starvation | **Implemented.** Each day the larvae get what the store yields that day. A shortfall kills a share of them in proportion to it: 48 percent a day when they get nothing, which leaves 1 percent alive after a week. Nothing else answers a shortfall. This replaces the forager-to-larva proxy of §4 | **[A]** that larvae starve in about a week; **[C]** for the shape of the loss | Kwapich & Tschinkel 2013; Smith 2007; both as reported by Tschinkel & Kwapich 2016 |
+| Adults eating seed | **Not modelled.** Workers do eat seed. Here only larvae are fed from the store, and worker fat follows its own published schedule | **[A]**, not implemented | Tschinkel & Kwapich 2016 |
+| Seed ageing, moisture, the daily swing | **Not modelled.** Germination depends on size class and mean soil temperature only. The laboratory tests found a smaller effect of elapsed time, and moisture was not tested | — | Tschinkel & Kwapich 2016 |
+| Consequence | Large seeds are a delayed store that cannot be drawn on quickly in a crisis. A colony in this model that stops foraging starves most of its larvae within a week above a full store | **[A]** | Tschinkel & Kwapich 2016 |
+
+### What Tschinkel & Kwapich 2016 found
+
+Read in full, figures included. Sizes are U.S. Standard Testing Sieve numbers, which run
+backwards: a *higher* number is a *smaller* seed. Sieve 20 retains seeds 0.85 to 1.0 mm
+across, 18 retains 1.0 to 1.18 mm, 14 retains 1.4 to 1.7 mm and 12 retains 1.7 to 2.0 mm.
+The paper's four experimental classes are small (20), medium (18), large (14) and very large
+(12 and bigger). Values marked *read from figure* were read off a plot and are good to a few
+percent.
+
+| Finding | What was measured | Tag |
+|---|---|---|
+| Used seeds are small, stored seeds are large | Husks in the middens, the record of what was eaten, were almost all sieve 18 (about 1 mm) and smaller. Seeds taken from storage chambers were almost all larger than sieve 18. Seeds robbed from workers carrying the whole store during relocations showed the same split against the chaff at both old and new nests | **[A]** |
+| Foragers bring in every size | Seeds taken from laden foragers of six colonies were by number roughly three fifths sieve 35 to 20, a third sieve 18 to 16, about 1 percent sieve 14 and about 5 percent sieve 12 and 11 (*read from figure*). So a colony collects more large seeds than it eats, and eats more small ones than it collects | **[A]** |
+| Seed mass by size | Mean dry mass per seed, 1989 samples: sieve 8+ 14.45 mg, 10 7.30, 12 5.28, 14 2.31, 16 1.47, 18 0.83, 20 0.63, 25 0.51, 30 0.37, 35 0.34. 2014 experimental classes: very large 10.9 mg, large 2.61, medium (sieves 18 and 16) 1.49, small 0.65. The largest stored seeds are almost 4 mm across and 80 to 90 times the mass of the smallest | **[A]** |
+| Which sizes can be opened, in the laboratory | Five colonies were offered 30 marked seeds of each of the four classes. Within about six days 80 percent of small and 60 percent of medium husks were in the trash pile; almost no large or very large seed had been opened after twelve. By the end, 82 percent of small and 58 percent of medium seeds had been eaten, and about 70 percent of the large seeds lay unopened in the nest | **[A]** |
+| Which sizes can be opened, in the field | Nine field colonies offered 30 of each class discarded, per colony over two weeks, husks equivalent to 17.3 small, 10.0 medium, 0.6 large and no very large seeds. All sizes were carried in. Even among openable sizes, the rate of opening falls as size rises | **[A]** |
+| What majors do | Colony fragments with and without their majors (mean 28 majors to 450 minors, a ratio of about 1 to 20) were offered the four classes for a week. With majors, 33 small and 18 medium husks were discarded; without them, 12 and 5.5. Large and very large husks were under one either way. Majors raise the rate; they do not extend the range | **[A]** |
+| The limit and the payoff | The largest seed the ants readily open is about 1 mm wide (sieve 18), about 0.8 mg. A 2 mm seed (sieve 10), about 7.3 mg, cannot be opened and holds about nine times as much food; against a sieve 25 seed the ratio is about fifteen | **[A]** |
+| What the store is made of | In 31 colonies excavated in 1989, about 70 percent of stored seed biomass, and about half of stored seeds by number, was in sizes the ants cannot readily open. In the 2014–15 samples very large seeds were about 70 percent of store weight and large seeds another quarter. Size composition differed greatly among colonies and very little among chambers of one colony | **[A]** |
+| Germinating seeds are eaten | Nine field colonies were offered 50 germinating and 50 non-germinating sieve 14 seeds, marked. Husks equivalent to 74 percent of the germinating seeds turned up in the middens against 2 percent of the non-germinating ones, and about 40 percent of the germinating husks appeared within a day | **[A]** |
+| …and fed to larvae first | In the laboratory, within two days of being offered dyed germinating seeds, 45 percent of larvae had eaten dye; non-germinating seeds mostly stayed unopened in the nest. In eight field colonies that had their own stores available, 24 percent of larvae and 12 percent of pharate pupae carried dye after two to three days | **[A]** |
+| Germination happens in the chambers | Nine natural seed chambers were split with a metal strip so that the ants could reach only one side. Two to three weeks later the side they could not reach held a mean of 21 germinating seeds among about 4400; the side they could reach held 1.3 among about 6500. The ants find germinating seeds and take them | **[A]** |
+| What germination depends on: burial | Seeds of the four classes were buried at 5, 15, 40 and 80 cm for one month, six times through 2015. Seed size, date and their interaction accounted for 93 percent of the explained variance. **Depth had no significant effect.** Sizes 14 and 18 peaked in April and December and fell to a minimum in August; sizes 12 and 20 rose gradually through the year | **[A]** |
+| What germination depends on: temperature | The same seed batch held one month at 10, 15, 24 and 32 °C. Overall germination was moderate at 10 °C, highest at 15, lower at 24 and very low at 32. By class (*read from figure*): small about 35, 29, 12 and 10 percent; medium about 27, 48, 33 and 19; large about 25, 62, 23 and 2; very large about 11, 30, 30 and 30 | **[A]** |
+| Temperature explains the season | Mean soil temperature over each burial month barely differed between 5 and 80 cm, though its daily swing shrank with depth: about 11.5 °C in February, 18 rising to 22 in April, 27 in June, 28 in August, 23 in October, 18 in December and 13 the next February. Germination of sizes 14 and 18 peaks as the soil passes through about 18 °C on the way up and on the way down, which is why the burial peaks fall in April and December | **[A]** |
+| Batches differ | A second batch, collected in 2015 and tested the same year, germinated about half as much as the 2014 batch. Each size class was dominated by one or two plant species — sieve 14 was 98 percent *Croton michauxii* — so a germination rate is really a property of a species mix, and a colony's mix depends on where it forages | **[A]** |
+| Turnover, as inferred | If rates in the dishes hold in the nest, large and medium seeds turn over mainly in spring and autumn at 50 to 80 percent a month, and very large and small seeds at 15 to 30 percent, rising from spring to winter. The authors state that this has not been tested in a nest | **[A]** as an inference, untested |
+| The store is not an emergency granary | Colonies prevented from foraging for 7 to 60 days did not draw on their seed stores, at the cost of larval survival, alate production and worker fat, and larvae died of starvation in as little as seven days. When the larval population was doubled, the stores were not drawn on either. The authors suggest germination is simply too slow to cover a sudden loss of income | **[A]** | 
+| Winter | Wheeler in 1910 found deep chambers in winter holding masses of sprouted seeds, grown "too far to be fit for food", which the ants carried out. Workers also eat seed themselves; whether they do so in winter is not known, and the ratio of stored seeds to workers does not change over the winter | **[A]** |
+
+Kwapich & Tschinkel 2013 and Smith 2007 for the foraging-prevention experiments, Wheeler
+1910 for winter, and Tschinkel 1999 for the winter seed-to-worker ratio are cited here as
+Tschinkel & Kwapich 2016 report them; they have not been read directly.
+
+One correction follows. The parameter file listed burial depth as a driver of germination.
+The burial experiment found no significant effect of depth, and the paper's own summary of
+the drivers is seed species, temperature and elapsed time. See DECISIONS.md D21.
 
 ## 7. Nest relocation
 
 | Mechanic | Rule as implemented | Tag | Source |
 |---|---|---|---|
-| Frequency | About one move per year; some colonies up to four. Between May and November, peaking in July when over 1 percent of colonies move per day | **[A]** | Tschinkel 2014 |
-| Distance | Mean about 4 m, rarely over 10 m. Over successive moves the colony performs a random walk around its original position | **[A]** | Tschinkel 2014 |
-| **Direction** | Moves occur **along an existing foraging trail, usually the main trunk trail**. Direction is random at population level because trail direction is | **[A]** | Harrison & Gentry 1981; Tschinkel 2014 |
+| Frequency | About one move per year; some colonies up to four. Between May and November, peaking in July when over 1 percent of colonies move per day. In Harrison & Gentry's South Carolina population up to 80 percent of colonies moved once a season, fewer moved twice, and third and fourth moves were rare | **[A]** | Tschinkel 2014; Harrison & Gentry 1981 |
+| Distance | Mean about 4 m, rarely over 10 m. Over successive moves the colony performs a random walk around its original position. Harrison & Gentry measured shorter moves in their denser population: a mean of 2.2 to 2.5 m in three separate years, individual moves from 1.3 to 3.7 m | **[A]** | Tschinkel 2014; Harrison & Gentry 1981 |
+| **Direction** | Moves occur **along an existing foraging trail, usually the main trunk trail**. Direction is random at population level because trail direction is. Every one of eleven colonies induced to move by shading moved along an established trail; of 23 natural moves in 1976, 78 percent followed the main trail and 22 percent a secondary one. New trails keep the orientation of the old ones, displaced by the distance moved | **[A]** | Harrison & Gentry 1981; Tschinkel 2014 |
+| Spacing survives moving | Colonies are regularly spaced, nearest neighbours about 10 to 12.5 m apart, and the spacing did not change over five years of moves and new colonies | **[A]** | Harrison & Gentry 1981 |
 | Duration | 4 to 6 days. Diurnal, peaking morning and afternoon, dipping at midday, stopping before sundown | **[A]** | Tschinkel 2014 |
 | Concurrent excavation | Workers excavate the new nest continuously throughout the move and after it | **[A]** | Tschinkel 2014 |
-| What is carried | A minority of workers carry anything. Seeds are by far the commonest burden, then charcoal, then brood. The proportion carrying rises through the move | **[A]** | Tschinkel 2014 |
+| What is carried | A minority of workers carry anything. Seeds are by far the commonest burden, then charcoal, then brood. The proportion carrying rises through the move. The whole seed store moves, so a store can accumulate over the life of the colony | **[A]** | Tschinkel 2014; Tschinkel & Kwapich 2016 |
 | Result | The new nest is statistically indistinguishable from the vacated one in size and shape. The colony builds a replica | **[A]** | Tschinkel 2013 |
 | Cost | Colonies that moved more than once in two years lost more size than those that moved less | **[A]** | Tschinkel 2014 |
-| Cause | **Unknown.** Architecture, forest canopy and neighbour density all failed to explain it. Surface this honestly in the simulator | **[A]** | Tschinkel 2013, 2014 |
+| Cause | **Unknown.** Architecture, forest canopy and neighbour density all failed to explain it. Surface this honestly in the simulator. Shading a nest makes a colony move, which says what can trigger a move, not why colonies move unshaded | **[A]** | Tschinkel 2013, 2014; Carlson & Gentry 1973 as reported by Harrison & Gentry 1981 |
 | Candidate site quality | The player is offered two or three trail-constrained candidates whose soil moisture and workable depth genuinely affect excavation rate and outcome. **This contradicts the row above**, which is the [A] finding that no such property explains relocation and that the replacement nest is indistinguishable from the vacated one. Included at the project author's instruction so that the one annual decision has consequences, and labelled as invented wherever it is shown | **[C]** (D3) | None. Tschinkel 2013, 2014 tested for exactly this effect and did not find it |
 
 ## 8. Pheromones
@@ -226,6 +290,7 @@ Seasonal biology to drive from this calendar:
 | Autumn (Sep to Nov) | Proportion foraging falls as colony size rises through new worker birth. Workers gain about 24 percent in weight by winter, storing fat for overwintering and next year's alates | **[A]** | Kwapich & Tschinkel 2013; Tschinkel 1998 |
 | Winter (Dec to Feb) | Excavation lull. Nests part-built in autumn are doubled in volume after the winter lull | **[A]** | Tschinkel & Seal 2015 |
 | Soil temperature | Follows the seasonal air cycle with depth-dependent lag and damping, and drives the seed germination rate in storage chambers | **[A]** for the germination link; **[B]** for the soil thermal model | Tschinkel & Kwapich 2016 (**[A]**) |
+| Measured soil temperature | At the study site, monthly mean soil temperature at 5, 15, 40 and 80 cm differed by at most about 2 °C between depths in any month, running from about 11 °C in February to 28 °C in August. What falls with depth is the daily swing, not the mean. This is the measurement the soil thermal model is checked against | **[A]** | Tschinkel & Kwapich 2016 |
 
 ## 10. Events (v2 unless noted)
 
@@ -257,6 +322,9 @@ simulator is as valuable as anything it does implement.
 | "A CO2 gradient tells the ants how deep they are" | An appealing hypothesis, tested by venting the gradient and by reversing it. Falsified. Nest architecture was unchanged |
 | "The colony chooses a better site when it moves" | The replacement nest is statistically indistinguishable from the one vacated, and the reason for moving remains unknown |
 | "Ants plan the nest" | There is no plan and no architect. Structure emerges from local rules, though ice-cast experiments show colonies do have preferences about what they will accept |
+| "The seed store is an emergency granary" | Tested and rejected. Colonies kept from foraging did not draw on their stores and their larvae starved within about a week; doubling the larvae did not unlock the stores either. Most of a store is seed the ants cannot open until it germinates (Tschinkel & Kwapich 2016, reporting Kwapich & Tschinkel 2013 and Smith 2007) |
+| "Harvester ants stop their stored seeds from germinating" | The usual assumption, and some ant species do. *P. badius* does the opposite: it relies on germination to get at seeds too large to open, and removes germinating seeds from its chambers within days (Tschinkel & Kwapich 2016) |
+| "Big workers crack big seeds" | Majors raise the rate at which small and medium seeds are opened, and open nothing the minors cannot. The widest seed opened is the same with or without them (Tschinkel & Kwapich 2016) |
 
 ## References
 
@@ -268,6 +336,7 @@ Bruce, A. I. et al. (2018) The digging dynamics of ant tunnels. *Insectes Sociau
 Brunner, E. et al. (2009) Worker dominance and policing in *Temnothorax unifasciatus*. *Insectes Sociaux*.
 Buarque de Macedo, R. et al. (2021) Unearthing real-time 3D ant tunneling mechanics. *PNAS*.
 Buhl, J. et al. (2005) Self-organized digging activity in ant colonies. *Behav. Ecol. Sociobiol.*
+Carlson, D. M. & Gentry, J. B. (1973) Effects of shading on the migratory behavior of the Florida harvester ant, *Pogonomyrmex badius*. *Ecology* 54:452–453. Cited as reported by Harrison & Gentry 1981.
 Czaczkes, T. et al. (2024) Ants deposit more pheromone close to food sources. *Insectes Sociaux*.
 Diez, L. et al. (2012) Social prophylaxis through distant corpse removal. *Naturwissenschaften*.
 Diez, L. et al. (2014) Keep the nest clean. *Biology Letters*.
@@ -275,9 +344,10 @@ Diez, L. et al. (2015) Emergency measures. *Behavioural Processes*.
 Espinoza, D. & Santamarina, J. (2010) Ant tunneling, a granular media perspective.
 Ferster, B. & Traniello, J. (1995) Polymorphism and foraging behavior in *Pogonomyrmex badius*. *Environmental Entomology*.
 García Ibarra, F. A. et al. (2023) Experimental evidence that increased surface temperature affects bioturbation by ants.
-Harrison, J. & Gentry, J. (1981) Foraging pattern, colony distribution, and foraging range of the Florida harvester ant. *Ecology*.
+Harrison, J. S. & Gentry, J. B. (1981) Foraging pattern, colony distribution, and foraging range of the Florida harvester ant, *Pogonomyrmex badius*. *Ecology* 62:1467–1473.
 Hölldobler, B. & Wilson, E. O. (1970) Recruitment trails in the harvester ant *Pogonomyrmex badius*. *Psyche*.
 Khuong, A. et al. (2016) Stigmergic construction and topochemical information shape ant nest architecture. *PNAS*.
+Kwapich, C. L. (2014) The influence of demography, development and death on seasonal labor allocation in the Florida harvester ant (*Pogonomyrmex badius*). PhD dissertation, Florida State University.
 Kwapich, C. L. & Tschinkel, W. (2013) Demography, demand, death. *Behav. Ecol. Sociobiol.*
 Kwapich, C. L. & Tschinkel, W. (2016) Limited flexibility and unusual longevity shape forager allocation. *Behav. Ecol. Sociobiol.*
 Kwapich, C. L. et al. (2024) A kleptoparasitic beetle larva exploits vertical division of labor. *Insectes Sociaux*.
@@ -288,6 +358,7 @@ Monaenkova, D. et al. (2015) Behavioral and mechanical determinants of collectiv
 Monnin, T. & Ratnieks, F. (2001) Policing in queenless ponerine ants. *Behav. Ecol. Sociobiol.*
 Pielström, S. & Roces, F. (2013) Sequential soil transport. *PLoS ONE*.
 Sankovitz, M. & Purcell, J. (2021) Ant nest architecture is shaped by local adaptation and plastic response to temperature. *Scientific Reports*.
+Smith, C. R. (2007) Energy use and allocation in the Florida harvester ant, *Pogonomyrmex badius*: are stored seeds a buffer? *Behav. Ecol. Sociobiol.* 61:1479–1487. Cited as reported by Tschinkel & Kwapich 2016.
 Stroeymeyt, N. et al. (2007) Selfish worker policing. *Behav. Ecol. Sociobiol.*
 Sumpter, D. & Beekman, M. (2003) From nonlinearity to optimality. *Animal Behaviour*.
 Tschinkel, W. (1998) Sociometry and sociogenesis of *Pogonomyrmex badius*, worker characteristics. *Insectes Sociaux*.
@@ -297,6 +368,7 @@ Tschinkel, W. (2013) Florida harvester ant nest architecture, nest relocation an
 Tschinkel, W. (2014) Nest relocation and excavation in the Florida harvester ant. *PLoS ONE*.
 Tschinkel, W. (2015) The architecture of subterranean ant nests. *Journal of Bioeconomics*.
 Tschinkel, W. (2017) Do Florida harvester ant colonies have a nest architecture "plan"? *Ecology*.
-Tschinkel, W. & Kwapich, C. L. (2016) The Florida harvester ant relies on germination to consume large seeds. *PLoS ONE*.
+Tschinkel, W. R. & Kwapich, C. L. (2016) The Florida harvester ant, *Pogonomyrmex badius*, relies on germination to consume large seeds. *PLoS ONE* 11(11):e0166907.
 Tschinkel, W. & Kwapich, C. L. (2017) Vertical organization of the division of labor. *PLoS ONE*.
 Tschinkel, W. & Seal, J. (2015) Sequential subterranean transport of excavated sand and foraged seeds. *PLoS ONE*.
+Wheeler, W. M. (1910) *Ants: their structure, development and behavior.* Columbia University Press. Cited as reported by Tschinkel & Kwapich 2016.

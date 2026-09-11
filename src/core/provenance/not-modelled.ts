@@ -90,6 +90,27 @@ export const NOT_MODELLED: readonly NotModelled[] = [
     experimentallyRejected: false,
   },
   {
+    assumption: 'The seed store is an emergency granary.',
+    reason:
+      'Colonies kept from foraging did not draw on their stores, and their larvae starved within about a week; doubling a colony’s larvae did not unlock the store either. Most of a store is seed the ants cannot open until it germinates, and in a packed chamber that is slow. A colony in this model that stops foraging starves its larvae above a full store, as the real ones did.',
+    citation: 'Kwapich & Tschinkel 2013; Smith 2007; both as reported by Tschinkel & Kwapich 2016',
+    experimentallyRejected: true,
+  },
+  {
+    assumption: 'Harvester ants keep their stored seeds from germinating.',
+    reason:
+      'Some ant species do. The Florida harvester ant does the opposite: it relies on germination to eat seeds too large to open, finds germinating seeds in its chambers within days, and feeds them to its larvae first. Chambers the ants were barred from filled with sprouting seeds; chambers they could reach had almost none.',
+    citation: 'Tschinkel & Kwapich 2016',
+    experimentallyRejected: true,
+  },
+  {
+    assumption: 'Big workers crack the big seeds.',
+    reason:
+      'Majors raise the rate at which small and medium seeds are opened, roughly threefold, and open nothing the minors cannot: the widest seed opened was the same with or without them. A large seed is eaten only once it germinates.',
+    citation: 'Tschinkel & Kwapich 2016',
+    experimentallyRejected: true,
+  },
+  {
     assumption: 'Ants plan the nest.',
     reason:
       'There is no plan and no architect. No ant has a map, and none has seen the whole structure. Everything here emerges from local rules — though ice-cast experiments do show colonies have preferences about what they will accept.',

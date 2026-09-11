@@ -52,6 +52,11 @@ export interface DemographyState {
    * spring follows temperature rather than the calendar.
    */
   soilTemperatureAtForagerDepthC: number
+  /**
+   * How far short of the larvae's need the day's food fell, from 0 to 1. Written on the day
+   * boundary by the seed store, which runs just before this system. See systems/seeds.ts.
+   */
+  larvalFoodShortfall: number
   phase: ColonyPhase
   /** Slot of the queen in the ant store, or -1 once she is dead. */
   queenSlot: number
@@ -94,6 +99,7 @@ export function createDemographyState(
     brood,
     nest,
     soilTemperatureAtForagerDepthC: 0,
+    larvalFoodShortfall: 0,
     foundingEggsLaid: 0,
     nanaticTarget,
     eclosionCarry: [0, 0, 0],
@@ -293,24 +299,19 @@ function runDay(sim: Simulation, state: DemographyState): void {
   }
 
   // ---- Starvation ----
-  // The colony's only means of feeding larvae is its foragers. When there are too few for
-  // the brood on hand, larvae die. Nothing is recruited to fix it.
-  // The 1.64 foragers per larva that Kwapich & Tschinkel measured is a correlation in
-  // mature colonies, not a feeding requirement, and treating it as a hard threshold starves
-  // every founding colony to death within a year. Larvae begin to die only when foragers
-  // fall well below it. A real food account arrives with the seed store at step 7.
-  const foragers = countForagers(sim)
+  // Larvae eat what the seed store yields: small seeds the workers open, and large seeds
+  // only once they have germinated. The store runs just before this system and records how
+  // far short of the larvae's need the day's food fell. A shortfall is answered with larval
+  // death and with nothing else — no forager is recruited and no store is raided faster —
+  // which is what Kwapich & Tschinkel found when they removed half a colony's foragers, and
+  // what was found when colonies were kept from foraging with full stores beneath them.
+  // A founding queen feeds her first brood from her own body, so none of this applies
+  // until the nest is open. See systems/seeds.ts.
   const larvae = state.brood.larvaCount
-  if (larvae > 0 && state.phase !== 'founding') {
-    const needed =
-      (larvae / params.labour.foragersPerLarva.value) *
-      params.brood.starvationForagerRatioTolerance.value
-    if (foragers < needed) {
-      const shortfall = 1 - foragers / needed
-      state.totalLarvaeStarved += state.brood.starveLarvae(
-        shortfall * params.brood.starvationSeverityPerDay.value,
-      )
-    }
+  if (larvae > 0 && state.phase !== 'founding' && state.larvalFoodShortfall > 0) {
+    state.totalLarvaeStarved += state.brood.starveLarvae(
+      state.larvalFoodShortfall * params.brood.starvationSeverityPerDay.value,
+    )
   }
 
   // ---- No overwintering brood ----

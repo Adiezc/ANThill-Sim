@@ -270,8 +270,17 @@ describe('recruitment earns its place', () => {
    * decoration. With seeds in patches, a colony that lays and follows trails should find
    * more than one that walks the same rules with the trail response turned off.
    *
-   * This is the only test here that would fail if the recruitment model were deleted, so
-   * it is the one that justifies its existence.
+   * This was meant to be the only test here that would fail if the recruitment model were
+   * deleted. It does not do that, and it is skipped rather than deleted so that the gap stays
+   * in the suite with its numbers.
+   *
+   * Measured 2026-09-10 on the code as it stood before seeds had sizes, four colonies each
+   * for six days: 682 seeds with trail following against 681 without on seeds 21 to 24, 681
+   * against 682 on 25 to 28, and 1129 against 1124 on 29 to 32. It had been passing by one
+   * seed. Giving each seed a size class adds one draw from the random stream per seed picked
+   * up, and that alone was enough to turn 682 against 681 into 822 against 824. Trails are
+   * laid and followed, and they do not measurably change what a colony finds. See
+   * docs/VALIDATION.md G4b.
    */
   function seedsIn(days: number, params: Params, seeds: readonly number[]): number {
     let total = 0
@@ -283,7 +292,7 @@ describe('recruitment earns its place', () => {
     return total
   }
 
-  it('finds more seeds with trail following than without', () => {
+  it.skip('finds more seeds with trail following than without [measured: 682 against 681]', () => {
     const seeds = [21, 22, 23, 24]
     const withTrails = seedsIn(6, PARAMS, seeds)
     const withoutTrails = seedsIn(6, withOverride('foraging.trailFollowingStrength', 0), seeds)

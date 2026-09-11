@@ -22,6 +22,11 @@ import { makeExcavationSystem } from '../systems/excavation.js'
 import { createForagingState, makeForagingSystem, meanTripTicks } from '../systems/foraging.js'
 import { createInteriorState, makeInteriorSystem } from '../systems/interior.js'
 import {
+  createSeedStoreState,
+  makeSeedStoreSystem,
+  unopenableShareByWeight,
+} from '../systems/seeds.js'
+import {
   createDemographyState,
   makeDemographySystem,
   countForagers,
@@ -31,6 +36,7 @@ import { RULE } from '../provenance/rules.js'
 import type { ExcavationState } from '../systems/excavation.js'
 import type { ForagingState } from '../systems/foraging.js'
 import type { InteriorState } from '../systems/interior.js'
+import type { SeedStoreState } from '../systems/seeds.js'
 import type { DemographyState } from '../systems/demography.js'
 import type { Params } from '../params/params.js'
 
@@ -63,6 +69,19 @@ export interface ColonySummary {
   readonly seedsStored: number
   /** Seeds in a worker's mandibles inside the nest, on their way to or down the store. */
   readonly seedsInTransit: number
+  /** Stored seeds by size class, in the order of `params.seeds.sizeClassNames`. */
+  readonly seedStoreByClass: readonly number[]
+  /** Share of stored seed mass in sizes the ants cannot open. About 70 percent or more is measured. */
+  readonly unopenableShareOfStore: number
+  /** Germinating seeds in the chambers that the ants have not yet found. */
+  readonly seedsGerminating: number
+  readonly totalSeedsGerminated: number
+  readonly totalSeedsOpened: number
+  /** Milligrams of seed fed to larvae over the run, and how much of it had germinated. */
+  readonly totalFedToLarvaeMg: number
+  readonly totalGerminatedFedToLarvaeMg: number
+  /** How far short of the larvae's need the last day's food fell, 0 to 1. */
+  readonly larvalFoodShortfall: number
   /** Brood the colony is holding, as placed in chambers. */
   readonly broodInChambers: number
   readonly totalSeedsCollected: number
@@ -81,6 +100,7 @@ export class Colony {
   readonly surface: SurfaceGrid
   readonly foraging: ForagingState
   readonly interior: InteriorState
+  readonly seedStore: SeedStoreState
 
   private peakWorkers = 0
 
@@ -131,6 +151,11 @@ export class Colony {
     // top of every tick and runs first.
     this.interior = createInteriorState(this.nest, this.demography, this.excavation.occupants)
 
+    // What happens to seeds once they are stored: germination, opening, and the larvae's
+    // food. It runs after the interior has put the day's seeds where they are going and
+    // before demography, which answers any shortfall with larval death.
+    this.seedStore = createSeedStoreState(this.nest, this.soil, this.demography, params)
+
     // The entrance. Everything below it the colony digs itself.
     this.nest.excavate(this.nest.entranceCol, 0)
     this.soil.applyVoid(this.nest, this.nest.entranceCol, 0)
@@ -169,6 +194,7 @@ export class Colony {
     this.sim.register('climate', () => this.rollWeather())
     this.sim.register('excavation', makeExcavationSystem(this.excavation))
     this.sim.register('interior', makeInteriorSystem(this.interior))
+    this.sim.register('seeds', makeSeedStoreSystem(this.seedStore))
     this.sim.register('demography', makeDemographySystem(this.demography))
     this.sim.register('foraging', makeForagingSystem(this.foraging))
     this.sim.register('newAdults', () => this.settleNewAdults())
@@ -221,6 +247,13 @@ export class Colony {
 
   summary(): ColonySummary {
     const date = this.sim.clock.date()
+    const store = this.seedStore
+    let germinated = 0
+    let opened = 0
+    for (let c = 0; c < store.totalGerminatedByClass.length; c += 1) {
+      germinated += store.totalGerminatedByClass[c]!
+      opened += store.totalOpenedByClass[c]!
+    }
     return {
       yearsSurvived: date.colonyYear,
       workers: countWorkers(this.sim),
@@ -235,6 +268,14 @@ export class Colony {
       phase: this.demography.phase,
       seedsStored: this.interior.seedsInStore,
       seedsInTransit: this.interior.seedsCarried,
+      seedStoreByClass: Array.from(store.storedByClass),
+      unopenableShareOfStore: unopenableShareByWeight(this.sim.params, store),
+      seedsGerminating: store.germinatingInStore,
+      totalSeedsGerminated: germinated,
+      totalSeedsOpened: opened,
+      totalFedToLarvaeMg: store.totalFedToLarvaeMg,
+      totalGerminatedFedToLarvaeMg: store.totalGerminatedFedToLarvaeMg,
+      larvalFoodShortfall: this.demography.larvalFoodShortfall,
       broodInChambers: this.interior.broodInCells,
       totalSeedsCollected: this.foraging.totalSeedsCollected,
       foragersOnSurface: this.foraging.antsOnSurface,

@@ -178,9 +178,13 @@ describe('determinism', () => {
      * `preferredDepthCm`, and the nest grid gained the seed and brood layers, so the hash is
      * again taken over more than it was. The run itself is unchanged — this simulation has
      * none of those systems in it — and the previous value was 14b17c699c52ab0b.
+     *
+     * Regenerated a third time when seeds were given sizes: the ant store gained `seedClass`,
+     * so that a carried seed remembers what it is. Again the hash covers more and this run is
+     * unchanged, and the previous value was c7839c69077adb0b.
      */
     const sim = build(20240607)
     sim.run(10000)
-    expect(sim.digest()).toBe('c7839c69077adb0b')
+    expect(sim.digest()).toBe('cfd824695674030b')
   })
 })

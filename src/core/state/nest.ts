@@ -26,14 +26,26 @@ export class NestGrid {
   /** Building pheromone, added to excavated material. Its lifetime dominates nest form. */
   readonly building: Grid2D
   /**
-   * Seeds in store, per cell.
+   * Seeds in store, per cell, every size class together.
    *
    * The colony's food, where the colony actually put it. Foragers drop seeds in the
    * topmost chambers and transfer workers carry them down into the seed-chamber band, so
    * this grid is the record of that traffic rather than a granary anyone laid out.
    * See docs/SCIENCE.md section 6.
+   *
+   * It is the sum of `seedsByClass` in the same cell. Write through `addSeed` and
+   * `takeSeed` rather than to either grid directly, so the two cannot come apart.
    */
   readonly seeds: Grid2D
+  /** Seeds in store per cell, one layer per size class, in the order of `params.seeds.sizeClassNames`. */
+  readonly seedsByClass: readonly Grid2D[]
+  /**
+   * Seeds that have germinated in the store and have not yet been found, per cell, and the
+   * food they hold, in milligrams. A germinating seed splits its own husk, which is the only
+   * way the ants ever eat a seed too large to open. See systems/seeds.ts.
+   */
+  readonly germinating: Grid2D
+  readonly germinatingMg: Grid2D
   /**
    * Brood in the nest, per cell, as a count of eggs, larvae and pupae together.
    *
@@ -102,6 +114,11 @@ export class NestGrid {
     this.spoil = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.building = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.seeds = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
+    this.seedsByClass = params.seeds.sizeClassNames.value.map(
+      () => new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0),
+    )
+    this.germinating = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
+    this.germinatingMg = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.brood = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.entranceCol = Math.floor(this.cols / 2)
     this.blockSize = Math.max(1, Math.round(params.excavation.crowdingRadiusCm.value / cell))
@@ -303,8 +320,61 @@ export class NestGrid {
     this.spoil.decayWithin(spoilDecay, bounds)
   }
 
+  /** Adds seeds of one size class to a cell, keeping the all-class total in step. */
+  addSeed(sizeClass: number, col: number, row: number, amount: number): void {
+    this.seedsByClass[sizeClass]!.add(col, row, amount)
+    this.seeds.add(col, row, amount)
+  }
+
+  /**
+   * Takes one seed out of a cell and returns its size class.
+   *
+   * The class is chosen in proportion to what the cell holds, from `pick` in [0, 1), so an
+   * ant reaching into a pile takes what the pile is mostly made of. Counts are fractional —
+   * a day's germination and eating take a fraction of a cell — so a class holding less than
+   * a whole seed gives what it has and the rest comes from the classes after it. The count
+   * taken is the same either way; only which layer it comes out of differs.
+   */
+  takeSeed(col: number, row: number, pick: number): number {
+    const layers = this.seedsByClass
+    let held = 0
+    for (const layer of layers) held += Math.max(0, layer.get(col, row))
+    const taking = Math.min(1, this.seeds.get(col, row))
+    this.seeds.add(col, row, -taking)
+    if (held <= 0) return 0
+
+    let target = pick * held
+    let chosen = layers.length - 1
+    for (let c = 0; c < layers.length; c += 1) {
+      const here = Math.max(0, layers[c]!.get(col, row))
+      if (target < here) {
+        chosen = c
+        break
+      }
+      target -= here
+    }
+
+    let left = taking
+    for (let k = 0; k < layers.length && left > 0; k += 1) {
+      const layer = layers[(chosen + k) % layers.length]!
+      const taken = Math.min(Math.max(0, layer.get(col, row)), left)
+      layer.add(col, row, -taken)
+      left -= taken
+    }
+    return chosen
+  }
+
   buffers(): ArrayBufferView[] {
-    return [this.occupancy, this.spoil.data, this.building.data, this.seeds.data, this.brood.data]
+    return [
+      this.occupancy,
+      this.spoil.data,
+      this.building.data,
+      this.seeds.data,
+      ...this.seedsByClass.map((layer) => layer.data),
+      this.germinating.data,
+      this.germinatingMg.data,
+      this.brood.data,
+    ]
   }
 }
 

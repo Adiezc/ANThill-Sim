@@ -176,6 +176,18 @@ export class AntStore {
   readonly carriedCm: Float32Array
 
   /**
+   * Size class of the seed this ant is carrying, as an index into
+   * `params.seeds.sizeClassNames`. Meaningless unless its burden is a seed.
+   *
+   * The class is drawn when a forager picks the seed up and travels with it from then on:
+   * into the top chamber, down to the store, and out again in another ant's mandibles.
+   * What becomes of a stored seed depends on its size, so the size is the one thing about
+   * it that has to be remembered. It never depends on the ant: worker size predicts nothing
+   * about seed size (HARD RULE).
+   */
+  readonly seedClass: Uint8Array
+
+  /**
    * Id of the rule the ant is currently following, for the inspector's citation line.
    * See core/provenance. This is the entire educational payload of the project, so it is
    * first-class state rather than a debug field.
@@ -211,6 +223,7 @@ export class AntStore {
     this.helixPhase = new Float32Array(capacity)
     this.tunnelLengthCm = new Float32Array(capacity)
     this.carriedCm = new Float32Array(capacity)
+    this.seedClass = new Uint8Array(capacity)
     this.ruleId = new Uint16Array(capacity)
   }
 
@@ -250,6 +263,7 @@ export class AntStore {
     this.helixPhase[slot] = 0
     this.tunnelLengthCm[slot] = 0
     this.carriedCm[slot] = 0
+    this.seedClass[slot] = 0
     this.ruleId[slot] = 0
     return slot
   }
@@ -299,6 +313,7 @@ export class AntStore {
       this.helixPhase,
       this.tunnelLengthCm,
       this.carriedCm,
+      this.seedClass,
       this.ruleId,
     ]
   }
