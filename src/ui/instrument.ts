@@ -55,7 +55,7 @@ export function createInstrumentSheet(repoUrl: string): () => void {
     el(
       'p',
       undefined,
-      'Every run draws on one seeded random number generator and moves forward in fixed one-minute steps, in a fixed order. The project even carries its own maths functions, because browsers are not required to compute a sine or an exponential identically. The same seed and parameter file give a byte-for-byte identical run in Chrome, Firefox and Node, and a test checks this on every change.',
+      'Every run draws on one seeded random number generator and moves forward in fixed one-minute steps, in a fixed order. The project even carries its own maths functions, because browsers are not required to compute a sine or an exponential identically. Everything the model does is arithmetic that every engine must get exactly right, so the same seed and parameter file give the same run, bit for bit, in Chrome, Firefox and Node. A test pins the result of a seeded run, so any change that alters it fails the build.',
     ),
     el('h3', undefined, 'Running a study'),
     el(
