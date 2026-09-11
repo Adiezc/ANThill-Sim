@@ -116,6 +116,16 @@ describe('claustral founding', () => {
     )
   })
 
+  it('does not let its first workers dig a mature nest', () => {
+    // Her daughters widen the nest she dug rather than driving it deeper. Before the digging
+    // budget and the resting diggers of D28, seeds 1 to 3 reached 2.2 to 2.7 m in their first
+    // year against an incipient 29 to 37 cm, and the whole first year of the simulator was a
+    // colony of a dozen ants sinking a mature shaft.
+    const c = colony(1, 150)
+    expect(countWorkers(c.sim)).toBeGreaterThan(0)
+    expect(c.nest.maxDepthCm).toBeLessThanOrEqual(PARAMS.nest.incipientDepthCm.max * 1.5)
+  }, 120000)
+
   it('never carries a fractional adult into oblivion', () => {
     // Brood is cohort counts, adults are individuals, and a small colony ecloses well under
     // one adult a day. Flooring that fraction away silently killed every founding colony.

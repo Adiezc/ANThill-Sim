@@ -582,3 +582,58 @@ pass. Seeds and brood lie on chamber floors. The map of the foraging range, a pl
 view from above. All of this is drawing: no system reads it, and headless runs are unaffected by
 it.
 
+---
+
+## D28. An ant digs less the more she has dug, and most diggers dig where they rest
+
+**Date.** 2026-09-12.
+
+**The problem.** VALIDATION.md has recorded since the excavation step that nothing stops the
+digging: the model dug to the floor of the grid whatever the colony size. With the founding
+queen fixed (D27), colonies of 7 to 22 workers still reached 2.2 to 2.7 m by day 270 of their
+first year, against Tschinkel's own law, `log(depth) = 0.95 + 0.37 log(workers)`, which
+predicts 21 to 28 cm for that many ants.
+
+**Why.** Traced by probing a colony day by day. Nanitics eclose at day 55 and reach 43 days old
+at about day 98, at which point participation jumps from 19 percent to 82 percent, which is
+[A] from the penning experiments. All of them then walk to the tip of the single shaft, because
+an unburdened digger is pulled downward and toward faces. In a shaft one cell wide the local
+crowding reads 1 to 3 ants per open cell against a half-saturation of 0.30, so every one of them
+digs flat out, and deepening the shaft never lowers the reading. The one signal for "we have
+enough room" was being taken in the one place that is always busy.
+
+**What the literature offers.** Rasse & Deneubourg (2001) found nest volume tracking population
+in *Lasius niger*, with the brake coming from the nest's volume together with a change in the
+ants themselves after digging. Buhl et al. (2005) reproduced volume proportional to colony size
+in *Messor sancta* from recruitment and ant density alone, with no explicit negative feedback,
+and Halley et al. (2005) described Argentine ant nests growing the same way, digging subsiding
+as the density of digging stimuli declined. Rajendran et al. (2025) found *Camponotus fellah*
+workers differing in how they dig by age: young ants dug slanted tunnels, old ones straight down.
+
+**Resolution: two local rules.** Each ant carries the sand she has dug herself (`dugCells`
+in the ant store), and her willingness to dig falls as exp of minus that volume over
+`diggingFatigueSandCm3`. That ties the volume a colony digs to how many ants it has. And a
+digger with a resting place, which the interior system gives every worker, digs the wall beside
+her instead of walking to the deepest face; only `descenderShare` of diggers, drawn from
+each ant's id and fixed for life, still go down. Both values are **[C]**, invented and fitted to
+the depth law, and the parameter file says so in full. No ant reads the nest's size, its volume
+or its population.
+
+**What it gives.** Four colonies over three years, depth against the law: 0.98, 1.00, 1.08 and
+1.12 at day 1080 (244 to 331 workers). One colony over five years: 0.98 at 1263 workers, 1.27 at
+3618, and 1.70 at 2426 in the fifth year, when the colony had shrunk but its nest had not. The
+first year sits at the queen's founding depth, which is the measured incipient depth. Against no
+budget at all: 2.2 to 2.7 m in year one.
+
+**What it cost.** The pinned digest moved, because the ant store gained an array; it is
+regenerated in determinism.spec.ts with that reason. Deep chamber spacing in the gate harness
+fell to 7.8 cm against a target above 8.75, and that criterion is now skipped with its measured
+value. The harness cannot exercise the resting rule at all: it has no interior system, so its
+synthetic workers have no resting place and all of them behave as descenders. Evidence for the
+rule therefore comes from colony runs, which is where it is measured above.
+
+**Not addressed.** Colonies do not relocate, so a nest never shrinks when its colony does, which
+is what makes the fifth year run deep. A colony-level regulator would close the remaining gap in
+an afternoon and would contradict the premise this project exists to demonstrate, so it stays
+out.
+

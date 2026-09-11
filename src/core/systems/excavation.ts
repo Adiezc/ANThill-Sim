@@ -96,6 +96,31 @@ function participationForAge(sim: Simulation, slot: number): number {
   return p.diggingParticipationYoung.value
 }
 
+/** The sand one grid cell holds, in cubic centimetres: a cell of the slice, one slice thick. */
+function cellVolumeCm3(sim: Simulation): number {
+  const cell = sim.params.discretisation.nestCellSizeCm.value
+  return cell * cell * sim.params.discretisation.sliceThicknessCm.value
+}
+
+/**
+ * Whether this ant is one of the few diggers who go down to the deepest working face.
+ *
+ * The rest dig where they are resting, which widens chambers rather than driving the shaft
+ * down. Without anybody going down, a growing colony never deepens its nest; with everybody
+ * going down, a dozen nanitics sink two metres in their first year. Which ant is which is
+ * drawn from her id and never changes, so no ant switches from one to the other. The share is
+ * invented and fitted; see docs/DECISIONS.md D28.
+ */
+export function isDescender(sim: Simulation, slot: number): boolean {
+  const hash = Math.imul(sim.ants.id[slot]!, 2654435761) >>> 24
+  return hash / 256 < sim.params.excavation.descenderShare.value
+}
+
+/** Whether this ant stays where the interior system put her instead of walking to a face. */
+function restsHere(sim: Simulation, slot: number): boolean {
+  return sim.ants.preferredDepthCm[slot]! > 0 && !isDescender(sim, slot)
+}
+
 /** Whether this ant digs at all, right now. Persistent draw, age-dependent threshold. */
 export function isDigging(sim: Simulation, slot: number): boolean {
   return sim.ants.digger[slot]! / 256 < participationForAge(sim, slot)
@@ -254,7 +279,14 @@ function digWillingness(
   // Fresh pellets mark where digging is already under way and attract the next digger.
   const spoil = nest.spoil.get(col, row) * params.excavation.spoilCueWeight.value
 
-  return workability * easeOfRemoval * crowding * lengthFeedback * stigmergy * (1 + spoil)
+  // An ant digs less the more sand she has moved herself. This is the change in the ants that
+  // Rasse & Deneubourg 2001 found holding a nest to its colony, and it is what makes the volume
+  // a colony digs track the number of ants without any ant knowing either quantity.
+  const fatigue = exp(
+    -(ants.dugCells[slot]! * cellVolumeCm3(sim)) / params.excavation.diggingFatigueSandCm3.value,
+  )
+
+  return workability * easeOfRemoval * crowding * lengthFeedback * stigmergy * (1 + spoil) * fatigue
 }
 
 /**
@@ -411,6 +443,10 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
 
   // Not at a face: walk through the void, drawn by the building pheromone and by spoil.
   if (!nest.isDigFace(col, row)) {
+    if (restsHere(sim, slot)) {
+      ants.ruleId[slot] = RULE.digWhereSheRests
+      return
+    }
     walkInVoid(sim, state, slot, col, row)
     return
   }
@@ -490,6 +526,10 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
     // ant was technically at a face, because the surface cell has soil either side of it,
     // chose to dig downward into the shaft that was already there, and did nothing — for
     // forty simulated days.
+    if (restsHere(sim, slot)) {
+      ants.ruleId[slot] = RULE.digWhereSheRests
+      return
+    }
     walkInVoid(sim, state, slot, col, row)
     return
   }
@@ -518,6 +558,10 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
     ratePerTick = cellsPerTickAtFace(sim, slot)
     ants.ruleId[slot] = RULE.digShaftDescent
     if (!nest.isSoil(col, row + 1)) {
+      if (restsHere(sim, slot)) {
+        ants.ruleId[slot] = RULE.digWhereSheRests
+        return
+      }
       walkInVoid(sim, state, slot, col, row)
       return
     }
@@ -553,7 +597,12 @@ function digCell(
   void fromRow
 
   if (!prng.chance(Math.min(1, willingness * ratePerTick))) {
-    ants.ruleId[slot] = RULE.digCollisionAgitation
+    // Which of the two brakes stopped her, so a reader who clicks on her is told the truth.
+    const moved = ants.dugCells[slot]! * cellVolumeCm3(sim)
+    ants.ruleId[slot] =
+      moved > sim.params.excavation.diggingFatigueSandCm3.value
+        ? RULE.digFatigue
+        : RULE.digCollisionAgitation
     return
   }
   if (!soil.isDiggable(targetCol, targetRow)) {
@@ -568,6 +617,7 @@ function digCell(
   nest.building.add(targetCol, targetRow, 1)
   ants.burden[slot] = Burden.SoilPellet
   ants.carriedCm[slot] = 0
+  ants.dugCells[slot] = ants.dugCells[slot]! + 1
   ants.x[slot] = nest.offsetOf(targetCol)
   ants.y[slot] = nest.depthOf(targetRow)
   ants.tunnelLengthCm[slot] = ants.tunnelLengthCm[slot]! + nest.cellSizeCm

@@ -174,6 +174,10 @@ export interface Params {
     readonly foundingQueenLateRateCmPerDay: Param<number>
     /** Width in the slice of the one chamber she opens at the bottom of her shaft. */
     readonly foundingChamberRunCm: Param<number>
+    /** Sand a worker has dug herself, in cm3, at which her willingness to dig is down to 1/e. */
+    readonly diggingFatigueSandCm3: Param<number>
+    /** The share of diggers who go down to the working face instead of digging where they rest. */
+    readonly descenderShare: Param<number>
   }
 
   readonly soil: {
@@ -590,6 +594,8 @@ export function buildParams(root: Raw): Params {
       foundingQueenDepthByDayCm: readNumberList(root, 'excavation.foundingQueenDepthByDayCm'),
       foundingQueenLateRateCmPerDay: readScalar(root, 'excavation.foundingQueenLateRateCmPerDay'),
       foundingChamberRunCm: readScalar(root, 'excavation.foundingChamberRunCm'),
+      diggingFatigueSandCm3: readScalar(root, 'excavation.diggingFatigueSandCm3'),
+      descenderShare: readScalar(root, 'excavation.descenderShare'),
     },
 
     soil: {

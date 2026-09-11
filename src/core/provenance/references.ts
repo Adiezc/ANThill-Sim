@@ -213,6 +213,13 @@ export const REFERENCES: readonly Reference[] = [
     journal: 'eLife',
   },
   {
+    key: 'halley-2005',
+    authors: 'Halley, J. D., Burd, M. & Wells, P.',
+    year: '2005',
+    title: 'Excavation and architecture of Argentine ant nests',
+    journal: 'Insectes Sociaux 52:350-356',
+  },
+  {
     key: 'holldobler-wilson-1970',
     authors: 'Hölldobler, B. & Wilson, E. O.',
     year: '1970',
@@ -289,6 +296,20 @@ export const REFERENCES: readonly Reference[] = [
     year: '2013',
     title: 'Sequential soil transport',
     journal: 'PLoS ONE',
+  },
+  {
+    key: 'rajendran-2025',
+    authors: 'Rajendran, H. et al.',
+    year: '2025',
+    title: 'Colony demographics shape nest construction in Camponotus fellah ants',
+    journal: 'eLife',
+  },
+  {
+    key: 'rasse-deneubourg-2001',
+    authors: 'Rasse, P. & Deneubourg, J.-L.',
+    year: '2001',
+    title: 'Dynamics of nest excavation and nest size regulation of Lasius niger',
+    journal: 'Journal of Insect Behavior 14:433-449',
   },
   {
     key: 'sankovitz-purcell-2021',

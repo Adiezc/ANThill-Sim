@@ -178,9 +178,14 @@ describe('determinism', () => {
      * `preferredDepthCm`, and the nest grid gained the seed and brood layers, so the hash is
      * again taken over more than it was. The run itself is unchanged — this simulation has
      * none of those systems in it — and the previous value was 14b17c699c52ab0b.
+     *
+     * Regenerated a third time when digging became something an ant can tire of: the ant store
+     * gained `dugCells`, the sand each ant has moved herself, so the hash is taken over one
+     * array more. The run itself is unchanged — this simulation has no excavation in it — and the
+     * previous value was c7839c69077adb0b. See docs/DECISIONS.md D28.
      */
     const sim = build(20240607)
     sim.run(10000)
-    expect(sim.digest()).toBe('c7839c69077adb0b')
+    expect(sim.digest()).toBe('5e55bc69e8a30b0b')
   })
 })

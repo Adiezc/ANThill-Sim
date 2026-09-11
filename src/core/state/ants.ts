@@ -174,6 +174,15 @@ export class AntStore {
    * its pellet down after a short leg and someone else takes it on.
    */
   readonly carriedCm: Float32Array
+  /**
+   * Cells of sand this ant has dug out herself, over her whole life.
+   *
+   * Her willingness to dig falls with it, which is what ties the volume a colony excavates to
+   * the number of ants in it without any ant knowing either quantity. Rasse & Deneubourg 2001
+   * found that what holds a Lasius nest to its population is the nest's volume together with a
+   * change in the ants themselves after digging. See docs/DECISIONS.md D28.
+   */
+  readonly dugCells: Float32Array
 
   /**
    * Id of the rule the ant is currently following, for the inspector's citation line.
@@ -211,6 +220,7 @@ export class AntStore {
     this.helixPhase = new Float32Array(capacity)
     this.tunnelLengthCm = new Float32Array(capacity)
     this.carriedCm = new Float32Array(capacity)
+    this.dugCells = new Float32Array(capacity)
     this.ruleId = new Uint16Array(capacity)
   }
 
@@ -250,6 +260,7 @@ export class AntStore {
     this.helixPhase[slot] = 0
     this.tunnelLengthCm[slot] = 0
     this.carriedCm[slot] = 0
+    this.dugCells[slot] = 0
     this.ruleId[slot] = 0
     return slot
   }
@@ -299,6 +310,7 @@ export class AntStore {
       this.helixPhase,
       this.tunnelLengthCm,
       this.carriedCm,
+      this.dugCells,
       this.ruleId,
     ]
   }
