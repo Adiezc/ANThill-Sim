@@ -75,7 +75,7 @@ export const REFERENCES: readonly Reference[] = [
     title:
       'Limited flexibility and unusual longevity shape forager allocation in the Florida harvester ant',
     journal: 'Behavioral Ecology and Sociobiology 70:221-235',
-    doi: '10.1007/s00265-015-2038-2',
+    doi: '10.1007/s00265-015-2039-1',
     primary: true,
     usedFor:
       'The two HARD RULEs the demographic engine is built around: foragers do not revert to inside work, and the colony does not backfill from other castes when foragers are removed. Larval survival falls instead.',
@@ -87,7 +87,7 @@ export const REFERENCES: readonly Reference[] = [
     title:
       'Foraging pattern, colony distribution, and foraging range of the Florida harvester ant, Pogonomyrmex badius',
     journal: 'Ecology 62:1467-1473',
-    doi: '10.2307/1941504',
+    doi: '10.2307/1941503',
     primary: true,
     usedFor:
       'Trunk trails, foraging range, and the finding that ranges are used almost exclusively by one colony without being actively defended.',

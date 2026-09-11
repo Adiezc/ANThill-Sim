@@ -530,7 +530,9 @@ function startSimulator(): void {
 
     const cite = document.createElement('p')
     cite.className = 'inspector-cite'
-    cite.textContent = `${TAG_WORDS[rule.tag]} [${rule.tag}]. ${rule.citation}. Details in SCIENCE.md, section ${rule.section}.`
+    // The idle rule has no section, and "section —" reads as a bug.
+    const detail = rule.section === '—' ? '' : ` Details in SCIENCE.md, section ${rule.section}.`
+    cite.textContent = `${TAG_WORDS[rule.tag]} [${rule.tag}]. ${rule.citation}.${detail}`
 
     const close = document.createElement('button')
     close.type = 'button'
