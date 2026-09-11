@@ -288,12 +288,15 @@ button {
   padding: 16px;
 }
 
+/* The vertical rhythm is capped rather than generous, because this column sets the height of
+   the whole screen: at 10vh of padding and 32px gaps it stood 922px tall in a 900px window,
+   which pushed the bottom of the colony case, and the caption in it, below the fold. */
 .threshold-body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 32px;
-  padding: clamp(40px, 10vh, 112px) clamp(20px, 5vw, 88px);
+  gap: 28px;
+  padding: clamp(28px, 6vh, 72px) clamp(20px, 5vw, 88px);
   max-width: 780px;
 }
 
@@ -326,12 +329,6 @@ button {
   flex-wrap: wrap;
   align-items: center;
   gap: 12px;
-}
-
-.actions-note {
-  margin: -16px 0 0;
-  font-size: 13px;
-  color: var(--text-faint);
 }
 
 /* The provenance counts, as figures a reader can open. */
@@ -498,7 +495,41 @@ button {
   .threshold-body {
     padding: 48px 16px 24px;
   }
+}
 
+/* A phone. The two doors have to be reachable without scrolling, so the type tightens, the
+   rhythm closes up, and the last two sentences of the opening wait for a wider window. */
+@media (max-width: 600px) {
+  .threshold-body {
+    gap: 22px;
+    padding: 28px 16px 20px;
+  }
+
+  .threshold h1 {
+    font-size: clamp(2.3rem, 10vw, 2.9rem);
+    line-height: 1;
+  }
+
+  .threshold .binomial {
+    margin-top: 10px;
+    font-size: 14.5px;
+  }
+
+  .threshold .lede {
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .lede-tail {
+    display: none;
+  }
+
+  .threshold-stage {
+    min-height: 52vh;
+  }
+}
+
+@media (max-width: 900px) {
   .facts-grid {
     grid-template-columns: 1fr;
     gap: 10px;

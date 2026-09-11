@@ -144,7 +144,7 @@ export const RULE = {
     'A',
     'Tschinkel 2004',
     '2',
-    'The pattern is documented. The cue an ant uses to know its depth is not — see excavation.depthCue.',
+    'The pattern is documented. The cue an ant uses to know its depth is not. See excavation.depthCue.',
   ),
   digFoundingQueen: rule(
     'excavation.foundingQueen',
@@ -279,7 +279,7 @@ export const RULE = {
     'A',
     'Tschinkel & Seal 2015; Tschinkel & Kwapich 2017 for the 20 to 80 cm band',
     '6',
-    'What is [A] is the partitioning — the forager that brought the seed in never takes it deeper, and somebody else does — and the 20 to 80 cm band it ends up in. Which workers do the carrying is left open here: any worker that is not a forager will carry a seed it comes across. How fast the wave travels is invented; nobody timed it.',
+    'What is [A] is the partitioning (the forager that brought the seed in never takes it deeper, and somebody else does) and the 20 to 80 cm band it ends up in. Which workers do the carrying is left open here: any worker that is not a forager will carry a seed it comes across. How fast the wave travels is invented; nobody timed it.',
   ),
   queenLaying: rule(
     'colony.queenLaying',

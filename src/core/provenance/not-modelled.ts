@@ -64,7 +64,7 @@ export const NOT_MODELLED: readonly NotModelled[] = [
   {
     assumption: 'The colony chooses a better site when it moves.',
     reason:
-      'The replacement nest is statistically indistinguishable from the one vacated, in both size and shape, and architecture, forest canopy and neighbour density all failed to explain why colonies move at all. The reason for relocation remains unknown. This simulator nevertheless lets candidate sites differ, at the project author’s instruction, so that the player’s one annual decision has consequences — a departure recorded in docs/DECISIONS.md D3 and labelled wherever it is shown.',
+      'The replacement nest is statistically indistinguishable from the one vacated, in both size and shape, and architecture, forest canopy and neighbour density all failed to explain why colonies move at all. The reason for relocation remains unknown. This simulator nevertheless lets candidate sites differ, at the project author’s instruction, so that the player’s one annual decision has consequences. That departure is recorded in docs/DECISIONS.md D3 and labelled wherever it is shown.',
     citation: 'Tschinkel 2013, 2014',
     experimentallyRejected: true,
   },
@@ -92,7 +92,7 @@ export const NOT_MODELLED: readonly NotModelled[] = [
   {
     assumption: 'Ants plan the nest.',
     reason:
-      'There is no plan and no architect. No ant has a map, and none has seen the whole structure. Everything here emerges from local rules — though ice-cast experiments do show colonies have preferences about what they will accept.',
+      'There is no plan and no architect. No ant has a map, and none has seen the whole structure. Everything here emerges from local rules, though ice-cast experiments do show colonies have preferences about what they will accept.',
     citation: 'Tschinkel 2004, 2015, 2017',
     experimentallyRejected: false,
   },

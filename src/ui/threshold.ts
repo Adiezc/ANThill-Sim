@@ -37,7 +37,16 @@ export interface ThresholdOptions {
  * The opening paragraph. It is the one piece of prose in the application allowed to run to
  * a paragraph, because it does the job an abstract does.
  */
-const OPENING = `In the sandhills of north Florida a single mated queen lands, breaks off her wings and digs a shaft into the sand. She seals herself in and raises her first daughters on nothing but her own flight muscles. If they survive, they will build a nest three metres deep with no architect, no blueprint and no ant that has ever seen the whole thing. You are not in charge of them.`
+const OPENING = `In the sandhills of north Florida a single mated queen lands, breaks off her wings and digs a shaft into the sand. She seals herself in and raises her first daughters on nothing but her own flight muscles.`
+
+/**
+ * The rest of it, which a narrow screen has no room for.
+ *
+ * On a phone the whole paragraph pushed both doors below the fold, so a reader had to scroll
+ * before they could start. The stylesheet hides this tail under 600px. Nothing is lost: it is
+ * the same story the simulator then tells, and a wider window shows it in full.
+ */
+const OPENING_TAIL = ` If they survive, they will build a nest three metres deep with no architect, no blueprint and no ant that has ever seen the whole thing. You are not in charge of them.`
 
 /**
  * Renders the threshold into a container and returns a teardown function.
@@ -56,7 +65,7 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
           <h1>A nest with no architect</h1>
           <p class="binomial"><i>Pogonomyrmex badius</i>, the Florida harvester ant</p>
         </header>
-        <p class="lede">${OPENING}</p>
+        <p class="lede">${OPENING}<span class="lede-tail">${OPENING_TAIL}</span></p>
         <div class="actions">
           <button class="btn btn--primary" id="door-watch" type="button">
             Watch a colony
@@ -67,9 +76,6 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
             <span class="btn-icon" aria-hidden="true">↗</span>
           </button>
         </div>
-        <p class="actions-note">
-          Starts with one queen. A day takes 30 seconds while something is happening, and skips ahead while nothing is.
-        </p>
         <button class="facts" id="door-sources" type="button">
           <span class="facts-grid">
             <span class="fact">
@@ -98,8 +104,8 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
       <section class="threshold-stage" aria-label="A colony digging">
         <canvas id="threshold-slice" aria-hidden="true"></canvas>
         <p class="threshold-caption">
-          A colony digging in your browser right now, seen as a slice through the sand. The
-          ruler is in centimetres.
+          A colony digging in your browser right now, a slice through the sand with the ruler in
+          centimetres. Watch your own and a day takes 30 seconds, faster when nothing is happening.
         </p>
       </section>
     </main>
