@@ -635,12 +635,14 @@ It is not being brought enough.
 (D16, D18), and they search a range several times too large for this species (D21). Under the
 proxy both were cosmetic. Now they cost the brood.
 
-**What was decided.** G5 is committed on `feat/seeds-germination` and not merged to `main`
-until foraging can feed a growing colony, because `main` is what the public build deploys. The
-fix is not to keep the proxy beside the food account, or to let a starving colony draw on its
-store faster: colonies whose foragers were removed lost their larvae with full stores
-beneath them **[A]**, and a model that rescued them would contradict the measurement G5 was
-built to reproduce. The forager share and the foraging range are the next step.
+**What was decided at the time.** G5 was committed on `feat/seeds-germination` and initially
+held back from `main`, because `main` is what the public build deploys. On 2026-09-15 it was
+merged into `main` with the redesigned simulator UI, with the failed growth gate still stated
+plainly in the README, the simulator and this validation record. The fix is not to keep the
+proxy beside the food account, or to let a starving colony draw on its store faster: colonies
+whose foragers were removed lost their larvae with full stores beneath them **[A]**, and a model
+that rescued them would contradict the measurement G5 was built to reproduce. The forager share
+and the foraging range are the next step.
 
 ## D25. The soil model, fitted to the soil the ants actually live in
 
