@@ -37,8 +37,12 @@ labelled as such wherever the simulator surfaces it.
 |---|---|---|---|
 | Nuptial flight timing | Alates fly May to July, on a calm humid morning following heavy rain | **[A]** | AntWiki; Wikipedia species account |
 | Mating | Queen mates with several males over successive days, then sheds wings | **[A]** | Wikipedia species account |
-| Claustral founding | Queen digs one vertical shaft and a single chamber, seals herself in, takes in no food, raises the first brood entirely from her own fat and flight-muscle reserves | **[A]** | Wikipedia species account; Tschinkel 2004 |
-| Founding nest depth | Incipient nests 40 to 50 cm deep | **[A]** | Tschinkel 2004 |
+| Claustral founding | Queen digs one shaft and a single chamber, takes in no food, and raises the first brood entirely from her own fat and flight-muscle reserves. Real queens then seal themselves in; the model does not plug the entrance | **[A]** | Wikipedia species account; Tschinkel 2004 |
+| Founding nest depth | Incipient nests 29 to 37 cm deep, drawn once per colony, and the queen digs all of it. Whether a real queen does is unknown: see the row below. This row said 40 to 50 cm until 2026-09-11; see the correction in section 2 | **[A]** for the depth | Tschinkel 2004 |
+| Who dug the incipient nest **(new)** | The queen alone, in this model. Tschinkel reports incipient nests as 29 to 37 cm deep and holding about 40 g of sand, but never says whether they held workers, and "incipient colony" ordinarily means a queen and her first brood. Her 40 g is nearly all of it, which is a great deal for one ant. Queens measured digging alone go shallower: *P. rugosus* stopped at 17 cm after about 7 days, though in frames holding only 19 cm of soil, and *Atta sexdens* digs about 15 cm plus a chamber. A shallower queen was tried on 2026-09-12 and her workers never finished the nest, so the whole depth stays with her until somebody measures a *badius* queen digging alone | **[C]** for the attribution | Tschinkel 2004; Enzmann & Nonacs 2010; Camargo et al. 2016 |
+| Founding digging pace **(new)** | She starts digging the day she lands. Her nest is 9.32 cm deep after one day of digging, 14.32 after two and 16.26 after three, then deepens 5.25 cm a day to the incipient depth, about a week in all. Her clock counts only time when the sand under her can be dug, so rain holds her up | **[B]** | Enzmann & Nonacs 2010, Table 1 (*P. rugosus*, fully claustral, in sand-filled frames). Their queens stopped at 17 cm, but the frames held only 19 cm of soil, so that stop is not used |
+| Founding chamber **(new)** | One chamber opened sideways from the bottom of her shaft, 1 cm high and 3 cm wide in the slice. She stays in it until her first daughters eclose | **[A]** for the height; **[C]** for the width | Tschinkel 2004 for chamber height; no incipient chamber has been measured |
+| Founding spoil **(new)** | Sand a founding queen digs is counted onto the surface without her walking it up. Every ant in the model walks a cell a minute, and a queen alone has nobody to hand a pellet to, so walking it up would make that pace, not her, set her depth (D27) | **[C]** | None. An abstraction, and labelled as one |
 | Queen number | Exactly one. Multiple foundresses may cooperate briefly, but mature wild colonies are never truly polygynous, so at most one queen survives the founding phase | **[A]** | Wikipedia species account |
 | First workers | Undersized "nanitic" workers; they open the nest and begin foraging | **[B]** | General to claustral ants |
 | Sexual maturity | Colony begins producing alates at roughly 700 workers | **[A]** | AntWiki |
@@ -82,6 +86,7 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | Mature depth | Commonly 2.5 to 3.0 m; the deepest measured was 3.06 m | **[A]** | Tschinkel 2004 |
 | Growth mode | Deepening, chamber addition and chamber enlargement happen simultaneously, so the size-free shape is the same at every colony size. Enlargement contributes more to area than addition does | **[A]** | Tschinkel 2004; Tschinkel 1999a |
 | Mound | Flattened sand crater, no surrounding vegetation, decorated with charcoal and detritus for reasons unknown | **[A]** | AntWiki; Wikipedia species account |
+| The disc, as drawn | **Drawn only; not modelled.** A very slight, flattened disc of sand 30 to 60 cm across round the entrance, often covered with small pebbles or charcoal. The picture draws it 45 cm across, rising 6 mm at the middle, scattered with charcoal and bare of grass; the rise and the amount of charcoal are appearance | **[A]** from a secondary account for the diameter; **[C]** for the rest | Nickerson & Fasulo, EDIS EENY-298, citing Smith & Whitman 1992 |
 | Chamber spacing and stability | Chambers are placed so that stress zones overlap and arching is enhanced; modelled as a soil stress field that discourages placing chambers too close vertically | **[B]** | Belachew, Arson & Frost 2025 |
 
 ## 3. Excavation
@@ -95,6 +100,8 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | Age and nest size | Workers taken from the top of a mature nest dug larger, more complex nests than those from the bottom: about twice the rate of the middle group and three times the bottom. All age groups nevertheless produced top-heavy nests of similar shape | **[A]** | Tschinkel 2004 |
 | Digging regulation | Digging effort is modulated by each ant's own rate of collision with nestmates, with no global control. Rate curve runs constant, then decays rapidly, then tails off | **[B]** | Avinery et al. 2023 (*Solenopsis invicta*) |
 | Excavation dynamics | Excavation is logistic: exponential growth then saturation. Total excavated volume is close to proportional to worker number | **[B]** | Buhl et al. 2005 (*Messor sancta*) |
+| Digging fatigue **(new)** | An ant digs less the more sand she has moved herself, which is what ties the volume a colony digs to the number of ants in it | **[B]** for the mechanism, **[C]** for the amount | Rasse & Deneubourg 2001 (*Lasius niger*): nest volume tracks population, held there by the nest's volume and by a change in the ants after digging. The 0.5 cm³ is invented and fitted to Tschinkel's depth law (D28) |
+| Where a digger works **(new)** | Most diggers dig the wall beside where they rest, which widens chambers; a fixed one in twenty walks down to the working face and deepens the shaft | **[C]** | None for this species. Density-dependent digging that subsides as a nest grows is **[B]** (Buhl et al. 2005; Halley et al. 2005); that individuals differ in how they dig is **[B]** (Rajendran et al. 2025). The one in twenty is invented and fitted (D28) |
 | Space feedback | Ants dig significantly less in a tunnel that is already long, and walking speed correlates with excavation rate | **[B]** | Bruce et al. 2018 (*Acromyrmex lundi*, *Atta colombica*) |
 | Spoil as a cue | Accumulated freshly excavated pellets influence where workers choose to begin digging next | **[B]** | Pielström & Roces 2013 (*Atta vollenweideri*) |
 | Sequential transport | A pellet passes through multiple carriers on its way to the surface, not one ant end to end. Modelled as excavators, short-distance carriers and long-distance carriers | **[A]** for *badius* upward sand transport; **[B]** for the three-tier carrier split | Tschinkel & Seal 2015 (**[A]**); Pielström & Roces 2013 (**[B]**) |
@@ -129,6 +136,9 @@ Colony size classes used throughout are Tschinkel's: class 0, under 100 workers;
 | How an ant reaches its depth | It walks toward a depth drawn from the distribution measured for its task, redrawn every few days. **No ant knows its depth**; this is the same invented cue as `excavation.depthCue` and carries the same caveat | **[C]** | None. See §11 and DECISIONS.md D20 |
 | Where the brood is | Brood is held as a count per chamber in the nest grid, laid where the queen is and carried deeper by brood-care workers. The demographic count in `BroodStore` remains authoritative and the two are reconciled daily | **[A]** for brood being kept deep and callows eclosing in the bottom chambers; **[C]** for the carrying mechanism | Tschinkel & Kwapich 2017; DECISIONS.md D20 |
 | Where the queen is | In the brood chambers, which is where the eggs then appear. No source in the bibliography says where in the nest she sits | **[C]** | None |
+| Worker sizes, as drawn | **Drawn only.** Minor workers 6.35 mm long and majors 9.52 mm. A minor's head width grows with the colony, from 1.15 mm in incipient colonies to 1.90 mm at seven to eight thousand workers; a major's is 2.50 to 2.75 mm whatever the colony size. The picture uses all four, so a major's broad head is visible beside a minor's | **[A]** | Tschinkel 1998 |
+| Queen and male sizes, as drawn | **Drawn only.** Head width 2.9 mm for a gyne and 1.9 mm for a male, with dry weights of 8.6 and 2.4 mg. The queen is drawn 11 mm long, the middle of the 10 to 12 mm in an extension sheet that names no source; no primary measurement of queen length was found. No male length was found either, so a male is drawn at the queen's length scaled by the ratio of their head widths | **[A]** for head widths; **[A]** from a secondary account for queen length; **[C]** for male length | Smith & Tschinkel 2006, Table 1; Nickerson & Fasulo, EDIS EENY-298 |
+| Brood sizes, as drawn | **Drawn only.** An egg has the measured volume of a *P. rugosus* egg, 63.3 nl, drawn as an oval 1.6 times as long as it is wide, which makes it about 0.68 by 0.42 mm. A fully fed larva is drawn at 0.8 of a minor worker's length and a pupa at the length of the worker it will become. No source found measures any stage of *badius* brood | **[B]** for the egg volume; **[C]** for the egg's shape and both lengths | Genzoni et al. 2025 |
 
 ## 5. Foraging
 
@@ -247,8 +257,8 @@ and diffusion kernel. Do not collapse them into one "pheromone".
 |---|---|---|---|
 | Recruitment trail | Deposited on the return leg. Response is **non-linear**: strong trails elicit disproportionately stronger responses, producing winner-take-all trail selection | **[A]** that *badius* lays recruitment trails; **[B]** for the non-linear response function | Hölldobler & Wilson 1970 (**[A]**); Sumpter & Beekman 2003 (**[B]**) |
 | Deposition modulation | More pheromone is deposited near a food source than near the nest, and more for distant sources than near ones | **[B]** | Czaczkes et al. 2024 (*Lasius niger*) |
-| Alarm | Short-lived, fast-diffusing, radial. Drives defensive recruitment | **[B]** | General |
-| Necrophoric cue | Corpse recognition via cuticular fatty acids, driving removal | **[B]** | Diez et al. 2012, 2014; Zhang et al. 2025 |
+| Alarm | **Not implemented.** The species file has decay and diffusion parameters for it and nothing reads them; the simulator's key lists it as not simulated yet. What it should be: short-lived, fast-diffusing, radial, driving defensive recruitment | **[B]** | General |
+| Necrophoric cue | **Not implemented.** Parameters exist and nothing reads them; the key lists it as not simulated yet. What it should be: corpse recognition via cuticular fatty acids, driving removal | **[B]** | Diez et al. 2012, 2014; Zhang et al. 2025 |
 | Building pheromone | Added to excavated material, amplifying deposition where deposition already happened. Lifetime governs architecture | **[B]** | Khuong et al. 2016 |
 | Path integration | Foragers also hold a homing vector and use landmarks. They do not navigate by trail alone | **[B]** | General *Pogonomyrmex* and desert ant literature |
 | Decay and deposition constants | **No published values exist for *badius*.** These are tuned parameters, exposed in the UI and flagged as such | **[C]** | None |
@@ -345,6 +355,7 @@ Espinoza, D. & Santamarina, J. (2010) Ant tunneling, a granular media perspectiv
 Ferster, B. & Traniello, J. (1995) Polymorphism and foraging behavior in *Pogonomyrmex badius*. *Environmental Entomology*.
 García Ibarra, F. A. et al. (2023) Experimental evidence that increased surface temperature affects bioturbation by ants.
 Harrison, J. S. & Gentry, J. B. (1981) Foraging pattern, colony distribution, and foraging range of the Florida harvester ant, *Pogonomyrmex badius*. *Ecology* 62:1467–1473.
+Genzoni, E. et al. (2025) Trophic eggs affect caste determination in the ant *Pogonomyrmex rugosus*. *eLife*.
 Hölldobler, B. & Wilson, E. O. (1970) Recruitment trails in the harvester ant *Pogonomyrmex badius*. *Psyche*.
 Khuong, A. et al. (2016) Stigmergic construction and topochemical information shape ant nest architecture. *PNAS*.
 Kwapich, C. L. (2014) The influence of demography, development and death on seasonal labor allocation in the Florida harvester ant (*Pogonomyrmex badius*). PhD dissertation, Florida State University.
@@ -356,9 +367,11 @@ Leclerc, J.-B. & Detrain, C. (2016) Ants detect but do not discriminate diseased
 Leclerc, J.-B. et al. (2017) Impact of colony size on survival and sanitary strategies. *Behav. Ecol. Sociobiol.*
 Monaenkova, D. et al. (2015) Behavioral and mechanical determinants of collective subsurface nest excavation. *J. Exp. Biol.*
 Monnin, T. & Ratnieks, F. (2001) Policing in queenless ponerine ants. *Behav. Ecol. Sociobiol.*
+Nickerson, J. C. & Fasulo, T. R. Florida harvester ant, *Pogonomyrmex badius*. UF/IFAS Extension, EDIS publication EENY-298 (IN536). A secondary account, cited only for queen length and the surface disc.
 Pielström, S. & Roces, F. (2013) Sequential soil transport. *PLoS ONE*.
 Sankovitz, M. & Purcell, J. (2021) Ant nest architecture is shaped by local adaptation and plastic response to temperature. *Scientific Reports*.
 Smith, C. R. (2007) Energy use and allocation in the Florida harvester ant, *Pogonomyrmex badius*: are stored seeds a buffer? *Behav. Ecol. Sociobiol.* 61:1479–1487. Cited as reported by Tschinkel & Kwapich 2016.
+Smith, C. R. & Tschinkel, W. R. (2006) The sociometry and sociogenesis of reproduction in the Florida harvester ant. *Journal of Insect Science*.
 Stroeymeyt, N. et al. (2007) Selfish worker policing. *Behav. Ecol. Sociobiol.*
 Sumpter, D. & Beekman, M. (2003) From nonlinearity to optimality. *Animal Behaviour*.
 Tschinkel, W. (1998) Sociometry and sociogenesis of *Pogonomyrmex badius*, worker characteristics. *Insectes Sociaux*.

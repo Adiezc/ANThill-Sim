@@ -2,21 +2,21 @@
  * The page.
  *
  * Two screens: the threshold a reader meets on arrival, and the simulator itself. Nothing
- * here contains any biology. It reads core state and draws it, and the one thing it is
- * allowed to write is the brood investment lever, which is one of the two decisions a
- * person is permitted to make about this colony.
+ * here contains any biology. It reads core state and draws it, and the one thing it may
+ * write is the brood investment lever, one of the two decisions a person is allowed to make
+ * about this colony.
  *
  * **The simulation runs on the main thread, time-sliced.** A colony of a few hundred costs
- * about a tenth of a second per simulated day, so at the speeds offered here the frame
- * budget below is never spent; a mature colony of several thousand at the highest speed
- * will spend it and the picture will slow rather than the simulation losing fidelity. That
- * is the correct trade of the two, and it is the reason speed is expressed as simulated
- * days per real second and never as a step size. Moving the core into a Worker is the next
- * step and changes nothing about the model: `/core` already imports no DOM.
+ * about a tenth of a second per simulated day, so at the speeds offered here the frame budget
+ * below is rarely spent. A mature colony of several thousand at the highest speed will spend
+ * it, and the picture will slow rather than the simulation losing fidelity. That is the right
+ * trade, and it is why speed is expressed as simulated days per real second and never as a
+ * step size. Moving the core into a Worker is the next step and changes nothing about the
+ * model, because `/core` already imports no DOM.
  *
  * **Drawing and stepping are separate clocks.** The ants are eased toward their simulated
- * positions every frame (see render/ant-motion.ts), so the picture is continuous even when
- * the model is taking one step a second. That is a property of the drawing only; delete it
+ * positions every frame (see render/ant-motion.ts), so the picture stays continuous even
+ * when the model takes one step a second. That is a property of the drawing only. Delete it
  * and the run is identical.
  */
 
@@ -32,12 +32,37 @@ import { SurfaceView } from './render/surface-view.js'
 import { AntMotion } from './render/ant-motion.js'
 import { CASTE_COLOURS, BURDEN_COLOURS, coloursFor } from './render/ant-sprite.js'
 import { DEFAULT_THEME } from './render/nest-view.js'
-import { colonyReadings, describePhase, formatDate, nestReadings, renderHud } from './ui/hud.js'
+import { antBodyFor, bodySizesFor } from './render/body-sizes.js'
+import { PHEROMONES } from './render/pheromones.js'
+import {
+  colonyReadings,
+  describePhase,
+  formatDate,
+  nestReadings,
+  renderHud,
+  seedReadings,
+} from './ui/hud.js'
 import { createSourcesSheet } from './ui/sources.js'
 import { createInstrumentSheet } from './ui/instrument.js'
 import { mountThreshold } from './ui/threshold.js'
+import { Timelapse, WATCH_SECONDS_PER_DAY } from './ui/pace.js'
+import { ColonyDiary } from './ui/diary.js'
+import type { DiaryEntry } from './ui/diary.js'
+import type { ColonySummary } from './core/sim/colony.js'
+import {
+  currentTheme,
+  initTheme,
+  nestThemeFor,
+  onThemeChange,
+  themeToggleLabel,
+  toggleTheme,
+} from './ui/theme.js'
 import type { NestViewport } from './render/nest-view.js'
+import type { BodySizes } from './render/body-sizes.js'
+import type { PheromoneId } from './render/pheromones.js'
 import type { BroodInvestmentValue } from './core/systems/demography.js'
+
+initTheme()
 
 const { params, counts } = loadSpecies(species as unknown as Record<string, unknown>)
 
@@ -65,32 +90,45 @@ const openSources = createSourcesSheet(counts)
 const openInstrument = createInstrumentSheet(repositoryUrl())
 
 /**
- * Simulated days per real second. Speed changes how many steps run, never their size.
+ * How fast the colony runs. Speed changes how many steps run, never their size.
  *
- * Labelled in days rather than in multipliers. "16x" says nothing about what a reader is
- * about to see; "16 days a second" says that the first workers are about three seconds
- * away.
+ * The first is the time-lapse (ui/pace.ts), which has no fixed rate. The rest are simulated
+ * days per real second, labelled in days rather than multipliers, because "16x" says nothing
+ * about what a reader is about to see.
  */
-const SPEEDS: readonly { label: string; daysPerSecond: number }[] = [
-  { label: '1 day/min', daysPerSecond: 1 / 60 },
-  { label: '1 day/4s', daysPerSecond: 0.25 },
-  { label: '1 day/s', daysPerSecond: 1 },
-  { label: '4 days/s', daysPerSecond: 4 },
-  { label: '16 days/s', daysPerSecond: 16 },
+const SPEEDS: readonly { label: string; title: string; daysPerSecond: number | null }[] = [
+  {
+    label: 'Time-lapse',
+    title: 'A day takes 30 seconds while something is happening, and skips ahead while nothing is',
+    daysPerSecond: null,
+  },
+  { label: '1 day/30 s', title: 'One simulated day every 30 seconds', daysPerSecond: 1 / 30 },
+  { label: '1 day/5 s', title: 'One simulated day every 5 seconds', daysPerSecond: 0.2 },
+  { label: '1 day/s', title: 'One simulated day every second', daysPerSecond: 1 },
+  { label: '16 days/s', title: 'Sixteen simulated days every second', daysPerSecond: 16 },
 ]
 
 /**
- * The speed a visitor starts at.
+ * The speed a visitor starts at: the time-lapse.
  *
- * A day a second. The queen seals herself in, digs her founding shaft over the next few
- * seconds, lays, and her first daughters eclose about forty seconds in — which is roughly
- * how long someone will watch before deciding whether this is worth their time. Slower and
- * the first minute is a still picture; faster and the founding is over before it is seen.
+ * Somebody who opens "Watch a colony" wants to see a colony begin, the way they would watch an
+ * ant farm: the queen digging her shaft over about a week, laying, her brood growing, her first
+ * daughters hatching and starting to dig and forage. At a fixed day a second the digging is over
+ * in seconds; at a fixed thirty seconds a day the first worker is nearly half an hour away.
  */
-const DEFAULT_SPEED = 2
+const DEFAULT_SPEED = 0
 
-/** Milliseconds of simulation permitted per frame. Past this the picture slows, not the model. */
+/** Milliseconds of simulation allowed per frame. Past this the picture slows, not the model. */
 const FRAME_BUDGET_MS = 9
+
+/** How quickly the camera catches up with where it has been told to look, per second. */
+const CAMERA_EASE_PER_SECOND = 5
+
+/**
+ * Centimetres of depth the ant-scale camera shows. About twenty body lengths of a worker, close
+ * enough to watch the queen dig and see her eggs, with her chamber in the same picture.
+ */
+const WORK_SPAN_CM = 16
 
 const INVESTMENTS: readonly {
   label: string
@@ -100,19 +138,29 @@ const INVESTMENTS: readonly {
   {
     label: 'Workers',
     value: BroodInvestment.Workers,
-    note: 'Every egg is raised as a worker. The colony grows as fast as its foragers can feed the brood, and produces almost no winged reproductives.',
+    note: 'Every egg becomes a worker. The colony grows as fast as its food allows and raises almost no queens or males.',
   },
   {
     label: 'Balanced',
     value: BroodInvestment.Balanced,
-    note: 'Most eggs become workers. Once the colony is past 700 workers, a small share of the spring brood is raised into winged queens and males instead.',
+    note: 'Most eggs become workers. Once the colony passes 700 workers, part of each spring brood becomes winged queens and males.',
   },
   {
-    label: 'Alates',
+    label: 'Queens and males',
     value: BroodInvestment.Alates,
-    note: 'As much of the spring brood as the season allows is raised into winged queens and males. That is the colony reproducing, and it is paid for out of the fat its workers stored last autumn.',
+    note: 'As much of the spring brood as the season allows becomes winged queens and males, paid for with fat the workers stored last autumn.',
   },
 ]
+
+/** Diary entries shown before the rest fold away under "Earlier entries". */
+const DIARY_SHOWN = 6
+
+/** Plain words for the three evidence labels, used wherever a rule is shown. */
+const TAG_WORDS: Readonly<Record<'A' | 'B' | 'C', string>> = {
+  A: 'Measured in this species',
+  B: 'Borrowed from another ant',
+  C: 'Invented',
+}
 
 function startThreshold(): void {
   const teardown = mountThreshold(app!, {
@@ -130,69 +178,116 @@ function startThreshold(): void {
   })
 }
 
-/** Camera modes for the slice. "Free" is whatever the reader has zoomed or dragged to. */
+/** Camera modes for the slice. "Free" is wherever the reader has zoomed or dragged to. */
 type Camera = 'work' | 'nest' | 'free'
 
 function startSimulator(): void {
   // A colony seed drawn once per visit, so two people who open the page do not watch the
-  // same nest. It is printed in the panel, so any run a person likes can be repeated here
-  // or handed to the headless runner and reproduced exactly.
+  // same nest. It is printed in the panel, so any run a person likes can be repeated here or
+  // handed to the headless runner and reproduced exactly.
   const seed = Math.floor(Math.random() * 2 ** 31) || 1
   const colony = new Colony({ seed, params })
   const motion = new AntMotion(colony.sim.ants.capacity)
+  const totalValues = counts.A + counts.B + counts.C
 
   app!.innerHTML = `
     <main class="layout">
       <section class="stage">
+        <div class="stage-core">
         <div class="views">
           <div class="view view--nest">
-            <canvas id="slice"></canvas>
-            <p class="view-label">nest, vertical slice</p>
+            <canvas
+              id="slice"
+              aria-label="The nest, as a vertical slice through the sand, with the ground above it"
+            ></canvas>
+            <p class="view-label">The nest, with the ground above</p>
             <div class="view-tools" id="cameras"></div>
-          </div>
-          <div class="view view--surface">
-            <canvas id="ground"></canvas>
-            <p class="view-label">ground, from above</p>
+            <figure class="map-inset">
+              <canvas id="ground" aria-label="The foraging range, from above"></canvas>
+              <figcaption class="map-inset-label">The foraging range, from above</figcaption>
+            </figure>
           </div>
         </div>
         <p class="stage-note">
-          Scroll to zoom the slice, drag to move it. Click an ant to see the rule it is
-          following. Real shafts are helices 4 to 6 cm across; the slice is a plane cut
-          through one, not a flattened nest. The lines on the ground are not drawn: they are
-          recruitment pheromone, left by foragers walking home.
+          Scroll to zoom and drag to move. Click an ant to see what it is doing and which
+          study says so.
         </p>
+        </div>
       </section>
       <aside class="panel">
-        <div class="panel-head">
+        <div class="panel-core">
+        <header class="panel-head">
           <h1>Anthill</h1>
-          <p class="subtitle">Pogonomyrmex badius, ${params.species.habitat}</p>
-          <p class="clock">
-            <span id="date"></span>
-            <span class="phase" id="phase"></span>
-          </p>
-        </div>
-        <div class="controls" id="speeds"></div>
-        <div class="controls" id="levers"></div>
-        <p class="control-note" id="lever-note"></p>
+          <p class="subtitle"><i>Pogonomyrmex badius</i>. ${params.species.habitat}.</p>
+          <div class="clock">
+            <div>
+              <p class="date" id="date"></p>
+              <p class="phase" id="phase"></p>
+            </div>
+            <button class="control-pause" id="pause" type="button" data-state="running">
+              <span class="control-pause-label">Pause</span>
+              <span class="control-pause-icon" aria-hidden="true"></span>
+            </button>
+          </div>
+        </header>
+        <section class="panel-section">
+          <h2 class="panel-label">Right now</h2>
+          <p class="now-text" id="now"></p>
+          <p class="now-food" id="food"></p>
+        </section>
+        <section class="panel-section">
+          <h2 class="panel-label">Speed</h2>
+          <div class="controls controls--segmented controls--auto" id="speeds"></div>
+          <p class="control-note" id="pace"></p>
+        </section>
+        <section class="panel-section">
+          <h2 class="panel-label">At a glance</h2>
+          <div class="hud-grid glance" id="glance"></div>
+        </section>
         <div class="inspector" id="inspector" hidden></div>
+        <section class="panel-section">
+          <h2 class="panel-label">Colony diary</h2>
+          <div id="diary" aria-live="polite"></div>
+        </section>
+        <section class="panel-section">
+          <h2 class="panel-label">What the queen's eggs become</h2>
+          <div class="controls controls--segmented controls--three" id="levers"></div>
+          <p class="control-note" id="lever-note"></p>
+        </section>
         <details class="legend" id="legend">
           <summary>What am I looking at?</summary>
           <div class="legend-body" id="legend-body"></div>
         </details>
-        <div class="readouts" id="hud"></div>
-        <div class="panel-foot">
-          <p class="provenance">
-            seed ${seed}<br />
-            ${counts.A} measured in this species [A]<br />
-            ${counts.B} from another ant [B]<br />
-            ${counts.C} invented [C]
-          </p>
-          <button class="linkish" id="show-sources" type="button">
-            Sources, provenance, and what this refuses to model
-          </button>
-          <button class="linkish" id="show-instrument" type="button">
-            Running this as an instrument
-          </button>
+        <details class="legend behind" id="behind">
+          <summary>Behind the picture</summary>
+          <div class="legend-body behind-body">
+            <section>
+              <h3 class="panel-label">Scents the ants follow</h3>
+              <ul class="scent-list" id="scents"></ul>
+            </section>
+            <div class="readouts">
+              <p class="readouts-intro">
+                The grey note under each figure is what real colonies show. A figure turns red
+                when the model is outside that.
+              </p>
+              <div id="hud"></div>
+            </div>
+            <p class="provenance">
+              This run uses seed <code>${seed}</code>, so it can be repeated exactly. Of the
+              model's ${totalValues} values, ${counts.A} are measured in this species,
+              ${counts.B} are borrowed from other ants and ${counts.C} are invented.
+            </p>
+            <div class="foot-links">
+              <button class="linkish" id="show-sources" type="button">Sources and evidence</button>
+              <button class="linkish" id="show-instrument" type="button">Run your own study</button>
+            </div>
+          </div>
+        </details>
+        <footer class="panel-foot">
+          <div class="foot-links">
+            <button class="linkish" id="theme-toggle" type="button"></button>
+          </div>
+        </footer>
         </div>
       </aside>
     </main>
@@ -208,52 +303,75 @@ function startSimulator(): void {
   const leverNote = app!.querySelector<HTMLParagraphElement>('#lever-note')!
   const cameraBar = app!.querySelector<HTMLDivElement>('#cameras')!
   const inspector = app!.querySelector<HTMLDivElement>('#inspector')!
+  const nowEl = app!.querySelector<HTMLParagraphElement>('#now')!
+  const foodEl = app!.querySelector<HTMLParagraphElement>('#food')!
+  const paceEl = app!.querySelector<HTMLParagraphElement>('#pace')!
+  const glanceEl = app!.querySelector<HTMLDivElement>('#glance')!
+  const diaryEl = app!.querySelector<HTMLDivElement>('#diary')!
+  const behind = app!.querySelector<HTMLDetailsElement>('#behind')!
 
-  const nestView = new NestView(sliceCanvas)
+  const nestView = new NestView(sliceCanvas, nestThemeFor(currentTheme()))
   const surfaceView = new SurfaceView(groundCanvas)
+
+  // The slice draws its own sky and ruler, so it is told when the theme changes. The next
+  // frame redraws it; nothing else needs to happen.
+  const themeButton = app!.querySelector<HTMLButtonElement>('#theme-toggle')!
+  themeButton.textContent = themeToggleLabel()
+  themeButton.addEventListener('click', () => toggleTheme())
+  onThemeChange((theme) => {
+    nestView.setTheme(nestThemeFor(theme))
+    themeButton.textContent = themeToggleLabel()
+  })
+
+  // Which scents are drawn. Both start on, because they are half of what the colony is doing.
+  let showDiggingScent = true
+  let showTrails = true
 
   let speedIndex = DEFAULT_SPEED
   let paused = false
   let camera: Camera = 'work'
   /**
-   * How much depth the slice shows. Starts at ant scale — a founding chamber is 1 cm high
-   * and a worker 6.35 mm long, so this is about forty body lengths of nest.
+   * How much depth the slice shows. Starts at ant scale: a founding chamber is 1 cm high and
+   * a worker 6.35 mm long, so this is about forty body lengths of nest.
    */
-  let spanCm = 26
+  let spanCm = WORK_SPAN_CM
   let freeTopCm = 0
   let freeCentreCm = 0
   let selected = -1
   const startedAtMs = performance.now()
 
-  // Speed controls. Pause first, because it is the one a person reaches for in a hurry.
-  const pauseButton = document.createElement('button')
-  pauseButton.type = 'button'
-  pauseButton.textContent = 'Pause'
+  // Pause sits beside the date, where a person looks when they want the colony to stop.
+  const pauseButton = app!.querySelector<HTMLButtonElement>('#pause')!
+  const pauseLabel = pauseButton.querySelector<HTMLSpanElement>('.control-pause-label')!
   pauseButton.addEventListener('click', () => {
     paused = !paused
-    pauseButton.textContent = paused ? 'Run' : 'Pause'
+    pauseLabel.textContent = paused ? 'Resume' : 'Pause'
+    pauseButton.dataset.state = paused ? 'paused' : 'running'
     pauseButton.ariaPressed = String(paused)
   })
-  speedBar.append(pauseButton)
 
+  const speedThumb = addThumb(speedBar)
   const speedButtons: HTMLButtonElement[] = []
   SPEEDS.forEach((speed, index) => {
     const button = document.createElement('button')
     button.type = 'button'
     button.textContent = speed.label
+    button.title = speed.title
     button.addEventListener('click', () => {
       speedIndex = index
       for (const [i, b] of speedButtons.entries()) b.ariaPressed = String(i === index)
+      syncThumb(speedThumb, button)
     })
     speedButtons.push(button)
     speedBar.append(button)
   })
   speedButtons[speedIndex]!.ariaPressed = 'true'
+  syncThumb(speedThumb, speedButtons[speedIndex]!)
 
-  // Camera. The default is ant scale, over the deepest work; one click gives the whole nest.
+  // Camera. The default is ant scale, around the queen. One click shows the whole nest.
   const cameraButtons: HTMLButtonElement[] = []
   const CAMERAS: readonly { label: string; value: Camera; title: string }[] = [
-    { label: 'Follow the ants', value: 'work', title: 'Ant scale, over the deepest digging' },
+    { label: 'Follow the ants', value: 'work', title: 'Close up, around the queen and her brood' },
     { label: 'Whole nest', value: 'nest', title: 'Everything dug so far, to scale' },
   ]
   CAMERAS.forEach((option) => {
@@ -263,7 +381,7 @@ function startSimulator(): void {
     button.title = option.title
     button.addEventListener('click', () => {
       camera = option.value
-      if (option.value === 'work') spanCm = 26
+      if (option.value === 'work') spanCm = WORK_SPAN_CM
       syncCameraButtons()
     })
     cameraButtons.push(button)
@@ -277,14 +395,10 @@ function startSimulator(): void {
   }
   syncCameraButtons()
 
-  // The one lever a person is given. It biases the queen's egg laying and acts on
-  // developmental scheduling only. It cannot reassign an adult, and nothing in the UI may
-  // ever offer to: foragers in this species do not revert and the colony does not backfill.
-  const leverLabel = document.createElement('span')
-  leverLabel.className = 'hud-expected'
-  leverLabel.textContent = 'Brood investment'
-  leverBar.append(leverLabel)
-
+  // The one lever a person is given. It biases what the queen's eggs are raised into and
+  // acts on development only. It cannot reassign an adult, and nothing in the UI may ever
+  // offer to: foragers in this species never go back inside and the colony never backfills.
+  const leverThumb = addThumb(leverBar)
   const leverButtons: HTMLButtonElement[] = []
   INVESTMENTS.forEach((investment) => {
     const button = document.createElement('button')
@@ -302,11 +416,111 @@ function startSimulator(): void {
     const chosen = INVESTMENTS.find((i) => i.value === colony.demography.investment)!
     for (const [i, b] of leverButtons.entries())
       b.ariaPressed = String(INVESTMENTS[i]!.value === colony.demography.investment)
-    leverNote.textContent = `${chosen.note} It changes what the queen's eggs are raised into, and nothing else: a worker already alive is never reassigned, because in this species a forager never returns to inside work and no shortage recruits a replacement.`
+    syncThumb(leverThumb, leverButtons[INVESTMENTS.indexOf(chosen)]!)
+    leverNote.textContent = `${chosen.note} Adults keep their jobs whatever you choose, because a forager in this species never goes back to work inside.`
   }
   syncLever()
 
+  buildScentKey(app!.querySelector<HTMLUListElement>('#scents')!, (id, on) => {
+    if (id === 'building') showDiggingScent = on
+    if (id === 'recruitment') showTrails = on
+  })
   buildLegend(app!.querySelector<HTMLDivElement>('#legend-body')!)
+
+  // ---- The time-lapse, the diary and the "Right now" card ----
+
+  const timelapse = new Timelapse()
+  const diary = new ColonyDiary(params)
+
+  const diaryList = (entries: readonly DiaryEntry[], fresh: ReadonlySet<string>): HTMLElement => {
+    const list = document.createElement('ol')
+    list.className = 'diary'
+    for (const entry of entries) {
+      const item = document.createElement('li')
+      if (fresh.has(entry.key)) item.className = 'is-new'
+      const time = document.createElement('time')
+      time.textContent = entry.date
+      const text = document.createElement('p')
+      text.textContent = entry.text
+      item.append(time, text)
+      list.append(item)
+    }
+    return list
+  }
+
+  let diaryKeysShown = new Set<string>()
+  /** Newest first. Only entries not shown before get the arrival animation. */
+  function renderDiary(): void {
+    const newest = [...diary.entries].reverse()
+    const fresh = new Set(newest.map((e) => e.key).filter((key) => !diaryKeysShown.has(key)))
+    diaryKeysShown = new Set(newest.map((e) => e.key))
+    const parts: HTMLElement[] = [diaryList(newest.slice(0, DIARY_SHOWN), fresh)]
+    if (newest.length > DIARY_SHOWN) {
+      const more = document.createElement('details')
+      more.className = 'diary-more'
+      more.open = diaryEl.querySelector('details')?.open === true
+      const summary = document.createElement('summary')
+      summary.textContent = 'Earlier entries (' + String(newest.length - DIARY_SHOWN) + ')'
+      more.append(summary, diaryList(newest.slice(DIARY_SHOWN), fresh))
+      parts.push(more)
+    }
+    diaryEl.replaceChildren(...parts)
+  }
+  diary.update(colony)
+  renderDiary()
+
+  function paceText(): string {
+    if (paused) return 'Paused.'
+    const chosen = SPEEDS[speedIndex]!
+    if (chosen.daysPerSecond !== null) return chosen.title + '.'
+    return timelapse.skipping
+      ? 'Skipping ahead, because nothing new is happening. It slows down again as soon as something does.'
+      : 'A day takes ' +
+          String(WATCH_SECONDS_PER_DAY) +
+          ' seconds while something is happening, and skips ahead while nothing is.'
+  }
+
+  let nowShown = ''
+  let foodShown = ''
+  let paceShown = ''
+  let glanceShown = ''
+  /** Text is only written when it changes, so the panel is not rebuilt sixty times a second. */
+  function renderNow(summary: ColonySummary): void {
+    const { now, food } = diary.describeNow(colony)
+    if (now !== nowShown) nowEl.textContent = nowShown = now
+    if (food !== foodShown) foodEl.textContent = foodShown = food
+    const pace = paceText()
+    if (pace !== paceShown) paceEl.textContent = paceShown = pace
+
+    const tiles: readonly (readonly [string, string])[] = [
+      ['Workers', String(summary.workers)],
+      ['Brood', String(Math.round(summary.brood))],
+      ['Seeds in store', String(Math.round(summary.seedsStored))],
+      [
+        'Nest depth',
+        (summary.nestDepthCm < 10
+          ? summary.nestDepthCm.toFixed(1)
+          : String(Math.round(summary.nestDepthCm))) + ' cm',
+      ],
+    ]
+    const glance = tiles.map((tile) => tile[1]).join('|')
+    if (glance === glanceShown) return
+    glanceShown = glance
+    glanceEl.replaceChildren(
+      ...tiles.map(([label, value]) => {
+        const tile = document.createElement('div')
+        tile.className = 'hud-tile'
+        const labelEl = document.createElement('span')
+        labelEl.className = 'hud-label'
+        labelEl.textContent = label
+        const valueEl = document.createElement('span')
+        valueEl.className = 'hud-value'
+        valueEl.textContent = value
+        tile.append(labelEl, valueEl)
+        return tile
+      }),
+    )
+  }
 
   app!.querySelector('#show-sources')!.addEventListener('click', () => openSources('sources'))
   app!.querySelector('#show-instrument')!.addEventListener('click', () => openInstrument())
@@ -390,8 +604,9 @@ function startSimulator(): void {
     let bestDistance = reach * reach
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
-      const dx = motion.drawnX(i) - offsetCm
-      const dy = motion.drawnY(i) - depthCm
+      const spread = nestView.spreadOf(i)
+      const dx = motion.drawnX(i) + spread.x - offsetCm
+      const dy = motion.drawnY(i) + spread.y - depthCm
       const d = dx * dx + dy * dy
       if (d < bestDistance) {
         bestDistance = d
@@ -417,18 +632,52 @@ function startSimulator(): void {
   function viewportFor(): NestViewport {
     if (camera === 'nest') return NestView.frameNest(colony.nest)
     if (camera === 'work') {
-      return NestView.frameWork(colony.nest, colony.sim.ants, spanCm, colony.demography.queenSlot)
+      return NestView.frameWork(colony.sim.ants, motion, spanCm, colony.demography.queenSlot)
     }
     return { topCm: freeTopCm, spanCm, centreCm: freeCentreCm }
+  }
+
+  /**
+   * The viewport actually drawn: the one asked for, eased toward over a few frames.
+   *
+   * A camera that jumps to wherever it is told is the stutter this replaces. Free movement is
+   * not eased, because a drag or a scroll that lags behind the hand feels broken, and a jump of
+   * more than a screen is taken at once rather than swept through.
+   */
+  let easedViewport: NestViewport | null = null
+  let lastEaseMs = performance.now()
+  function easeViewport(target: NestViewport): NestViewport {
+    const now = performance.now()
+    const dt = Math.min(0.25, (now - lastEaseMs) / 1000)
+    lastEaseMs = now
+    const from = easedViewport
+    if (
+      camera === 'free' ||
+      from === null ||
+      Math.abs(target.topCm - from.topCm) > from.spanCm ||
+      Math.abs(target.centreCm - from.centreCm) > from.spanCm * 2
+    ) {
+      easedViewport = target
+      return target
+    }
+    const k = 1 - Math.exp(-CAMERA_EASE_PER_SECOND * dt)
+    easedViewport = {
+      topCm: from.topCm + (target.topCm - from.topCm) * k,
+      spanCm: from.spanCm + (target.spanCm - from.spanCm) * k,
+      centreCm: from.centreCm + (target.centreCm - from.centreCm) * k,
+    }
+    return easedViewport
   }
 
   function redraw(): void {
     const timeSeconds = (performance.now() - startedAtMs) / 1000
     const brood = colony.demography.brood
+    const summary = colony.summary()
+    const sizes = bodySizesFor(params, summary.workers)
     const sliceSize = fit(sliceCanvas)
     if (sliceSize !== null) {
       lastSliceSize = sliceSize
-      lastViewport = viewportFor()
+      lastViewport = easeViewport(viewportFor())
       nestView.draw(
         colony.nest,
         colony.soil,
@@ -440,6 +689,12 @@ function startSimulator(): void {
           motion,
           timeSeconds,
           selected,
+          sizes,
+          showDiggingScent,
+          labels: true,
+          surface: colony.surface,
+          discDiameterCm:
+            (params.nest.surfaceDiscDiameterCm.min + params.nest.surfaceDiscDiameterCm.max) / 2,
           broodMix: {
             eggs: brood.eggCount,
             larvae: brood.larvaCount,
@@ -457,23 +712,31 @@ function startSimulator(): void {
         groundSize.width,
         groundSize.height,
         params.foraging.foragingRangeMetres.value * 2.2,
-        { motion, timeSeconds },
+        { motion, timeSeconds, sizes, showTrails },
       )
     }
 
-    const summary = colony.summary()
-    const measurement = measureNest(colony.nest, params)
-    renderHud(hud, [
-      ...colonyReadings(summary, params),
-      ...nestReadings(measurement, params, summary.workers, summary.phase !== 'founding'),
-    ])
+    // The readouts held against real colonies sit folded away under "Behind the picture", and
+    // measuring the nest for them is not free, so they are only worked out while it is open.
+    if (behind.open) {
+      const measurement = measureNest(colony.nest, params)
+      renderHud(hud, [
+        { title: 'The colony', readings: colonyReadings(summary, params) },
+        { title: 'Seeds', readings: seedReadings(summary, params) },
+        {
+          title: 'The nest',
+          readings: nestReadings(measurement, params, summary.phase !== 'founding'),
+        },
+      ])
+    }
     dateEl.textContent = formatDate(colony.sim.clock.date())
     phaseEl.textContent = describePhase(summary)
-    renderInspector()
+    renderNow(summary)
+    renderInspector(sizes)
   }
 
   /** The card that appears when a reader clicks an ant. The citation is the point of it. */
-  function renderInspector(): void {
+  function renderInspector(sizes: BodySizes): void {
     const { ants } = colony.sim
     if (selected < 0 || selected >= ants.count || !ants.isAlive(selected)) {
       inspector.hidden = true
@@ -493,14 +756,16 @@ function startSimulator(): void {
     title.append(
       swatch,
       document.createTextNode(
-        `${CASTE_NAMES[ants.caste[selected]!] ?? 'ant'}, ${TASK_NAMES[ants.task[selected]!] ?? 'no task yet'}`,
+        `${CASTE_NAMES[ants.caste[selected]!] ?? 'Ant'}, ${TASK_NAMES[ants.task[selected]!] ?? 'no job yet'}`,
       ),
     )
 
     const where = document.createElement('p')
     where.className = 'inspector-where'
+    // Her length in millimetres, at scale 1 pixel per millimetre.
+    const lengthMm = antBodyFor(ants.caste[selected]!, ants.lengthMm[selected]!, sizes, 1).lengthPx
     where.textContent =
-      `${depth.toFixed(1)} cm down` +
+      `${lengthMm.toFixed(1)} mm long, ${depth.toFixed(1)} cm down` +
       (carrying === '' ? '' : `, carrying ${carrying}`) +
       `, ${(ants.ageTicks[selected]! / colony.sim.clock.ticksPerDay).toFixed(0)} days old`
 
@@ -510,7 +775,9 @@ function startSimulator(): void {
 
     const cite = document.createElement('p')
     cite.className = 'inspector-cite'
-    cite.textContent = `[${rule.tag}] ${rule.citation} · SCIENCE.md §${rule.section}`
+    // The idle rule has no section, and "section —" reads as a bug.
+    const detail = rule.section === '—' ? '' : ` Details in SCIENCE.md, section ${rule.section}.`
+    cite.textContent = `${TAG_WORDS[rule.tag]} [${rule.tag}]. ${rule.citation}.${detail}`
 
     const close = document.createElement('button')
     close.type = 'button'
@@ -535,15 +802,19 @@ function startSimulator(): void {
 
   function frame(): void {
     // The clock is read here rather than taken from the animation frame's own timestamp.
-    // That timestamp is when the frame began, which can already be several milliseconds in
-    // the past by the time this callback runs, and measuring a nine millisecond budget from
-    // it meant the budget was often spent before the first step and the colony never moved.
+    // That timestamp is when the frame began, which can be several milliseconds in the past
+    // by the time this callback runs. Measuring a nine-millisecond budget from it meant the
+    // budget was often spent before the first step, and the colony never moved.
     const now = performance.now()
     const elapsedSeconds = Math.min(0.25, (now - lastFrameMs) / 1000)
     lastFrameMs = now
 
     if (!paused && colony.alive) {
-      owedTicks += SPEEDS[speedIndex]!.daysPerSecond * elapsedSeconds * colony.sim.clock.ticksPerDay
+      // The time-lapse watches every frame, even at a fixed speed, so switching back to it
+      // picks up from what is happening now.
+      const timelapseRate = timelapse.update(colony, elapsedSeconds)
+      const daysPerSecond = SPEEDS[speedIndex]!.daysPerSecond ?? timelapseRate
+      owedTicks += daysPerSecond * elapsedSeconds * colony.sim.clock.ticksPerDay
       const deadline = now + FRAME_BUDGET_MS
       while (owedTicks >= 1 && performance.now() < deadline) {
         colony.step()
@@ -553,6 +824,12 @@ function startSimulator(): void {
       // Whatever could not be afforded this frame is dropped rather than carried. Carrying
       // it turns one slow frame into a spiral of slower ones.
       if (owedTicks > colony.sim.clock.ticksPerDay) owedTicks = 0
+
+      // A new diary entry is a moment worth seeing, so the time-lapse slows for it.
+      if (diary.update(colony).length > 0) {
+        timelapse.hold(colony)
+        renderDiary()
+      }
     }
 
     // The ants keep walking even while the model is paused mid-step, which is what makes a
@@ -566,16 +843,34 @@ function startSimulator(): void {
   redraw()
   window.requestAnimationFrame(frame)
 
-  // A handle on the running colony, for the development server only. Vite removes this
-  // whole block from a production build. It exists so the simulation can be driven and
-  // inspected from a console during development without the page growing a debug surface
-  // that ships.
+  // A handle on the running colony, for the development server only. Vite removes this whole
+  // block from a production build. It lets the simulation be driven and inspected from a
+  // console during development without the page growing a debug surface that ships.
   if (import.meta.env.DEV) {
     ;(window as unknown as Record<string, unknown>).anthill = {
       colony,
       redraw,
       advanceDays: (days: number) => {
         colony.run(colony.sim.clock.ticksPerDay * days)
+        redraw()
+      },
+      /** Centimetres of depth the ant-scale camera shows, for a screenshot at a chosen zoom. */
+      zoom: (cm: number) => {
+        spanCm = cm
+        camera = 'work'
+        syncCameraButtons()
+        // Jump straight there. Easing runs on real time, which a hidden tab barely gives it.
+        easedViewport = null
+        redraw()
+      },
+      /** Points the camera at a place in the nest, for a screenshot of something specific. */
+      lookAt: (offsetCm: number, depthCm: number, span: number) => {
+        spanCm = span
+        freeTopCm = depthCm - span / 2
+        freeCentreCm = offsetCm
+        camera = 'free'
+        syncCameraButtons()
+        easedViewport = null
         redraw()
       },
     }
@@ -588,13 +883,13 @@ const CASTE_NAMES: Record<number, string> = {
   [Caste.Male]: 'Male',
   [Caste.MinorWorker]: 'Minor worker',
   [Caste.MajorWorker]: 'Major worker',
-  [Caste.Callow]: 'Callow, newly eclosed',
+  [Caste.Callow]: 'Callow (newly hatched)',
 }
 
 const TASK_NAMES: Record<number, string> = {
-  [Task.None]: 'not yet working',
-  [Task.BroodCare]: 'brood care',
-  [Task.Transfer]: 'transfer work',
+  [Task.None]: 'no job yet',
+  [Task.BroodCare]: 'caring for brood',
+  [Task.Transfer]: 'moving seeds and brood',
   [Task.Excavator]: 'digging',
   [Task.Forager]: 'foraging',
 }
@@ -610,38 +905,60 @@ const BURDEN_NAMES: Record<number, string> = {
 /**
  * The key to the picture.
  *
- * It exists because a reader cannot be expected to infer that a pale blob is a callow and a
- * cream oval is a larva. Where the drawing makes a distinction the model does not, this
- * says so — the brood stages and the queen's size are both conventions of the renderer.
+ * A reader cannot be expected to infer that a pale blob is a callow and a cream oval is a
+ * larva. Where the drawing makes a distinction the model does not, the key says so: the
+ * brood stages and the queen's size are both conventions of the renderer.
  */
 function buildLegend(container: HTMLElement): void {
+  const { colony, brood, nest, seeds, discretisation } = params
+  const young = bodySizesFor(params, 10)
+  const mature = bodySizesFor(params, colony.meanMatureWorkers.value)
+  const mm = (n: number): string => `${n.toFixed(n < 1 ? 2 : 1)} mm`
+
   const entries: readonly { colour: string; label: string }[] = [
     {
       colour: coloursFor(Caste.Queen).body,
-      label: 'The queen. One per colony, and there is never another.',
+      label: `The queen, ${colony.queenLengthMm.min} to ${colony.queenLengthMm.max} mm long, with a head ${colony.queenHeadwidthMm.value} mm wide and a broad thorax that still carries the scars of her wings. A colony has one, and never gets another.`,
     },
     {
       colour: CASTE_COLOURS[Caste.MinorWorker]!.body,
-      label: 'Minor worker, 6.35 mm. Most of the colony.',
+      label: `Minor worker, ${colony.minorWorkerLengthMm.value} mm long. Most of the colony. Her head is ${mm(young.minorHeadwidthMm)} wide in a young colony and ${mm(mature.minorHeadwidthMm)} in a mature one.`,
     },
     {
       colour: CASTE_COLOURS[Caste.MajorWorker]!.body,
-      label: 'Major worker, 9.52 mm. About one in fourteen; they crack seeds.',
+      label: `Major worker, ${colony.majorWorkerLengthMm.value} mm long, with a head ${colony.majorHeadwidthMm.min} to ${colony.majorHeadwidthMm.max} mm wide. About one worker in ${Math.round(1 / colony.majorWorkerFraction.value)}. Majors speed up the opening of seeds.`,
     },
     {
       colour: CASTE_COLOURS[Caste.Callow]!.body,
-      label: 'Callow: newly eclosed and still pale. It darkens over its first days.',
+      label: `Callow, a newly hatched worker. Pale, and not yet working, for her first ${brood.callowDurationDays.value} days.`,
+    },
+    {
+      colour: CASTE_COLOURS[Caste.Male]!.body,
+      label: `Male, winged, with a head ${colony.maleHeadwidthMm.value} mm wide. Raised in spring for the mating flight. Nobody has measured his length, so he is drawn at the queen's length scaled by head width.`,
+    },
+    {
+      colour: CASTE_COLOURS[Caste.Alate]!.body,
+      label: 'Winged queen, raised in spring for the mating flight. Drawn at the queen’s size.',
+    },
+    {
+      colour: DEFAULT_THEME.egg,
+      label: `Egg, about ${mm(young.eggLengthMm)} long, kept in clumps. Its size is borrowed from a related harvester ant.`,
+    },
+    {
+      colour: DEFAULT_THEME.larva,
+      label: `Larva, a curled grub up to about ${mm(young.matureLarvaLengthMm)} long when fully fed. Estimated: no one has measured one.`,
+    },
+    {
+      colour: DEFAULT_THEME.pupa,
+      label: `Pupa, already shaped like the ${mm(young.pupaLengthMm)} worker it will become.`,
+    },
+    {
+      colour: DEFAULT_THEME.seed,
+      label: `Stored seed, in chambers ${seeds.seedChamberDepthCm.min} to ${seeds.seedChamberDepthCm.max} cm down. Drawn ${mm(young.seedWidthMm)} wide, the widest seed a worker can open.`,
     },
     {
       colour: BURDEN_COLOURS[Burden.SoilPellet]!,
-      label: 'A pellet of sand, on its way up and out.',
-    },
-    { colour: BURDEN_COLOURS[Burden.Seed]!, label: 'A seed. Seeds are what this species eats.' },
-    { colour: DEFAULT_THEME.egg, label: 'Eggs, larvae and pupae, kept in the deep chambers.' },
-    { colour: DEFAULT_THEME.seed, label: 'The seed store, in the chambers at 20 to 80 cm.' },
-    {
-      colour: '#3f7d6a',
-      label: 'Recruitment pheromone on the ground. Not drawn: left by foragers walking home.',
+      label: 'A pellet of sand on its way up and out.',
     },
   ]
 
@@ -656,12 +973,86 @@ function buildLegend(container: HTMLElement): void {
     list.append(item)
   }
 
+  const slice = document.createElement('p')
+  slice.className = 'legend-caveat'
+  slice.textContent = `Real shafts spiral down in a helix ${nest.shaftHelixDiameterCm.min} to ${nest.shaftHelixDiameterCm.max} cm across, and the shaft itself is about ${nest.shaftBoreDiameterCm.value} cm wide. The left-hand view cuts through one like a knife through a cake, so you see a slice of the nest rather than a flattened map of it.`
+
   const caveat = document.createElement('p')
   caveat.className = 'legend-caveat'
-  caveat.textContent =
-    'Three things in this picture are the renderer’s doing rather than the model’s. On the ground, seen from above, the ants are drawn far larger than life: at a scale that fits a 20 metre foraging range on screen, a 6.35 mm worker is a fiftieth of a pixel. Use the scale bar for distances, and the nest slice — where body length is drawn true — for size. The queen is drawn larger than her daughters because she is larger, but no body length for a badius queen appears in the bibliography, so her size on screen is a convention. And the nest tracks brood as a count per chamber, not as individuals, so which glyph is an egg and which a larva is assigned in the colony’s current proportions. Everything else — where each ant is, what it carries, how many seeds are in that chamber — is the model’s.'
+  caveat.textContent = `In the nest, everything is drawn at its real size, so a worker fills most of a tunnel, as a real one does. Zoom in to see them. Several things are drawing conventions, not model output. The tunnels are traced as one smooth outline round the ${discretisation.nestCellSizeCm.value * 10} mm squares the model digs, so their corners are rounded, and the sand is darkened where the model says it is damp. The model puts each ant in the middle of a square and gives her no posture, so the picture draws each ant from the side, standing on the nearest floor or holding on to the nearest shaft wall, spreads out ants that share a square, and lets ants going up and ants going down pass on opposite walls of a shaft. The name tags on the queen, her brood and the seed store point at what the model has there. Brood is counted per chamber rather than one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Above the nest the ground is seen from the side, showing the ants and seeds within a metre either side of the slice at their true size; the bare disc of sand, its charcoal and the grass round it are drawn, not modelled. When the camera is deep, a band across the top shows the ground at a smaller scale and says how much. In the map of the foraging range, ants are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use its scale bar for distance. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.`
 
-  container.replaceChildren(list, caveat)
+  container.replaceChildren(list, slice, caveat)
+}
+
+/**
+ * The scent key: every chemical channel in SCIENCE.md section 8, in the colour it is drawn,
+ * with a switch for each one the model simulates. The ones it does not simulate are listed
+ * too, and say so.
+ */
+function buildScentKey(
+  container: HTMLElement,
+  onToggle: (id: PheromoneId, on: boolean) => void,
+): void {
+  container.replaceChildren(
+    ...PHEROMONES.map((scent) => {
+      const item = document.createElement('li')
+      item.className = scent.simulated ? 'scent' : 'scent scent--absent'
+
+      const swatch = document.createElement('span')
+      swatch.className = 'scent-swatch'
+      swatch.style.background = scent.colour
+
+      const text = document.createElement('div')
+      const name = document.createElement('p')
+      name.className = 'scent-name'
+      name.textContent = scent.name
+      const where = document.createElement('span')
+      where.className = 'scent-where'
+      where.textContent = scent.where
+      name.append(where)
+      const what = document.createElement('p')
+      what.className = 'scent-what'
+      what.textContent = scent.what
+      text.append(name, what)
+
+      item.append(swatch, text)
+      if (scent.simulated) {
+        const toggle = document.createElement('input')
+        toggle.type = 'checkbox'
+        toggle.checked = true
+        toggle.className = 'scent-toggle'
+        toggle.ariaLabel = `Show the ${scent.name.toLowerCase()}`
+        toggle.addEventListener('change', () => onToggle(scent.id, toggle.checked))
+        item.append(toggle)
+      }
+      return item
+    }),
+  )
+}
+
+/**
+ * The sliding selection behind a segmented control.
+ *
+ * One raised pill glides to the chosen option, rather than each option lighting up in place,
+ * so a change of speed or of what the eggs become reads as one control moving. It follows the
+ * chosen button's box whenever the control changes size.
+ */
+function addThumb(bar: HTMLElement): HTMLSpanElement {
+  const thumb = document.createElement('span')
+  thumb.className = 'seg-thumb'
+  thumb.ariaHidden = 'true'
+  bar.prepend(thumb)
+  new ResizeObserver(() => {
+    const chosen = bar.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
+    if (chosen !== null) syncThumb(thumb, chosen)
+  }).observe(bar)
+  return thumb
+}
+
+function syncThumb(thumb: HTMLSpanElement, chosen: HTMLButtonElement): void {
+  thumb.style.width = `${chosen.offsetWidth}px`
+  thumb.style.transform = `translateX(${chosen.offsetLeft}px)`
+  thumb.dataset.ready = 'true'
 }
 
 startThreshold()

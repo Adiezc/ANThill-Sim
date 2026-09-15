@@ -180,6 +180,15 @@ export const REFERENCES: readonly Reference[] = [
     journal: 'Behavioural Processes',
   },
   {
+    key: 'enzmann-nonacs-2010',
+    authors: 'Enzmann, B. L. & Nonacs, P.',
+    year: '2010',
+    title:
+      'Digging beneath the surface: incipient nest characteristics across three species of harvester ant that differ in colony founding strategy',
+    journal: 'Insectes Sociaux 57:115-123',
+    doi: '10.1007/s00040-009-0056-7',
+  },
+  {
     key: 'espinoza-santamarina-2010',
     authors: 'Espinoza, D. & Santamarina, J.',
     year: '2010',
@@ -197,6 +206,20 @@ export const REFERENCES: readonly Reference[] = [
     authors: 'García Ibarra, F. A. et al.',
     year: '2023',
     title: 'Experimental evidence that increased surface temperature affects bioturbation by ants',
+  },
+  {
+    key: 'genzoni-2025',
+    authors: 'Genzoni, E. et al.',
+    year: '2025',
+    title: 'Trophic eggs affect caste determination in the ant Pogonomyrmex rugosus',
+    journal: 'eLife',
+  },
+  {
+    key: 'halley-2005',
+    authors: 'Halley, J. D., Burd, M. & Wells, P.',
+    year: '2005',
+    title: 'Excavation and architecture of Argentine ant nests',
+    journal: 'Insectes Sociaux 52:350-356',
   },
   {
     key: 'holldobler-wilson-1970',
@@ -255,11 +278,40 @@ export const REFERENCES: readonly Reference[] = [
     journal: 'Behavioral Ecology and Sociobiology',
   },
   {
+    key: 'motro-2016',
+    authors: 'Motro, M. et al.',
+    year: '2016',
+    title:
+      'Decision making by young queens of the harvester ant Messor semirufus while searching for a suitable nesting site',
+    journal: 'Insectes Sociaux',
+  },
+  {
+    key: 'nickerson-fasulo-edis',
+    authors: 'Nickerson, J. C. & Fasulo, T. R.',
+    year: 'n.d.',
+    title: 'Florida harvester ant, Pogonomyrmex badius',
+    journal: 'UF/IFAS Extension, EDIS publication EENY-298 (IN536). A secondary account',
+  },
+  {
     key: 'pielstrom-roces-2013',
     authors: 'Pielström, S. & Roces, F.',
     year: '2013',
     title: 'Sequential soil transport',
     journal: 'PLoS ONE',
+  },
+  {
+    key: 'rajendran-2025',
+    authors: 'Rajendran, H. et al.',
+    year: '2025',
+    title: 'Colony demographics shape nest construction in Camponotus fellah ants',
+    journal: 'eLife',
+  },
+  {
+    key: 'rasse-deneubourg-2001',
+    authors: 'Rasse, P. & Deneubourg, J.-L.',
+    year: '2001',
+    title: 'Dynamics of nest excavation and nest size regulation of Lasius niger',
+    journal: 'Journal of Insect Behavior 14:433-449',
   },
   {
     key: 'sankovitz-purcell-2021',
@@ -268,6 +320,15 @@ export const REFERENCES: readonly Reference[] = [
     title:
       'Ant nest architecture is shaped by local adaptation and plastic response to temperature',
     journal: 'Scientific Reports',
+  },
+  {
+    key: 'smith-tschinkel-2006',
+    authors: 'Smith, C. R. & Tschinkel, W. R.',
+    year: '2006',
+    title:
+      'The sociometry and sociogenesis of reproduction in the Florida harvester ant, Pogonomyrmex badius',
+    journal: 'Journal of Insect Science 6:32',
+    doi: '10.1673/2006_06_32.1',
   },
   {
     key: 'stroeymeyt-2007',

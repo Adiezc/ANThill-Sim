@@ -92,6 +92,40 @@ describe('claustral founding', () => {
     expect(c.nest.excavatedCells).toBeGreaterThan(1)
   })
 
+  it('digs from her first day the sand can be worked', () => {
+    // Enzmann & Nonacs 2010: a fully claustral congener was 9.3 cm down after one day of
+    // digging. Flights follow heavy rain, and saturated sand cannot be dug, so the day counted
+    // is her first full day of workable sand rather than the calendar day she landed. Seed 1
+    // lands in 12.7 mm of rain and waits a day. Half the measured depth is asked for.
+    const c = colony(1)
+    const perDay = c.sim.clock.ticksPerDay
+    for (let t = 0; t < perDay * 10 && c.excavation.foundingDigTicks < perDay; t += 1) c.step()
+    const firstDay = PARAMS.excavation.foundingQueenDepthByDayCm.value[0]!
+    expect(c.excavation.foundingDigTicks).toBe(perDay)
+    expect(c.nest.maxDepthCm).toBeGreaterThan(firstDay / 2)
+  })
+
+  it('sinks her founding nest to the incipient depth, then stops', () => {
+    // Tschinkel 2004: incipient nests are 29 to 37 cm. At the measured pace she gets there in
+    // about a week; three weeks allows for rain, and is still a month before her first daughters.
+    const c = colony(1, 21)
+    expect(c.demography.phase).toBe('founding')
+    expect(c.nest.maxDepthCm).toBeGreaterThanOrEqual(PARAMS.nest.incipientDepthCm.min)
+    expect(c.nest.maxDepthCm).toBeLessThanOrEqual(
+      PARAMS.nest.incipientDepthCm.max + PARAMS.nest.chamberHeightCm.value,
+    )
+  })
+
+  it('does not let its first workers dig a mature nest', () => {
+    // Her daughters widen the nest she dug rather than driving it deeper. Before the digging
+    // budget and the resting diggers of D28, seeds 1 to 3 reached 2.2 to 2.7 m in their first
+    // year against an incipient 29 to 37 cm, and the whole first year of the simulator was a
+    // colony of a dozen ants sinking a mature shaft.
+    const c = colony(1, 150)
+    expect(countWorkers(c.sim)).toBeGreaterThan(0)
+    expect(c.nest.maxDepthCm).toBeLessThanOrEqual(PARAMS.nest.incipientDepthCm.max * 1.5)
+  }, 120000)
+
   it('never carries a fractional adult into oblivion', () => {
     // Brood is cohort counts, adults are individuals, and a small colony ecloses well under
     // one adult a day. Flooring that fraction away silently killed every founding colony.

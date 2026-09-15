@@ -1,5 +1,8 @@
 # Anthill
 
+**[▶ Try it live](https://adiezc.github.io/ANThill-Sim/)** — it runs in your browser, with
+nothing to install.
+
 An agent-based simulation of a single colony of the Florida harvester ant,
 _Pogonomyrmex badius_, from the nuptial flight of one mated queen through claustral
 founding, self-organised excavation, trunk-trail foraging, seed storage and germination,

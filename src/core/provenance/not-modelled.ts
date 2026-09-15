@@ -106,7 +106,7 @@ export const NOT_MODELLED: readonly NotModelled[] = [
   {
     assumption: 'Ants plan the nest.',
     reason:
-      'There is no plan and no architect. No ant has a map, and none has seen the whole structure. Everything in the model’s nest comes from local rules, although experiments with ice casts show that colonies do have preferences about what they will accept.',
+      'There is no plan and no architect. No ant has a map, and none has seen the whole structure. Everything here emerges from local rules, though ice-cast experiments do show colonies have preferences about what they will accept.',
     citation: 'Tschinkel 2004, 2015, 2017',
     experimentallyRejected: false,
   },

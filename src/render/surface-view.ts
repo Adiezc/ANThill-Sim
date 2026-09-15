@@ -14,11 +14,14 @@
  * the walking, and a colony whose foragers stop finding anything loses them within a day.
  */
 
-import { Domain } from '../core/state/ants.js'
+import { Burden, Domain } from '../core/state/ants.js'
 import { coloursFor, drawAnt } from './ant-sprite.js'
+import { antBodyFor } from './body-sizes.js'
+import { pheromoneColour } from './pheromones.js'
 import type { AntStore } from '../core/state/ants.js'
 import type { SurfaceGrid } from '../core/state/surface.js'
 import type { AntMotion } from './ant-motion.js'
+import type { BodySizes } from './body-sizes.js'
 
 export interface SurfaceViewTheme {
   readonly ground: string
@@ -39,13 +42,22 @@ export const DEFAULT_SURFACE_THEME: SurfaceViewTheme = {
   // The trail is deliberately not a shade of sand. It is the one thing on this picture that
   // is a signal rather than a substance, and a reader should be able to see at a glance
   // which way the colony is currently pointing.
-  trail: '#3f7d6a',
+  trail: pheromoneColour('recruitment'),
   entrance: '#20120a',
   ant: '#2a1a0e',
   antLaden: '#7a4a18',
   rule: 'rgba(32,18,10,0.45)',
   ruleText: 'rgba(32,18,10,0.75)',
 }
+
+/**
+ * Recruitment pheromone weaker than this is not drawn.
+ *
+ * One step of a laden forager lays about one unit. Decay never quite reaches zero in floating
+ * point, so every cell of the range holds a remnant around 1e-44, and scaling the tint to the
+ * strongest cell turned that remnant into a green field before any ant had foraged.
+ */
+const TRAIL_FLOOR = 0.01
 
 export class SurfaceView {
   private readonly ctx: CanvasRenderingContext2D
@@ -71,7 +83,13 @@ export class SurfaceView {
     widthPx: number,
     heightPx: number,
     spanM: number,
-    options: { motion: AntMotion; timeSeconds: number },
+    options: {
+      motion: AntMotion
+      timeSeconds: number
+      sizes: BodySizes
+      /** Whether to draw the recruitment pheromone. */
+      showTrails: boolean
+    },
   ): void {
     const { ctx, theme } = this
     ctx.clearRect(0, 0, widthPx, heightPx)
@@ -119,12 +137,12 @@ export class SurfaceView {
     for (let i = 0; i < surface.recruitment.data.length; i += 1) {
       if (surface.recruitment.data[i]! > peakTrail) peakTrail = surface.recruitment.data[i]!
     }
-    if (peakTrail > 0) {
+    if (peakTrail >= TRAIL_FLOOR && options.showTrails) {
       ctx.fillStyle = theme.trail
       for (let row = 0; row < surface.rows; row += 1) {
         for (let col = 0; col < surface.cols; col += 1) {
           const amount = surface.recruitment.get(col, row)
-          if (amount <= 0) continue
+          if (amount < TRAIL_FLOOR) continue
           const alpha = Math.min(0.85, (amount / peakTrail) * 0.85)
           if (alpha < 0.03) continue
           ctx.globalAlpha = alpha
@@ -149,20 +167,28 @@ export class SurfaceView {
     // real distances, and the caption says the trails are pheromone rather than drawing.
     // The nest slice is where body length is true, and that is where a reader who wants to
     // compare an ant to a chamber should look.
+    //
+    // The symbols keep the castes' real proportions to one another: a minor is drawn antPx long
+    // and everything else is scaled by the same factor, so a major is still half again her
+    // length and the seed she carries is still a seed's size beside her.
+    const { sizes } = options
     const antPx = Math.max(9, 0.02 * pxPerM)
+    const pxPerMm = antPx / sizes.minorLengthMm
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i)) continue
       if (ants.domain[i] !== Domain.Surface) continue
+      const burden = ants.burden[i]!
       drawAnt(
         ctx,
         toPxX(options.motion.drawnX(i)),
         toPxY(options.motion.drawnY(i)),
-        antPx,
+        antBodyFor(ants.caste[i]!, ants.lengthMm[i]!, sizes, pxPerMm),
         options.motion.facingX(i),
         options.motion.facingY(i),
         coloursFor(ants.caste[i]!),
-        ants.burden[i]!,
+        burden,
         options.timeSeconds * 9 + i * 1.7,
+        (burden === Burden.Seed ? sizes.seedLengthMm : sizes.minorLengthMm * 0.2) * pxPerMm,
       )
     }
 
@@ -204,7 +230,7 @@ export class SurfaceView {
 
     ctx.fillStyle = theme.ruleText
     ctx.font =
-      '11px ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace'
+      '11px "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace'
     ctx.textAlign = 'left'
     ctx.textBaseline = 'bottom'
     ctx.fillText(`${metres} m`, x, y - 6)

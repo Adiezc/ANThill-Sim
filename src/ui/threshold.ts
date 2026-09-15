@@ -3,21 +3,25 @@
  *
  * It exists because this software has two audiences who want incompatible things from it.
  * One wants to watch a colony. The other wants thirty of them, with a methods file at the
- * end. Dropping both into the same running simulation and hoping they work out which one
- * they are is how a model gets cited carelessly by the second and abandoned by the first.
+ * end. The choice is made on the way in: one action for each, and the evidence behind the
+ * model one click away.
  *
- * So the choice is made explicitly, on the way in, and the honest limits of each path are
- * stated there rather than discovered later. A browser tab runs one colony well. It cannot
- * run a study, and the panel says so and hands over the command that can.
- *
- * The picture on the left is not a screenshot and not stock photography. It is the same
- * renderer and the same core, running a seeded colony while the reader reads.
+ * The picture on the right is not a screenshot. It is the same renderer and the same core,
+ * running a seeded colony while the reader reads.
  */
 
 import { NestView } from '../render/nest-view.js'
 import { AntMotion } from '../render/ant-motion.js'
 import { createNestHarness } from '../core/sim/nest-harness.js'
 import { measureNest } from '../core/state/nest.js'
+import { bodySizesFor } from '../render/body-sizes.js'
+import {
+  currentTheme,
+  nestThemeFor,
+  onThemeChange,
+  themeToggleLabel,
+  toggleTheme,
+} from './theme.js'
 import type { Params } from '../core/params/params.js'
 
 export type Door = 'watch' | 'instrument'
@@ -30,74 +34,94 @@ export interface ThresholdOptions {
 }
 
 /**
- * The opening text, from the build brief. It is the one piece of prose in the application
- * that is allowed to be a paragraph, because it is doing the job an abstract does.
+ * The opening paragraph. It is the one piece of prose in the application allowed to run to
+ * a paragraph, because it does the job an abstract does.
  */
-const OPENING = `In the sandhills of northern Florida a single mated queen lands, breaks off her wings and digs a shaft into the sand. She will seal herself in and raise her first daughters on nothing but her own flight muscles. If they live, they will build a nest three metres deep with no architect, no blueprint and no ant that has ever seen the whole thing. You are not in charge of them.`
+const OPENING = `In the sandhills of north Florida a single mated queen lands, breaks off her wings and digs a shaft into the sand. She seals herself in and raises her first daughters on nothing but her own flight muscles.`
+
+/**
+ * The rest of it, which a narrow screen has no room for.
+ *
+ * On a phone the whole paragraph pushed both doors below the fold, so a reader had to scroll
+ * before they could start. The stylesheet hides this tail under 600px. Nothing is lost: it is
+ * the same story the simulator then tells, and a wider window shows it in full.
+ */
+const OPENING_TAIL = ` If they survive, they will build a nest three metres deep with no architect, no blueprint and no ant that has ever seen the whole thing. You are not in charge of them.`
 
 /**
  * Renders the threshold into a container and returns a teardown function.
  *
- * Teardown matters: the demonstration colony behind the text keeps digging on an animation
- * frame, and leaving it running once a reader has gone through a door would spend the whole
- * frame budget of the actual simulation on a nest nobody is looking at.
+ * Teardown matters. The demonstration colony keeps digging on an animation frame, and
+ * leaving it running after a reader has gone through a door would spend the real
+ * simulation's frame budget on a nest nobody is looking at.
  */
 export function mountThreshold(root: HTMLElement, options: ThresholdOptions): () => void {
   const { params, counts } = options
 
   root.innerHTML = `
     <main class="threshold">
-      <section class="threshold-stage">
-        <canvas id="threshold-slice"></canvas>
-        <p class="threshold-caption">
-          A colony digging, right now, in this tab. The same core that runs headless on a
-          cluster, drawn as a vertical slice with a centimetre ruler.
-        </p>
-      </section>
       <section class="threshold-body">
-        <h1>
-          A nest with no architect
-          <span class="binomial">Pogonomyrmex badius, the Florida harvester ant</span>
-        </h1>
-        <blockquote>${OPENING}</blockquote>
-        <div class="doors">
-          <button class="door door--primary" id="door-watch" type="button">
-            <span class="door-title">Watch a colony</span>
-            <span class="door-note">
-              One colony, from the founding queen to the end of the run. Roughly ten minutes
-              to see a nest built, longer for the years that follow.
-            </span>
+        <header>
+          <h1>A nest with no architect</h1>
+          <p class="binomial"><i>Pogonomyrmex badius</i>, the Florida harvester ant</p>
+        </header>
+        <p class="lede">${OPENING}<span class="lede-tail">${OPENING_TAIL}</span></p>
+        <div class="actions">
+          <button class="btn btn--primary" id="door-watch" type="button">
+            Watch a colony
+            <span class="btn-icon" aria-hidden="true">→</span>
           </button>
-          <button class="door" id="door-instrument" type="button">
-            <span class="door-title">Use it as an instrument</span>
-            <span class="door-note">
-              Replicate runs, a seeded and reproducible core, and a methods file written at
-              the end. A browser tab runs one colony; a study runs on your machine.
-            </span>
-          </button>
-          <button class="door" id="door-sources" type="button">
-            <span class="door-title">Sources, provenance, and what this refuses to model</span>
-            <span class="door-note">
-              ${counts.A} values measured in this species, ${counts.B} generalised from
-              another ant, ${counts.C} invented. Every one of them is labelled.
-            </span>
+          <button class="btn btn--secondary" id="door-instrument" type="button">
+            Run your own study
+            <span class="btn-icon" aria-hidden="true">↗</span>
           </button>
         </div>
-        <p class="threshold-foot">
-          The biology is the field work of Walter R. Tschinkel and Christina L. Kwapich.
-          Cite them, not this software, for any biological claim.
+        <button class="facts" id="door-sources" type="button">
+          <span class="facts-grid">
+            <span class="fact">
+              <span class="fact-value">${counts.A}</span>
+              <span class="fact-label">values measured in this species</span>
+            </span>
+            <span class="fact">
+              <span class="fact-value">${counts.B}</span>
+              <span class="fact-label">borrowed from related ants</span>
+            </span>
+            <span class="fact">
+              <span class="fact-value">${counts.C}</span>
+              <span class="fact-label">invented, and labelled as such</span>
+            </span>
+          </span>
+          <span class="facts-caption">See where every number comes from</span>
+        </button>
+        <footer class="threshold-foot">
+          <p>
+            The biology comes from three decades of field work by Walter R. Tschinkel and
+            Christina L. Kwapich. Cite them, not this software, for any claim about the ants.
+          </p>
+          <button class="linkish" id="theme-toggle" type="button"></button>
+        </footer>
+      </section>
+      <section class="threshold-stage" aria-label="A colony digging">
+        <canvas id="threshold-slice" aria-hidden="true"></canvas>
+        <p class="threshold-caption">
+          A colony digging in your browser right now, a slice through the sand with the ruler in
+          centimetres. Watch your own and a day takes 30 seconds, faster when nothing is happening.
         </p>
       </section>
     </main>
   `
 
   const canvas = root.querySelector<HTMLCanvasElement>('#threshold-slice')!
-  const view = new NestView(canvas)
+  const view = new NestView(canvas, nestThemeFor(currentTheme()))
+  const themeButton = root.querySelector<HTMLButtonElement>('#theme-toggle')!
+  themeButton.textContent = themeToggleLabel()
+  themeButton.addEventListener('click', () => toggleTheme())
 
   // A fixed seed, so every reader meets the same nest and a screenshot of this page is
-  // reproducible. Small enough that it digs visibly while somebody reads three paragraphs.
+  // reproducible. Small enough to dig visibly while somebody reads a paragraph.
   const harness = createNestHarness({ seed: 7, params, workers: 240 })
   const motion = new AntMotion(harness.sim.ants.capacity)
+  const sizes = bodySizesFor(options.params, harness.sim.ants.count)
   let lastDrawMs = performance.now()
   let frame = 0
   let running = true
@@ -113,23 +137,40 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
     const now = performance.now()
     motion.update(harness.sim.ants, (now - lastDrawMs) / 1000)
     lastDrawMs = now
-    const viewport = NestView.frameNest(harness.nest)
+    // Framed close enough to see the ants from the first frame, and widened as the nest
+    // deepens. The simulator's whole-nest camera starts at 24 cm, which left this picture as
+    // a speck at the surface above a screen of empty sand for the first minute.
+    const dugCm = Math.max(harness.nest.maxDepthCm, 1)
+    const spanCm = Math.max(7, dugCm * 1.5)
+    const viewport = { topCm: -spanCm * 0.12, spanCm, centreCm: 0 }
     view.draw(harness.nest, harness.soil, harness.sim.ants, viewport, rect.width, rect.height, {
       motion,
       timeSeconds: now / 1000,
       selected: -1,
-      // The demonstration is a nest being dug by a synthetic workforce. It has no queen and
-      // no brood, so there is no mix to draw.
+      sizes,
+      showDiggingScent: true,
+      discDiameterCm:
+        (options.params.nest.surfaceDiscDiameterCm.min +
+          options.params.nest.surfaceDiscDiameterCm.max) /
+        2,
+      // The demonstration is a nest dug by a synthetic workforce. It has no queen and no
+      // brood, so there is no mix to draw.
       broodMix: { eggs: 0, larvae: 0, pupae: 0 },
     })
   }
 
+  const stopListening = onThemeChange((theme) => {
+    view.setTheme(nestThemeFor(theme))
+    themeButton.textContent = themeToggleLabel()
+    draw()
+  })
+
   const tick = (): void => {
     if (!running) return
     // A small, fixed number of steps per frame. The point is a nest that visibly deepens,
-    // not a race: a reader should be able to look up and see that something moved.
+    // not a race.
     harness.run(90)
-    // Stop once the nest is past the depth an incipient nest reaches, so the demonstration
+    // Stop once the nest is well past the depth a new nest reaches, so the demonstration
     // does not run to the floor of the grid while somebody reads the reference list.
     if (measureNest(harness.nest, params).maxDepthCm > params.nest.incipientDepthCm.max * 2) {
       running = false
@@ -154,5 +195,6 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
     running = false
     window.cancelAnimationFrame(frame)
     window.removeEventListener('resize', onResize)
+    stopListening()
   }
 }

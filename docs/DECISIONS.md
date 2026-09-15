@@ -675,3 +675,181 @@ the floor for a model of this form.
 so that foraging can still begin in early March, as it did in three of the four study years,
 and not in February. `test/soil.spec.ts` now asserts the burial measurements instead of the
 old lag.
+## D26. Everything in the nest at its real size
+
+**Date.** 2026-09-11.
+
+This branch's log stops at D20 and the seeds branch has reached D25, so this entry is numbered
+D26 and the two logs can be merged without renumbering either.
+
+The ants were already drawn at their real body length, but three things about the picture
+were wrong. Every ant stood on the centre of its 5 mm grid cell, so ants sharing a cell were
+drawn exactly on top of one another and a busy shaft looked solid. The camera followed the
+queen's position in the model, which moves half a centimetre at a time, so the whole view
+jumped every time she took a step. And nothing about a queen, a major or an egg said how big
+any of them was: the queen was simply drawn 1.4 times the size of a major, and brood were
+tokens of no particular size.
+
+**Sizes come from the species file.** Worker lengths and head widths were already there. Queen
+and male head widths are now read from Table 1 of Smith & Tschinkel 2006. Queen length comes
+from an extension sheet that names no source, and its note says so. Nobody has measured
+*badius* brood in any source found, so the egg borrows its volume from *P. rugosus* and
+invents its shape, and the larva and pupa lengths are invented fractions of a worker's
+length. All six new parameters are read only by the renderer, and each carries its tag.
+
+**Where an ant stands in its cell is a drawing decision, and is labelled as one.** Ants that
+share a cell are spread across it. In a shaft, ants climbing keep to one side and ants
+descending to the other, so two workers in a tunnel under a centimetre wide can be seen
+passing. In a chamber they spread along the floor. No offset ever puts an ant in sand. The
+model is untouched, so headless runs and their digests are the same as before.
+
+**The camera follows the queen as she is drawn, and eases after her.** The drawn position
+glides, so the camera glides with it.
+
+**Two pheromones are drawn, and the key names all four.** SCIENCE.md section 8 lists four
+chemical channels, but only the building pheromone in the nest and the recruitment trail on
+the ground have grids. Both are now drawn in their own colours and can be switched off. Alarm
+and the dead-nestmate cue have parameters that nothing reads. The key lists them as not
+simulated yet, and section 8 no longer describes them under "rule as implemented" without
+saying so.
+
+**The ground is drawn above the nest, and the map of the range becomes an inset.** There used
+to be two pictures side by side, the slice and the ground from above, and nothing connected a
+forager leaving the entrance in one to the seed arriving in a chamber in the other. Now the
+slice carries the ground on top of it, seen side on. The ants and seeds shown there are the
+model's, limited to a metre either side of the plane of the slice, because the ground is a
+plan and anything drawn from further out would put a distant forager at the entrance. The
+bare disc of sand, the charcoal on it and the grass round it are drawn and not modelled: the
+disc's diameter comes from an extension sheet and is used nowhere else. When the camera is too
+deep to see the surface, a band across the top shows it at a smaller scale and prints how much
+ground it covers. The whole range from above stays available as an inset in the corner.
+
+**The burrows are drawn to the cell, with softened corners.** Tunnels used to be stacks of
+hard squares with a lighter top edge and a darker floor. They are now filled cell by cell at
+exactly the width the model dug, with only the outside corners rounded, by under two
+millimetres, and a small bridge where two cells meet only at a corner. A smoothed outline was
+tried first and rejected: it trimmed the end cell off every dead-end tunnel, so an ant digging
+at a face was drawn inside solid sand. The cavity darkens towards its walls and has a thin lit
+rim, the sand has a grain texture, and it is tinted darker where the soil model's moisture is
+higher. The moisture is the model's; the rest is appearance. (Superseded by D27: the burrows
+are now traced as one smooth outline, and the ants are drawn from the side.)
+
+---
+
+## D27. The founding queen digs her own nest, and the slice is drawn like an ant farm
+
+**Date.** 2026-09-11.
+
+**The founding queen never dug her founding nest.** VALIDATION.md recorded a founding nest a
+tenth of its proper size. Measured again while building a view of the founding for the
+"Watch a colony" door, over seeds 1 to 3 she dug 0.3 to 0.8 cm in the 55 days before her
+first daughters eclosed, and the 29 to 37 cm incipient depth was reached only on day 80 to 150,
+by workers. There were two causes. The interior system's queen branch walked her back to her
+brood on every pass, although its comment said excavation owned her while she founded, and
+she had laid her eggs at the entrance, so that is where she stayed. And excavation gave her a
+minor worker's rate of work, cut to a young worker's third because her age starts at zero. No
+rate of work would have been enough on its own: an ant in this model walks a cell a minute,
+and a queen alone carries every pellet up the shaft herself.
+
+**What real queens do.** Enzmann & Nonacs (2010, *Insectes Sociaux* 57: 115–123, Table 1)
+watched fully claustral *P. rugosus* foundresses dig in sand-filled frames at 30 °C. After one
+day of digging they were 9.32 cm down, after two 14.32 and after three 16.26, digging 5.25 cm
+a day between the second and third, for 7.13 days in all. Their stopping depth of 17.11 cm is
+not used, because the frames held only 17.75 to 19 cm of soil. No such series is published for
+*badius*, whose incipient depth of 29 to 37 cm stays **[A]** from Tschinkel 2004. Queens of
+another harvester ant, *Messor semirufus*, were seen to start digging between a few minutes and
+about two hours after landing (Motro et al. 2016).
+
+**Resolution.** The interior system leaves a founding queen alone. Excavation gives her her
+own rule, `excavation.foundingQueen`, tagged **[B]**. Her depth follows the measured series and
+then the last measured rate until this colony's incipient depth. She then opens one chamber
+from the cell that finished her shaft, 1 cm high **[A]** and 3 cm wide in the slice **[C]**,
+and stays in it. Her clock runs only while the sand under her can be dug, so a rained-out
+landing day costs her a day. The sand she digs while founding is counted onto the surface
+without her walking it up. That is an abstraction, it is **[C]**, and the rule she is shown
+following says so; it exists only because the walking pace would otherwise decide her depth.
+
+Seeds 1, 2 and 3 now reach 29.8, 30.3 and 35.3 cm on days 6.5, 8.6 and 6.5, and dig nothing
+more before their first daughters eclose. The chamber was first anchored at whatever was the
+deepest dug cell, which slid sideways with every cell she opened, and one queen dug 286 cells
+before it stopped; it is now fixed where the shaft finished. Every colony run changes from its
+first day. The digest pinned in `determinism.spec.ts` does not, because that run has no colony
+in it.
+
+**Not addressed here.** A queen does not plug her entrance, which most *rugosus* queens did. Once
+the nanitics work, the over-digging recorded in VALIDATION.md ("nothing stops the digging")
+is untouched and has not been re-measured.
+
+**The burrows are traced as one smooth outline.** D26 drew them cell by cell and rejected a
+smoothed outline because it cut the last cell off every dead-end tunnel. The outline is now
+traced through a field of soft bumps, one per dug cell, reaching 1.3 cells, drawn where their
+sum crosses 0.65 (render/cavity.ts). Checked numerically before use: a straight wall lands 0.52
+cells from its last cell's centre where the cell ends at 0.5, a dead end and a lone cell reach
+0.48 cells past their centre, and two cells touching only at a corner stay joined. What changes
+is that corners are rounded. The outline is traced a 32 by 32 cell patch at a time and kept
+until a patch's count of dug cells changes, which is safe because this model never puts sand
+back.
+
+**The ants are drawn from the side.** A slice is seen side on, but ants were drawn as seen from
+above, so half of every ant's legs lay across the sand of the floor, the wall or the ground.
+Each ant is now drawn in profile, standing on the floor of a chamber within a centimetre below
+her, or holding on to a shaft wall when she is heading up or down. Which wall follows which way
+up she already was, so ants climbing and ants descending a shaft settle on opposite walls and
+pass. Seeds and brood lie on chamber floors. The map of the foraging range, a plan, keeps the
+view from above. All of this is drawing: no system reads it, and headless runs are unaffected by
+it.
+
+---
+
+## D28. An ant digs less the more she has dug, and most diggers dig where they rest
+
+**Date.** 2026-09-12.
+
+**The problem.** VALIDATION.md has recorded since the excavation step that nothing stops the
+digging: the model dug to the floor of the grid whatever the colony size. With the founding
+queen fixed (D27), colonies of 7 to 22 workers still reached 2.2 to 2.7 m by day 270 of their
+first year, against Tschinkel's own law, `log(depth) = 0.95 + 0.37 log(workers)`, which
+predicts 21 to 28 cm for that many ants.
+
+**Why.** Traced by probing a colony day by day. Nanitics eclose at day 55 and reach 43 days old
+at about day 98, at which point participation jumps from 19 percent to 82 percent, which is
+[A] from the penning experiments. All of them then walk to the tip of the single shaft, because
+an unburdened digger is pulled downward and toward faces. In a shaft one cell wide the local
+crowding reads 1 to 3 ants per open cell against a half-saturation of 0.30, so every one of them
+digs flat out, and deepening the shaft never lowers the reading. The one signal for "we have
+enough room" was being taken in the one place that is always busy.
+
+**What the literature offers.** Rasse & Deneubourg (2001) found nest volume tracking population
+in *Lasius niger*, with the brake coming from the nest's volume together with a change in the
+ants themselves after digging. Buhl et al. (2005) reproduced volume proportional to colony size
+in *Messor sancta* from recruitment and ant density alone, with no explicit negative feedback,
+and Halley et al. (2005) described Argentine ant nests growing the same way, digging subsiding
+as the density of digging stimuli declined. Rajendran et al. (2025) found *Camponotus fellah*
+workers differing in how they dig by age: young ants dug slanted tunnels, old ones straight down.
+
+**Resolution: two local rules.** Each ant carries the sand she has dug herself (`dugCells`
+in the ant store), and her willingness to dig falls as exp of minus that volume over
+`diggingFatigueSandCm3`. That ties the volume a colony digs to how many ants it has. And a
+digger with a resting place, which the interior system gives every worker, digs the wall beside
+her instead of walking to the deepest face; only `descenderShare` of diggers, drawn from
+each ant's id and fixed for life, still go down. Both values are **[C]**, invented and fitted to
+the depth law, and the parameter file says so in full. No ant reads the nest's size, its volume
+or its population.
+
+**What it gives.** Four colonies over three years, depth against the law: 0.98, 1.00, 1.08 and
+1.12 at day 1080 (244 to 331 workers). One colony over five years: 0.98 at 1263 workers, 1.27 at
+3618, and 1.70 at 2426 in the fifth year, when the colony had shrunk but its nest had not. The
+first year sits at the queen's founding depth, which is the measured incipient depth. Against no
+budget at all: 2.2 to 2.7 m in year one.
+
+**What it cost.** The pinned digest moved, because the ant store gained an array; it is
+regenerated in determinism.spec.ts with that reason. Deep chamber spacing in the gate harness
+fell to 7.8 cm against a target above 8.75, and that criterion is now skipped with its measured
+value. The harness cannot exercise the resting rule at all: it has no interior system, so its
+synthetic workers have no resting place and all of them behave as descenders. Evidence for the
+rule therefore comes from colony runs, which is where it is measured above.
+
+**Not addressed.** Colonies do not relocate, so a nest never shrinks when its colony does, which
+is what makes the fifth year run deep. A colony-level regulator would close the remaining gap in
+an afternoon and would contradict the premise this project exists to demonstrate, so it stays
+out.

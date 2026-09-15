@@ -27,6 +27,10 @@ const PARAMS = loadSpecies(
 function colonyWithNest(seed: number, depthCm = 100, params: Params = PARAMS): Colony {
   const colony = new Colony({ seed, params })
   const { nest, soil } = colony
+  // This harness supplies a finished nest, so the queen's new founding-excavation system
+  // must stay out of the test. Otherwise she changes both its geometry and random stream
+  // while the assertions are trying to isolate transport inside an already-built nest.
+  colony.excavation.foundingTargetDepthCm = 0
   const cell = nest.cellSizeCm
   const rows = Math.round(depthCm / cell)
 

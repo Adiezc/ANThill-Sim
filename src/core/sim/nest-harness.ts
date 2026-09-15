@@ -58,6 +58,9 @@ export function createNestHarness(options: HarnessOptions): NestHarness {
     surfacePellets: 0,
     redepositedPellets: 0,
     foundingTargetDepthCm: 0,
+    foundingDigTicks: 0,
+    foundingChamberCol: -1,
+    foundingChamberRow: -1,
     occupants: new Uint16Array(nest.cols * nest.rows),
     blockAnts: new Uint16Array(nest.blockCols * nest.blockRows),
   }

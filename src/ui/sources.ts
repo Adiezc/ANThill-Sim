@@ -2,12 +2,12 @@
  * Sources, provenance, and what this model refuses to do.
  *
  * This panel is not documentation bolted onto a simulation. It is the reason the project
- * exists: every mechanic on screen is either measured in this species, borrowed from
- * another ant, or invented, and a reader who cannot tell which is looking at a cartoon.
+ * exists. Every mechanic on screen is measured in this species, borrowed from another ant or
+ * invented, and a reader who cannot tell which is looking at a cartoon.
  *
- * Three tabs, and the third is the one that matters most. What a model declines to do is
- * as instructive as what it does, and several of the assumptions listed there were tested
- * in the field and rejected rather than merely being absent from the literature.
+ * Three tabs, and the third matters most. What a model declines to do teaches as much as
+ * what it does, and several of the assumptions listed there were tested in the field and
+ * rejected, not merely missing from the literature.
  */
 
 import {
@@ -27,7 +27,7 @@ type TabKey = 'sources' | 'provenance' | 'refused'
 const TABS: readonly { key: TabKey; label: string }[] = [
   { key: 'sources', label: 'Sources' },
   { key: 'provenance', label: 'Where the numbers come from' },
-  { key: 'refused', label: 'What this refuses to model' },
+  { key: 'refused', label: 'What the model leaves out' },
 ]
 
 function el<K extends keyof HTMLElementTagNameMap>(
@@ -48,11 +48,11 @@ function renderSources(): DocumentFragment {
     el(
       'p',
       undefined,
-      'The biology in this model is not ours. It is overwhelmingly the field work of Walter R. Tschinkel and Christina L. Kwapich in the Apalachicola National Forest, north Florida, over some three decades. Cite them, not this software, for any biological claim.',
+      'The biology in this model is not ours. Almost all of it comes from three decades of field work by Walter R. Tschinkel and Christina L. Kwapich in the Apalachicola National Forest, north Florida. Cite them, not this software, for any claim about the ants.',
     ),
   )
 
-  frag.append(el('h3', undefined, 'The five this model is built on'))
+  frag.append(el('h3', undefined, 'The five papers the model is built on'))
   for (const ref of REFERENCES.filter((r) => r.primary === true)) {
     const row = el('div', 'ref ref--primary')
     row.append(el('div', undefined, formatReference(ref, false)))
@@ -73,7 +73,7 @@ function renderSources(): DocumentFragment {
     frag.append(el('div', 'ref', formatReference(ref)))
   }
 
-  frag.append(el('h3', undefined, 'On the papers themselves'))
+  frag.append(el('h3', undefined, 'About the papers'))
   frag.append(el('p', undefined, SOURCES_NOTICE))
   return frag
 }
@@ -85,15 +85,15 @@ function renderProvenance(counts: ProvenanceCounts): DocumentFragment {
     el(
       'p',
       undefined,
-      'Every biological constant lives in one parameter file and carries its own tag, and no biological constant is hard-coded anywhere in the source. A test fails the build if one is. The tag travels with the number to the point where it is used, which is what stops a value and its provenance drifting apart.',
+      'Every biological number lives in one parameter file, with a label saying where it came from. None is typed directly into the code, and the build fails if one ever is. The label travels with the number to wherever the model uses it, so a value and its source cannot drift apart.',
     ),
   )
 
   const grid = el('div', 'summary-grid')
   const tally: [string, number][] = [
-    ['[A] measured in this species', counts.A],
-    ['[B] from another ant', counts.B],
-    ['[C] invented', counts.C],
+    ['[A] Measured in this species', counts.A],
+    ['[B] Borrowed from another ant', counts.B],
+    ['[C] Invented', counts.C],
   ]
   for (const [label, value] of tally) {
     const cell = el('div', 'summary-cell')
@@ -102,31 +102,31 @@ function renderProvenance(counts: ProvenanceCounts): DocumentFragment {
   }
   frag.append(grid)
 
-  frag.append(el('h3', undefined, 'What the tags mean'))
+  frag.append(el('h3', undefined, 'What the labels mean'))
   frag.append(
     el(
       'p',
       undefined,
-      '[A] is documented for Pogonomyrmex badius specifically. [B] is generalised from a different ant because no badius measurement exists. [C] is invented for tractability or playability and has no evidential basis at all. A [C] value is not a failure of research; it is a place where the literature is silent, and it is marked so that a reader can disagree with it.',
+      '[A] was measured in Pogonomyrmex badius itself. [B] comes from a different ant, because nobody has measured it in this one. [C] is invented to make the model work and has no evidence behind it. An invented value is not a research failure. It marks a gap in the literature, labelled so that you can disagree with it.',
     ),
   )
 
   const ruleCounts = ruleTagCounts()
-  frag.append(el('h3', undefined, 'Rules an ant can be following'))
+  frag.append(el('h3', undefined, 'The rules an ant can follow'))
   frag.append(
     el(
       'p',
       undefined,
-      `${allRules().length} rules are registered, of which ${ruleCounts.A} are measured in this species, ${ruleCounts.B} are generalised from another ant, and ${ruleCounts.C} are invented. Each carries its own citation.`,
+      `The model has ${allRules().length} behaviour rules. ${ruleCounts.A} are measured in this species, ${ruleCounts.B} are borrowed from other ants and ${ruleCounts.C} are invented. Click an ant in the simulator to see which one it is following and where it comes from.`,
     ),
   )
 
-  frag.append(el('h3', undefined, 'The largest invented element'))
+  frag.append(el('h3', undefined, 'The biggest invention'))
   frag.append(
     el(
       'p',
       undefined,
-      'Digging ants behave differently at depth, and nobody knows how a real ant senses how deep it is. The obvious candidate, a carbon dioxide gradient, was tested by venting it away and by reversing it, and nest architecture was unchanged. This simulation hands a digging ant its own depth as an admitted stand-in for a cue nobody has identified.',
+      'Digging ants behave differently at depth, and nobody knows how a real ant senses how deep it is. The obvious candidate, a gradient of carbon dioxide, was tested by venting the gas away and by reversing the gradient, and the shape of the nest did not change. So the model simply tells each digging ant its depth, and says so here.',
     ),
   )
 
@@ -139,7 +139,7 @@ function renderRefused(): DocumentFragment {
     el(
       'p',
       undefined,
-      'Every claim below is intuitive, commonly believed, and wrong for this species. The ones marked as tested were not merely absent from the literature; somebody went out and checked, and the answer was no.',
+      'Each claim below sounds reasonable, is widely believed and is wrong for this species. The ones marked as tested were checked in the field, and the answer was no.',
     ),
   )
 
@@ -147,7 +147,7 @@ function renderRefused(): DocumentFragment {
     const row = el('div', 'refused')
     const claim = el('div', 'refused-claim')
     claim.append(document.createTextNode(item.assumption))
-    if (item.experimentallyRejected) claim.append(el('span', 'tested', 'tested and rejected'))
+    if (item.experimentallyRejected) claim.append(el('span', 'tested', 'Tested and rejected'))
     row.append(claim, el('p', 'refused-why', item.reason), el('p', 'refused-cite', item.citation))
     frag.append(row)
   }
@@ -156,14 +156,14 @@ function renderRefused(): DocumentFragment {
 
 /**
  * Builds the sheet once and returns a function that opens it on a chosen tab. Building it
- * once matters: the reference list is long, and rebuilding it on every open would throw
- * away the reader's scroll position each time they came back to it.
+ * once keeps the reader's place: the reference list is long, and rebuilding it on every
+ * open would throw away the scroll position each time they came back.
  */
 export function createSourcesSheet(counts: ProvenanceCounts): (tab?: TabKey) => void {
   const dialog = el('dialog', 'sheet')
 
   const head = el('div', 'sheet-head')
-  const heading = el('h2', undefined, 'Sources and provenance')
+  const heading = el('h2', undefined, 'Sources and evidence')
   const close = el('button', 'sheet-close', 'Close')
   close.type = 'button'
   close.addEventListener('click', () => dialog.close())

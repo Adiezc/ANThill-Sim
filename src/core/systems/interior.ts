@@ -39,7 +39,7 @@
 
 import { Burden, Caste, Domain, Task } from '../state/ants.js'
 import { RULE } from '../provenance/rules.js'
-import { isDigging } from './excavation.js'
+import { isDescender, isDigging } from './excavation.js'
 import { chamberThresholdCm } from '../state/nest.js'
 import type { Simulation } from '../sim/simulation.js'
 import type { NestGrid } from '../state/nest.js'
@@ -464,6 +464,9 @@ export function makeInteriorSystem(state: InteriorState) {
       // The queen. While she is founding she is digging her own shaft and excavation owns
       // her; afterwards she sits deep in the nest and lays.
       if (caste === Caste.Queen) {
+        // The guard the comment above promises. Without it she was walked back to her eggs at
+        // the entrance on every pass, and never dug her founding nest.
+        if (state.demography.phase === 'founding') continue
         // Into the brood chambers, not to the floor of the nest. Aiming her at the deepest
         // point put her and therefore every egg in the bottom cell of a three-metre shaft,
         // which is neither what the excavations found nor anywhere a reader can see.
@@ -527,7 +530,10 @@ export function makeInteriorSystem(state: InteriorState) {
       // this species' *documented* one — that seeds are moved down out of the top chambers
       // by workers who are not the foragers that brought them — can happen at all in a model
       // where four workers in five are at a dig face. See docs/DECISIONS.md.
-      if (task !== Task.Forager && isDigging(sim, i)) continue
+      // Only the few diggers who go down to the working faces belong to excavation. The rest
+      // are placed here like everyone else and dig the wall beside them, which is what widens
+      // chambers instead of driving the shaft deeper. See docs/DECISIONS.md D28.
+      if (task !== Task.Forager && isDigging(sim, i) && isDescender(sim, i)) continue
 
       // Otherwise it is going about its business at its own depth. The depth is redrawn
       // every few days: redrawn every tick and the population is right but each individual

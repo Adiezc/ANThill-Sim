@@ -61,6 +61,10 @@ export interface Params {
     readonly minorHeadwidthSlopeMm: Param<number>
     /** HARD RULE that this does not scale with colony size. Minors grow; majors do not. */
     readonly majorHeadwidthMm: RangeParam
+    /** From a secondary account. Used only to draw the queen. */
+    readonly queenLengthMm: RangeParam
+    readonly queenHeadwidthMm: Param<number>
+    readonly maleHeadwidthMm: Param<number>
     readonly firstMajorAppearsAtWorkers: RangeParam
     readonly majorWorkerFractionBySeason: Param<readonly number[]>
     readonly queenLifespanYears: Param<number>
@@ -71,6 +75,8 @@ export interface Params {
     readonly matureDepthCm: RangeParam
     readonly meanDepthAcrossColoniesCm: Param<number>
     readonly maxRecordedDepthCm: Param<number>
+    /** The flat disc of sand around the entrance. Used only to draw it. */
+    readonly surfaceDiscDiameterCm: RangeParam
     readonly matureVolumeLitres: Param<number>
     readonly shaftHelixDiameterCm: RangeParam
     readonly shaftBoreDiameterCm: Param<number>
@@ -162,6 +168,16 @@ export interface Params {
     readonly relayPickUpChance: Param<number>
     readonly chamberInitiationChance: Param<number>
     readonly seriesCountProbeDepthCm: Param<number>
+    /** Depth of a founding queen's nest at the end of each of her first days of digging. */
+    readonly foundingQueenDepthByDayCm: Param<readonly number[]>
+    /** How fast her shaft deepens after those days, and how fast she opens her chamber. */
+    readonly foundingQueenLateRateCmPerDay: Param<number>
+    /** Width in the slice of the one chamber she opens at the bottom of her shaft. */
+    readonly foundingChamberRunCm: Param<number>
+    /** Sand a worker has dug herself, in cm3, at which her willingness to dig is down to 1/e. */
+    readonly diggingFatigueSandCm3: Param<number>
+    /** The share of diggers who go down to the working face instead of digging where they rest. */
+    readonly descenderShare: Param<number>
   }
 
   readonly soil: {
@@ -270,6 +286,11 @@ export interface Params {
     readonly larvaDurationDays: Param<number>
     readonly pupaDurationDays: Param<number>
     readonly callowDurationDays: Param<number>
+    /** The four below are used only to draw brood at its real size. */
+    readonly eggVolumeNl: Param<number>
+    readonly eggLengthToWidth: Param<number>
+    readonly matureLarvaLengthToMinorWorker: Param<number>
+    readonly pupaLengthToAdult: Param<number>
     /** HARD RULE, true. Colonies do not overwinter with brood. */
     readonly noOverwinteringBrood: Param<boolean>
     readonly latestPupalEclosionMonth: Param<number>
@@ -489,6 +510,9 @@ export function buildParams(root: Raw): Params {
       minorHeadwidthInterceptMm: readScalar(root, 'colony.minorHeadwidthInterceptMm'),
       minorHeadwidthSlopeMm: readScalar(root, 'colony.minorHeadwidthSlopeMm'),
       majorHeadwidthMm: readRange(root, 'colony.majorHeadwidthMm'),
+      queenLengthMm: readRange(root, 'colony.queenLengthMm'),
+      queenHeadwidthMm: readScalar(root, 'colony.queenHeadwidthMm'),
+      maleHeadwidthMm: readScalar(root, 'colony.maleHeadwidthMm'),
       firstMajorAppearsAtWorkers: readRange(root, 'colony.firstMajorAppearsAtWorkers'),
       majorWorkerFractionBySeason: readNumberList(root, 'colony.majorWorkerFractionBySeason'),
       queenLifespanYears: readScalar(root, 'colony.queenLifespanYears'),
@@ -499,6 +523,7 @@ export function buildParams(root: Raw): Params {
       matureDepthCm: readRange(root, 'nest.matureDepthCm'),
       meanDepthAcrossColoniesCm: readScalar(root, 'nest.meanDepthAcrossColoniesCm'),
       maxRecordedDepthCm: readScalar(root, 'nest.maxRecordedDepthCm'),
+      surfaceDiscDiameterCm: readRange(root, 'nest.surfaceDiscDiameterCm'),
       matureVolumeLitres: readScalar(root, 'nest.matureVolumeLitres'),
       shaftHelixDiameterCm: readRange(root, 'nest.shaftHelixDiameterCm'),
       shaftBoreDiameterCm: readScalar(root, 'nest.shaftBoreDiameterCm'),
@@ -588,6 +613,11 @@ export function buildParams(root: Raw): Params {
       relayPickUpChance: readScalar(root, 'excavation.relayPickUpChance'),
       chamberInitiationChance: readScalar(root, 'excavation.chamberInitiationChance'),
       seriesCountProbeDepthCm: readScalar(root, 'excavation.seriesCountProbeDepthCm'),
+      foundingQueenDepthByDayCm: readNumberList(root, 'excavation.foundingQueenDepthByDayCm'),
+      foundingQueenLateRateCmPerDay: readScalar(root, 'excavation.foundingQueenLateRateCmPerDay'),
+      foundingChamberRunCm: readScalar(root, 'excavation.foundingChamberRunCm'),
+      diggingFatigueSandCm3: readScalar(root, 'excavation.diggingFatigueSandCm3'),
+      descenderShare: readScalar(root, 'excavation.descenderShare'),
     },
 
     soil: {
@@ -695,6 +725,10 @@ export function buildParams(root: Raw): Params {
       larvaDurationDays: readScalar(root, 'brood.larvaDurationDays'),
       pupaDurationDays: readScalar(root, 'brood.pupaDurationDays'),
       callowDurationDays: readScalar(root, 'brood.callowDurationDays'),
+      eggVolumeNl: readScalar(root, 'brood.eggVolumeNl'),
+      eggLengthToWidth: readScalar(root, 'brood.eggLengthToWidth'),
+      matureLarvaLengthToMinorWorker: readScalar(root, 'brood.matureLarvaLengthToMinorWorker'),
+      pupaLengthToAdult: readScalar(root, 'brood.pupaLengthToAdult'),
       noOverwinteringBrood: readFlag(root, 'brood.noOverwinteringBrood'),
       latestPupalEclosionMonth: readScalar(root, 'brood.latestPupalEclosionMonth'),
       eggMortalityPerDay: readScalar(root, 'brood.eggMortalityPerDay'),
