@@ -2,6 +2,8 @@ cff-version: 1.2.0
 title: 'Anthill Simulator: an agent-based model of Pogonomyrmex badius'
 message: 'If you use this software or its parameter data, please cite it as below.'
 type: software
+repository-code: 'https://github.com/Adiezc/ANThill-Sim'
+url: 'https://adiezc.github.io/ANThill-Sim/'
 authors:
   - given-names: Adrian
     family-names: Diez Cuadrado

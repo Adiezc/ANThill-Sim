@@ -128,6 +128,7 @@ If you use this software or its parameter data, please cite it. GitHub renders a
 "Cite this repository" button from [`CITATION.cff`](CITATION.cff).
 
 > Diez Cuadrado, A. _Anthill Simulator: an agent-based model of Pogonomyrmex badius._
+> GitHub. https://github.com/Adiezc/ANThill-Sim
 
 The underlying biology is not ours. It is overwhelmingly the field work of Walter R.
 Tschinkel and Christina L. Kwapich in the Apalachicola National Forest, north Florida,
