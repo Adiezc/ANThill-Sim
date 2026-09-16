@@ -21,7 +21,7 @@
  */
 
 import { exp } from '../math/approx.js'
-import { DAYS_IN_MONTH, MONTH_START } from '../sim/calendar.js'
+import { DAYS_IN_MONTH, DAYS_IN_YEAR, MONTH_START } from '../sim/calendar.js'
 import { RULE } from '../provenance/rules.js'
 import { BroodFate } from '../state/brood.js'
 import { assignDiggerTrait } from './excavation.js'
@@ -150,6 +150,11 @@ export function countForagers(sim: Simulation): number {
  * August only, which put a growing colony's May callows on the overwintering schedule. They
  * sat inside through their first summer and foraged the following spring. Nothing ecloses in
  * March or April in the field, so the wider window changes nothing a paper measured.
+ *
+ * An autumn-born worker's 210 to 360 days are drawn so that they end by mid-July. Those
+ * workers dominate the foragers from March to mid-July and not after. Drawn across the whole
+ * range, a worker born in mid-October came due the following October, took up foraging in
+ * November and was still foraging in December, when colonies are dormant.
  */
 function ageAtFirstForagingDays(dayOfYear: number, params: Params, sim: Simulation): number {
   const month = monthOfDayOfYear(dayOfYear)
@@ -162,7 +167,10 @@ function ageAtFirstForagingDays(dayOfYear: number, params: Params, sim: Simulati
     return Math.max(1, mean + sim.prng.nextNormal() * sd)
   }
   const range = params.labour.ageAtFirstForagingDaysAutumnBornRange
-  return sim.prng.nextRange(range.min, range.max)
+  const lastOnset = params.labour.autumnBornLastOnsetDayOfYear.value
+  const daysToLastOnset = (lastOnset - dayOfYear + DAYS_IN_YEAR) % DAYS_IN_YEAR
+  const latest = Math.max(range.min, Math.min(range.max, daysToLastOnset))
+  return sim.prng.nextRange(range.min, latest)
 }
 
 function monthOfDayOfYear(dayOfYear: number): number {
@@ -429,6 +437,8 @@ function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: numbe
   const inForagingSeason = params.labour.foragingSeasonMonths.value.includes(month)
   const lastSeasonMonth = Math.max(...params.labour.foragingSeasonMonths.value)
   const seasonEndDayOfYear = MONTH_START[lastSeasonMonth - 1]! + DAYS_IN_MONTH[lastSeasonMonth - 1]!
+  const slowScheduleMinDays = params.labour.ageAtFirstForagingDaysAutumnBornRange.min
+  const pastSlowOnsetWindow = dayOfYear > params.labour.autumnBornLastOnsetDayOfYear.value
 
   // How readily a worker whose own schedule has come due actually takes up foraging today.
   //
@@ -532,7 +542,17 @@ function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: numbe
     //
     // It also concentrates recruitment into the spring, which is what lifts the summer
     // proportion foraging towards the measured 33 to 42 percent.
-    if (ants.fat[i]! < fatThreshold && sim.prng.chance(onsetChance)) {
+    //
+    // The overwintering cohort has a narrower window still: March to mid-July. A worker on
+    // that schedule that is still inside after mid-July waits for the next spring. Without
+    // this, the slowest of them came due in October, foraged through November and was still
+    // out in December.
+    const slowSchedule = dueDays >= slowScheduleMinDays
+    if (
+      ants.fat[i]! < fatThreshold &&
+      !(slowSchedule && pastSlowOnsetWindow) &&
+      sim.prng.chance(onsetChance)
+    ) {
       ants.task[i] = Task.Forager
       ants.y[i] = params.labour.foragerObservedMaxDepthCm.value * 0.5
       ants.ruleId[i] = RULE.idle

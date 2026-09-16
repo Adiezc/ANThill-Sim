@@ -160,6 +160,7 @@
     "ageAtFirstForagingDaysSummerBorn": { "value": 43, "tag": "A" },
     "ageAtFirstForagingDaysAutumnBorn": { "value": 200, "tag": "A", "note": "SUPERSEDED by ageAtFirstForagingDaysAutumnBornRange. Kwapich and Tschinkel 2013 give 210 to 360 days; the youngest winter workers first foraged the following July, eight months after the last eclosion." },
     "ageAtFirstForagingDaysAutumnBornRange": { "min": 210, "max": 360, "tag": "A" },
+    "autumnBornLastOnsetDayOfYear": { "value": 195, "tag": "B", "note": "15 July, counting 1 January as day 0. Slow-developing workers, produced from late August to mid-October, dominate the forager population from the following March to mid-July (Kwapich & Tschinkel 2013; Kwapich 2014). The window is measured; reading its end as a hard last day for this cohort to take up foraging is ours. An autumn-born worker's own schedule is drawn so that it comes due by this day, and one still inside after it waits for next spring rather than starting in October or November. See docs/DECISIONS.md D29." },
     "ageAtFirstForagingSummerBornSd": { "value": 1.78, "tag": "A", "note": "n = 10 colonies. Strikingly tight for a biological rate." },
     "maxProportionForaging": { "min": 0.33, "max": 0.42, "tag": "A", "note": "Annual maximum, midsummer, 2009-2012. Foraging begins late February to early April and falls to zero by December." },
     "proportionForagingMatureMean": { "value": 0.35, "tag": "A" },

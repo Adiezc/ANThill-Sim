@@ -855,3 +855,44 @@ rule therefore comes from colony runs, which is where it is measured above.
 is what makes the fifth year run deep. A colony-level regulator would close the remaining gap in
 an afternoon and would contradict the premise this project exists to demonstrate, so it stays
 out.
+
+## D29. Foragers keep to their own schedule, and the autumn cohort forages from March to mid-July
+
+**Date.** 2026-09-16.
+
+**The problem.** With the food account (D24), spring brood starved because no one brought seed
+home in spring. Three faults in the schedule that turns a worker into a forager caused it. May
+callows were put on the overwintering schedule, so a growing colony's first workers of the year
+stayed inside until the next spring. Autumn fattening topped up every worker, which froze the
+summer cohort in September and a founding colony's first workers for the whole first year. And
+the fat each worker burns was set against its whole age, so the autumn fattening was counted
+twice and the autumn cohort did not forage before mid-June, against a paper that has it
+foraging from March.
+
+**Resolution.** The year's own workers are everything that ecloses in the foraging season
+before the autumn fattening begins. Autumn fattening applies only to a worker that will not
+come due before the season ends. The burn is spread over the days after the callow stage and
+catches up to each worker's due date. Spring foraging returns.
+
+**What that broke.** The winter test in demography.spec.ts failed: 22 percent of workers
+foraging in December to February, against a limit of 5. The slowest of the autumn cohort came
+due in October or November, took up foraging while the soil was still warm and were still
+foraging in December.
+
+**The choice.** Kwapich & Tschinkel 2013 and Kwapich 2014 have slow developers dominating the
+foragers from March to mid-July **[A]**. The model now holds them to that window. An
+autumn-born worker's 210 to 360 days are drawn so that they end by 15 July
+(`labour.autumnBornLastOnsetDayOfYear`). A worker on that schedule still inside after that day
+waits for the next spring. Reading the end of the window as a hard last day is ours **[B]**.
+The other option was to change the test's made-up age structure, which would have hidden a
+behaviour real colonies do not show.
+
+One other test moved. "Gives summer-born and autumn-born workers very different schedules"
+counted workers on day 420 of a colony started on 15 June, which is mid-August. By then the
+autumn cohort has foraged and died, as the paper describes, so none were left to count. The
+test now counts on day 360, early June, when both cohorts are alive.
+
+**Not yet measured.** The growth study has not been rerun with this change. Before the window
+was added, one seed reached 201 workers by November of year two and then collapsed from 153 to
+37 in the summer of year three, when about 67 foragers brought home about 19 mg of seed a day
+against about 29 mg of larval demand. The foraging range (D21) is still the next step.

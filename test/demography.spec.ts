@@ -244,7 +244,11 @@ describe('development rate is set by season of birth, not by colony need', () =>
   it('gives summer-born and autumn-born workers very different schedules', () => {
     // Summer-born workers forage at 43 days (SD 1.78). Autumn-born ones overwinter and do
     // not forage for 210 to 360 days. The schedule is fixed at eclosion and never revisited.
-    const c = colony(9, 420, 900)
+    //
+    // Day 360 is early June of the second year. The autumn cohort forages from March to
+    // mid-July and is gone by August, so the two only overlap in spring and early summer.
+    // This test sampled day 420, mid-August, until D29 held that cohort to its window.
+    const c = colony(9, 360, 900)
     const schedules: number[] = []
     for (let i = 0; i < c.sim.ants.count; i += 1) {
       if (!c.sim.ants.isAlive(i)) continue
