@@ -934,3 +934,54 @@ a thousand workers by their fifth year, and the growth gate in `VALIDATION.md` s
 **Next, if the work continues.** A measured seed density or seed rain for Florida sandhills
 would settle this. Without one, the range should stay a known mismatch rather than become a
 tuning knob.
+
+## D31. The queen lays fewer eggs, and the seed on the ground now sets the ceiling
+
+**Date.** 2026-09-16.
+
+**The problem.** After D29 and D30, colonies reached 111 to 150 workers in their fourth year,
+and about seven larvae starved for every worker the colony raised. Kwapich & Tschinkel (2013)
+counted 1.64 foragers per larva (SD 0.99) from May to October in 48 colonies, whatever the date
+and the adult population. The model held 0.07 to 0.34, traced month by month on seed 2. Each
+forager brought home 1 to 5 mg of seed a day, several times the 0.21 mg that 1.64 foragers per
+larva would need from each. So the colony was not short of food per forager. It laid far more
+eggs than its foragers could feed.
+
+**Why.** `brood.queenEggsPerWorkerPerDay` is invented, since no laying rate is published for this
+species. Its value of 0.09 was tuned under the forager-to-larva proxy, which fed any number of
+larvae.
+
+**What was tried.** Seeds 2 to 4, up to five years each.
+
+| Laying | Workers, year 4 | Workers, year 5 | Larvae starved per worker raised |
+|---|---|---|---|
+| 0.09 a day per worker (former) | 111 to 150 | not run | 7.0 to 7.4 by year 4 |
+| 0.028 a day per forager | all colonies near extinction by year 3 | – | – |
+| 0.017 a day per worker | 0 to 18; one colony dead | – | – |
+| **0.035 a day per worker** | **272 to 315** | **252 to 296** | **1.9 to 2.0 by year 5** |
+| 0.05 a day per worker | 219 to 267 | 185 to 235 | 3.1 to 3.3 by year 5 |
+
+The measured ratio gives 0.017: 60 percent of an immature colony foraging, 1.64 foragers per
+larva and a 22-day larva. Every colony died at that rate. Laying in proportion to foragers,
+which is the ratio as measured, failed in the same way. Both fail for a reason already on
+record: this model has fewer foragers than real colonies (D16, D18), so a laying rate true to
+the ratio cannot replace the workers who die.
+
+**What was decided.** 0.035, tagged **[C]** and described in the parameter file as tuned. It
+roughly doubles the workforce and cuts larval starvation by more than two thirds.
+
+**What the science says about size, and where the model stands.** Colonies reach sexual
+maturity at about 700 workers and average about 4300 once mature **[A]**. The colonies Kwapich &
+Tschinkel sampled held 157 to 9656 adults, Harrison & Gentry's 1500 to 10 000, and the model's
+ant store is sized for 11 000. Laying is capped at `queenEggsPerDayMature`, 90 eggs a day, which
+this rate reaches at about 2600 workers. Over the nine active months that is about 24 000 eggs a
+year, enough in arithmetic to sustain a colony of several thousand workers who each live about a
+year. No modelled colony comes near that. Colonies stop growing at about 300 workers in their
+fourth and fifth years at both 0.035 and 0.05, so the laying rate is no longer what limits them.
+
+**The ceiling.** In a two-year trace on seed 2, three times the seed on the ground carried the
+larvae to about 600 in the third spring, against about 130 at today's density. The standing
+crop is invented **[C]** and no one has published it for these sandhills (D30). Raising it until
+colonies reach 700 workers would make maturity a fitted result, so it is left alone. The growth
+gate in `VALIDATION.md` still fails, now at about a fifteenth of mature size rather than a
+thirtieth.

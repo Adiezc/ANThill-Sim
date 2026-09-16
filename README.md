@@ -49,11 +49,11 @@ merely counted, and seeds come home in four measured sizes, are carried down tow
 chambers, germinate with the temperature of the soil they lie in and feed the larvae. Annual
 relocation is not built.
 
-The largest failure is growth. Larvae eat only what the foragers bring home, and that is not
-enough. Three colonies followed for four years reached 111 to 150 workers, where real colonies
-pass a thousand by their fifth year (`docs/DECISIONS.md` D24, D29 and D30). Shrinking the
-foraging range to its measured size made this worse, because in the model a colony's income is
-capped by how much seed lies on the ground, and no one has measured that for these sandhills.
+The largest failure is growth. Larvae eat only what the foragers bring home. Colonies followed
+for five years level off at about 250 to 300 workers, where real colonies mature at about 700 and
+average about 4300 once mature (`docs/DECISIONS.md` D24 and D29 to D31). What holds them there is
+how much seed lies on the ground, and no one has measured that for these sandhills. The queen's
+laying rate is invented and tuned too.
 
 The nest itself is closer. Depth follows Tschinkel's law between worker number and depth to
 within about a third over a colony's first years. The measured sorting of workers by depth, with
