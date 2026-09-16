@@ -154,6 +154,11 @@ wider out of plane than in it.
 | Forager lifespan | Emergent mean near 27 days from first foraging, from a 3–4%/day hazard rather than a hard cap   | **[A]**           |
 | No reversion     | Removing 50% of foragers draws no replacements from other castes; larval survival falls instead | **[A]** HARD RULE |
 
+**Forager fraction, measured 2026-09-16 on colonies grown from a queen.** The annual maximum is
+0.31 to 0.43, on the measured 35 to 41 percent. It comes in July to September instead of May to
+June, and the spring share is 0.02 to 0.22 where the measured curve is rising to its maximum.
+DECISIONS.md D32.
+
 ## G4. Vertical stratification
 
 Foragers in the top 15 cm with ≤5% below 20 cm; transfer workers ~30% below 20 cm; ≥90% of

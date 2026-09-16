@@ -985,3 +985,47 @@ crop is invented **[C]** and no one has published it for these sandhills (D30). 
 colonies reach 700 workers would make maturity a fitted result, so it is left alone. The growth
 gate in `VALIDATION.md` still fails, now at about a fifteenth of mature size rather than a
 thirtieth.
+
+## D32. Foragers are as many as measured, but their peak comes two months late
+
+**Date.** 2026-09-16.
+
+**The measurement.** Kwapich & Tschinkel (2013) followed 55 colonies from 2009 to 2012. Foraging
+began in early March or April and rose to a maximum of 35 to 41 percent of the colony between May
+and June, then fell to zero by December. At midsummer 60 percent of dark workers foraged in
+immature colonies (under 800 workers) and 35 percent in mature ones. The spring maximum comes
+from the large cohort of middle-aged, overwintered workers moving into foraging in late spring
+and early summer. The year's own workers join from about mid-July.
+
+**The model, measured on colonies grown from a queen** (seeds 2 to 4, D31 laying rate):
+
+| | April | May | June | July | August | September |
+|---|---|---|---|---|---|---|
+| Share foraging, year 3 | 0.02 to 0.07 | 0.11 to 0.18 | 0.12 to 0.25 | 0.32 to 0.37 | 0.32 to 0.34 | 0.20 to 0.26 |
+| Share foraging, year 4 | 0.01 to 0.08 | 0.10 to 0.16 | 0.17 to 0.22 | 0.31 to 0.39 | 0.34 to 0.43 | 0.26 to 0.42 |
+
+So D16's shortfall in height (14 to 15 percent) and D18's (26 percent) are gone: the model's
+maximum, 0.31 to 0.43, sits on the measured 0.35 to 0.41. What is wrong is its timing. The model
+peaks in July to September on the year's own workers, and the overwintered cohort gives a weak
+spring. That cohort's foraging age is drawn evenly across 210 to 360 days (D29), so its members
+start across four months from April to mid-July, and each forages for only about 27 days. At no
+moment are many of them out at once.
+
+**What was tried.** Holding the overwintered cohort's start to a narrower window, still no
+earlier than 210 days old:
+
+| Window | Workers, year 4 (Oct) | Share, June of year 4 | Share, August of year 4 | April |
+|---|---|---|---|---|
+| Unchanged, up to 15 July | 223 to 253 | 0.17 to 0.22 | 0.34 to 0.43 | foraging |
+| 1 April to 15 July | 190 to 196 | 0.17 to 0.19 | 0.43 to 0.53 | foraging |
+| 1 May to 15 July | 200 to 249 | 0.29 to 0.36 | 0.28 to 0.36 | none |
+
+The May window put the June share on the measurement but removed all April foraging, which the
+paper contradicts, and grew smaller colonies in year three. The April window changed almost
+nothing in spring. Neither was kept.
+
+**What is left.** The measured spring pulse needs overwintered workers to start foraging close
+together, which a start drawn evenly across months cannot give. No distribution of foraging ages
+within the 210 to 360 days is published. Fitting one to the seasonal curve is the next step if
+the work continues, and it should be judged against Figure 3 of Kwapich & Tschinkel 2013 rather
+than against colony growth.
