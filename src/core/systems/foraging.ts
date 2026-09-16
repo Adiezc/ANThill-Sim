@@ -30,6 +30,7 @@ import { Burden, Caste, Domain, Task } from '../state/ants.js'
 import { cosTurns, headingOf, sinTurns, turnsFromHeading, headingFromTurns } from '../math/trig.js'
 import { pow } from '../math/approx.js'
 import { RULE } from '../provenance/rules.js'
+import { HOURS_IN_DAY } from '../sim/calendar.js'
 import type { Simulation } from '../sim/simulation.js'
 import type { SurfaceGrid } from '../state/surface.js'
 import type { SoilModel } from './soil.js'
@@ -101,7 +102,11 @@ export function surfaceIsForageable(sim: Simulation, state: ForagingState): bool
     return false
   }
 
-  const surfaceTempC = state.soil.temperatureAt(0, date.dayOfYear, state.climate)
+  // Foraging pauses during rain.
+  if (state.climate.isRaining(dayFraction)) return false
+
+  const seasonalC = state.soil.temperatureAt(0, date.dayOfYear, state.climate)
+  const surfaceTempC = state.climate.surfaceTemperatureC(seasonalC, dayFraction)
   return surfaceTempC <= params.foraging.surfaceTemperatureMaxC.value
 }
 
@@ -118,12 +123,20 @@ export function makeForagingSystem(state: ForagingState) {
     }
 
     const forageable = surfaceIsForageable(sim, state)
+    const raining = state.climate.isRaining(sim.clock.date().dayFraction)
 
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i)) continue
       if (ants.caste[i] === Caste.Queen) continue
 
       if (ants.domain[i] === Domain.Surface) {
+        // Caught out by rain, a forager gives up the search and heads home, still carrying
+        // any seed she has found.
+        if (raining && ants.burden[i] !== Burden.Seed) {
+          ants.ruleId[i] = RULE.forageShelterFromRain
+          returnHome(sim, state, i)
+          continue
+        }
         stepOnSurface(sim, state, i)
         continue
       }
@@ -144,6 +157,15 @@ export function makeForagingSystem(state: ForagingState) {
       for (let i = 0; i < interval; i += 1)
         decay *= params.pheromones.recruitment.decayPerTick.value
       surface.decayRecruitment(decay, params.pheromones.recruitment.diffusion.value)
+    }
+
+    // Rain washes trail pheromone off the ground, a little every tick while it falls.
+    if (raining) {
+      const ticksPerHour = sim.clock.ticksPerDay / HOURS_IN_DAY
+      surface.decayRecruitment(
+        pow(params.climate.rainTrailRetentionPerHour.value, 1 / ticksPerHour),
+        0,
+      )
     }
   }
 }

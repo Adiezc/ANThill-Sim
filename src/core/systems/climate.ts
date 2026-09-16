@@ -16,6 +16,7 @@
  */
 
 import { ln } from '../math/approx.js'
+import { Prng as WeatherPrng } from '../math/prng.js'
 import { cosTurns } from '../math/trig.js'
 import { DAYS_IN_MONTH, DAYS_IN_YEAR, HOURS_IN_DAY, MONTH_START } from '../sim/calendar.js'
 import type { Params } from '../params/params.js'
@@ -33,7 +34,19 @@ export interface Weather {
   /** True when today's rain passed the heavy threshold. Gates the nuptial flight. */
   readonly heavyRain: boolean
   readonly frostPossible: boolean
+  /** What the sky is doing today. A rain day is always `rain`, whatever time the rain falls. */
+  readonly sky: Sky
+  /** The monthly normals interpolated to today, before the day's own weather is applied. */
+  readonly normalHighC: number
+  readonly normalLowC: number
+  /** Today's departure from the monthly normal, in °C, carried over from yesterday in part. */
+  readonly temperatureAnomalyC: number
+  /** When today's rain starts and stops, as fractions of the day. Both 0 on a dry day. */
+  readonly rainStartFraction: number
+  readonly rainEndFraction: number
 }
+
+export type Sky = 'clear' | 'cloudy' | 'rain'
 
 /**
  * Catmull-Rom through twelve monthly values, wrapped. Returns the value at a fractional
@@ -82,7 +95,7 @@ export class ClimateModel {
   /** Today's weather, recomputed once per simulated day. */
   private today: Weather
 
-  constructor(params: Params) {
+  constructor(params: Params, seed = 0) {
     this.params = params
     this.highs = params.climate.monthly.map((m) => m.highC)
     this.lows = params.climate.monthly.map((m) => m.lowC)
@@ -95,7 +108,23 @@ export class ClimateModel {
       rainfallMm: 0,
       heavyRain: false,
       frostPossible: false,
+      normalHighC: 0,
+      normalLowC: 0,
+      sky: 'clear',
+      temperatureAnomalyC: 0,
+      rainStartFraction: 0,
+      rainEndFraction: 0,
     }
+    // Its own stream, so that adding weather did not reshuffle every other random draw in a
+    // run. It is still fixed by the colony's seed.
+    this.weatherPrng = new WeatherPrng((seed ^ 0x5eed_c10d) >>> 0)
+  }
+
+  private readonly weatherPrng: WeatherPrng
+
+  /** The weather stream's state, for the digest. */
+  buffers(): Uint32Array[] {
+    return [this.weatherPrng.snapshot()]
   }
 
   /** Mean of the twelve monthly means. The soil model oscillates about this. */
@@ -158,14 +187,51 @@ export class ClimateModel {
       rainfall = -meanEvent * lnSafe(1 - prng.nextFloat())
     }
 
+    // Day-to-day weather on top of the normals: warm and cool spells, cloud and when the
+    // rain falls. The normals are measured; every value that shapes the variation is invented.
+    const c = this.params.climate
+    const w = this.weatherPrng
+    const persistence = c.temperatureAnomalyPersistence.value
+    const anomaly =
+      this.today.temperatureAnomalyC * persistence +
+      w.nextNormal() * c.temperatureAnomalySdC.value * Math.sqrt(1 - persistence * persistence)
+
+    const sky: Sky = rainfall > 0 ? 'rain' : w.chance(c.cloudyDayChance.value) ? 'cloudy' : 'clear'
+    // Cloud holds the afternoon down and the night up.
+    const cooling = sky === 'clear' ? 0 : c.cloudDaytimeCoolingC.value
+    const dayHigh = high + anomaly - cooling
+    const dayLow = low + anomaly + cooling / 2
+
+    // Summer rain in north Florida is mostly afternoon thunderstorms; rain in the cooler
+    // months comes with fronts at any hour. A storm lasts as long as its total takes to fall.
+    let rainStart = 0
+    let rainEnd = 0
+    if (rainfall > 0) {
+      const hours = Math.min(
+        c.rainMaxHours.value,
+        Math.max(1, rainfall / c.rainRateMmPerHour.value),
+      )
+      const startHour = c.afternoonStormMonths.value.includes(month)
+        ? c.afternoonStormStartHour.value + (w.nextFloat() - 0.5) * 4
+        : w.nextFloat() * HOURS_IN_DAY
+      rainStart = Math.max(0, Math.min(HOURS_IN_DAY - hours, startHour)) / HOURS_IN_DAY
+      rainEnd = rainStart + hours / HOURS_IN_DAY
+    }
+
     this.today = {
-      airTemperatureC: (high + low) / 2,
-      dailyMeanC: (high + low) / 2,
-      dailyHighC: high,
-      dailyLowC: low,
+      airTemperatureC: (dayHigh + dayLow) / 2,
+      dailyMeanC: (dayHigh + dayLow) / 2,
+      dailyHighC: dayHigh,
+      dailyLowC: dayLow,
       rainfallMm: rainfall,
       heavyRain: rainfall >= this.params.climate.heavyRainMm.value,
-      frostPossible: this.params.climate.frostPossibleMonths.includes(month) && low <= 2,
+      frostPossible: this.params.climate.frostPossibleMonths.includes(month) && dayLow <= 2,
+      normalHighC: high,
+      normalLowC: low,
+      sky,
+      temperatureAnomalyC: anomaly,
+      rainStartFraction: rainStart,
+      rainEndFraction: rainEnd,
     }
   }
 
@@ -177,8 +243,42 @@ export class ClimateModel {
   at(dayFraction: number): Weather {
     const peakHour = this.params.climate.dailyTemperaturePeakHour.value
     const phase = dayFraction - peakHour / HOURS_IN_DAY
-    const swing = ((this.today.dailyHighC - this.today.dailyLowC) / 2) * cosTurns(phase)
+    let swing = ((this.today.dailyHighC - this.today.dailyLowC) / 2) * cosTurns(phase)
+    // Rain holds the afternoon at the day's mean or below; a summer storm cools the air.
+    if (this.isRaining(dayFraction))
+      swing = Math.min(swing, 0) - this.params.climate.cloudDaytimeCoolingC.value
     return { ...this.today, airTemperatureC: this.today.dailyMeanC + swing }
+  }
+
+  /** True while today's rain is falling. */
+  isRaining(dayFraction: number): boolean {
+    return (
+      this.today.rainfallMm > 0 &&
+      dayFraction >= this.today.rainStartFraction &&
+      dayFraction < this.today.rainEndFraction
+    )
+  }
+
+  /**
+   * Temperature of the sand surface at a point in the day, given the soil model's seasonal
+   * value for it. The soil model knows the season; this adds today's weather. Sand in full
+   * sun runs far hotter than the air above it, and that heating follows the sun: nothing at
+   * night, most at the early afternoon peak, a third of it under cloud and none in rain.
+   */
+  surfaceTemperatureC(seasonalSurfaceC: number, dayFraction: number): number {
+    const c = this.params.climate
+    const sunTurns = dayFraction - c.solarPeakHour.value / HOURS_IN_DAY
+    const sun = Math.max(0, cosTurns(sunTurns * c.solarDayCompression.value))
+    const cover = this.isRaining(dayFraction)
+      ? 0
+      : this.today.sky === 'clear'
+        ? 1
+        : c.cloudySolarFraction.value
+    return (
+      seasonalSurfaceC +
+      this.today.temperatureAnomalyC +
+      sun * cover * c.clearSkySurfaceHeatingC.value
+    )
   }
 
   /** Today's weather without the diurnal swing. */

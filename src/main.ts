@@ -232,6 +232,7 @@ function startSimulator(): void {
         </header>
         <section class="panel-section">
           <h2 class="panel-label">Right now</h2>
+          <p class="now-weather" id="weather"></p>
           <p class="now-text" id="now"></p>
           <p class="now-food" id="food"></p>
         </section>
@@ -305,6 +306,8 @@ function startSimulator(): void {
   const inspector = app!.querySelector<HTMLDivElement>('#inspector')!
   const nowEl = app!.querySelector<HTMLParagraphElement>('#now')!
   const foodEl = app!.querySelector<HTMLParagraphElement>('#food')!
+  const stillWeather = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const weatherEl = app!.querySelector<HTMLParagraphElement>('#weather')!
   const paceEl = app!.querySelector<HTMLParagraphElement>('#pace')!
   const glanceEl = app!.querySelector<HTMLDivElement>('#glance')!
   const diaryEl = app!.querySelector<HTMLDivElement>('#diary')!
@@ -482,6 +485,7 @@ function startSimulator(): void {
 
   let nowShown = ''
   let foodShown = ''
+  let weatherShown = ''
   let paceShown = ''
   let glanceShown = ''
   /** Text is only written when it changes, so the panel is not rebuilt sixty times a second. */
@@ -489,6 +493,8 @@ function startSimulator(): void {
     const { now, food } = diary.describeNow(colony)
     if (now !== nowShown) nowEl.textContent = nowShown = now
     if (food !== foodShown) foodEl.textContent = foodShown = food
+    const weather = diary.describeWeather(colony)
+    if (weather !== weatherShown) weatherEl.textContent = weatherShown = weather
     const pace = paceText()
     if (pace !== paceShown) paceEl.textContent = paceShown = pace
 
@@ -692,6 +698,11 @@ function startSimulator(): void {
           sizes,
           showDiggingScent,
           labels: true,
+          weather: {
+            raining: colony.climate.isRaining(colony.sim.clock.date().dayFraction),
+            overcast: colony.climate.day.sky !== 'clear',
+            still: stillWeather,
+          },
           surface: colony.surface,
           discDiameterCm:
             (params.nest.surfaceDiscDiameterCm.min + params.nest.surfaceDiscDiameterCm.max) / 2,

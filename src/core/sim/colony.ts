@@ -117,7 +117,7 @@ export class Colony {
 
     this.nest = new NestGrid(params)
     this.soil = new SoilModel(params)
-    this.climate = new ClimateModel(params)
+    this.climate = new ClimateModel(params, options.seed)
     this.excavation = {
       nest: this.nest,
       soil: this.soil,
@@ -193,6 +193,7 @@ export class Colony {
     this.sim.registerState('soil', () => this.soil.buffers())
     this.sim.registerState('brood', () => this.demography.brood.buffers())
     this.sim.registerState('surface', () => this.surface.buffers())
+    this.sim.registerState('weather', () => this.climate.buffers())
 
     this.sim.register('climate', () => this.rollWeather())
     this.sim.register('excavation', makeExcavationSystem(this.excavation))

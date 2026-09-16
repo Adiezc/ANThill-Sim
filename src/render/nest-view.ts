@@ -118,6 +118,13 @@ export interface NestDrawOptions {
   readonly discDiameterCm: number
   /** Whether to put name tags on the queen, the brood and the seed store. */
   readonly labels?: boolean
+  /** The weather over the nest. Absent in a demonstration nest. */
+  readonly weather?: {
+    readonly raining: boolean
+    readonly overcast: boolean
+    /** Draw the rain without movement, for readers who asked for reduced motion. */
+    readonly still: boolean
+  }
 }
 
 /** Width of the depth ruler gutter, in device-independent pixels. */
@@ -357,6 +364,7 @@ export class NestView {
     const groundY = yOf(0)
     ctx.fillStyle = theme.sky
     ctx.fillRect(RULER_WIDTH, 0, plotWidth, Math.max(0, groundY))
+    if (groundY > 0) this.drawWeather(RULER_WIDTH, plotWidth, groundY, options)
 
     const gradient = ctx.createLinearGradient(0, Math.max(0, groundY), 0, heightPx)
     gradient.addColorStop(0, theme.soilTop)
@@ -737,6 +745,46 @@ export class NestView {
    * smaller scale, so the foragers going out and the seeds coming in are always in the picture.
    * The band prints how much ground it shows, because it is not at the depth ruler's scale.
    */
+  /**
+   * Cloud and rain over the strip of sky above the ground. Cloud greys the sky; rain greys it
+   * further and falls as thin slanted streaks, which hold still for reduced motion.
+   */
+  private drawWeather(
+    left: number,
+    width: number,
+    skyHeight: number,
+    options: NestDrawOptions,
+  ): void {
+    const weather = options.weather
+    if (weather === undefined || skyHeight <= 0) return
+    if (!weather.overcast && !weather.raining) return
+    const { ctx } = this
+    ctx.fillStyle = weather.raining ? 'rgba(52, 60, 68, 0.42)' : 'rgba(70, 78, 86, 0.24)'
+    ctx.fillRect(left, 0, width, skyHeight)
+    if (!weather.raining) return
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(left, 0, width, skyHeight)
+    ctx.clip()
+    ctx.strokeStyle = 'rgba(214, 226, 236, 0.55)'
+    ctx.lineWidth = 1
+    const spacing = 14
+    const length = 9
+    const fall = weather.still ? 0 : (options.timeSeconds * 260) % (spacing * 3)
+    ctx.beginPath()
+    for (let x = left - skyHeight; x < left + width + spacing; x += spacing) {
+      // Offset each column so the streaks read as rain rather than a grid.
+      const phase = ((x * 7919) % 37) + fall
+      for (let y = (phase % (spacing * 3)) - spacing * 3; y < skyHeight; y += spacing * 3) {
+        ctx.moveTo(x + y * 0.25, y)
+        ctx.lineTo(x + (y + length) * 0.25, y + length)
+      }
+    }
+    ctx.stroke()
+    ctx.restore()
+  }
+
   private drawGroundBand(
     nest: NestGrid,
     ants: AntStore,
@@ -753,6 +801,7 @@ export class NestView {
 
     ctx.fillStyle = theme.sky
     ctx.fillRect(RULER_WIDTH, 0, plotWidth, groundY)
+    this.drawWeather(RULER_WIDTH, plotWidth, groundY, options)
     ctx.fillStyle = theme.soilTop
     ctx.fillRect(RULER_WIDTH, groundY, plotWidth, bandPx - groundY)
     ctx.fillStyle = theme.voidFill

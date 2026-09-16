@@ -9,7 +9,7 @@
 
 import { Burden } from '../core/state/ants.js'
 import { RULE } from '../core/provenance/rules.js'
-import { countWorkers } from '../core/systems/demography.js'
+import { countForagers, countWorkers } from '../core/systems/demography.js'
 import { formatDate } from './hud.js'
 import type { Colony } from '../core/sim/colony.js'
 import type { NestGrid } from '../core/state/nest.js'
@@ -152,6 +152,41 @@ export class ColonyDiary {
     }
     if (d.phase === 'dead') add('dead', 'The colony has died.')
     return fresh
+  }
+
+  /** The weather at this moment, and what it means for the foragers. */
+  describeWeather(colony: Colony): string {
+    const { sim, climate, soil } = colony
+    const date = sim.clock.date()
+    const f = date.dayFraction
+    const params = this.params
+    const airC = Math.round(climate.at(f).airTemperatureC)
+    const daytime =
+      f >= params.foraging.activeDayFractionStart.value &&
+      f <= params.foraging.activeDayFractionEnd.value
+    const foragers = countForagers(sim) > 0
+    if (climate.isRaining(f)) {
+      return foragers
+        ? `Raining, ${airC} °C. No forager goes out while it rains, and any outside head home.`
+        : `Raining, ${airC} °C.`
+    }
+    const sky = climate.day.sky
+    if (!daytime) {
+      const rainedToday = climate.day.rainfallMm > 0 && f > climate.day.rainEndFraction
+      return (
+        (rainedToday ? 'After rain, ' : sky === 'clear' ? 'Clear night, ' : 'Cloudy night, ') +
+        `${airC} °C.` +
+        (foragers ? ' The foragers are inside until morning.' : '')
+      )
+    }
+    const surfaceC = climate.surfaceTemperatureC(soil.temperatureAt(0, date.dayOfYear, climate), f)
+    const skyWord = sky === 'clear' ? 'Sunny' : 'Overcast'
+    if (surfaceC > params.foraging.surfaceTemperatureMaxC.value) {
+      return `${skyWord}, ${airC} °C, and the sand is over ${params.foraging.surfaceTemperatureMaxC.value} °C. Too hot to forage on${foragers ? ', so the foragers wait inside' : ''}.`
+    }
+    const later =
+      climate.day.rainfallMm > 0 && f < climate.day.rainStartFraction ? ' Rain is on the way.' : ''
+    return `${skyWord}, ${airC} °C.${later}`
   }
 
   /** What is going on at this moment, and what the colony is living on. */

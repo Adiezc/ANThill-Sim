@@ -18,12 +18,13 @@ describe('climate from the monthly normals', () => {
 
   it('reproduces the tabulated normals at mid-month', () => {
     // July: high 33, low 23. The interpolation is placed so mid-month reads the table
-    // exactly, or the whole seasonal cycle would be quietly shifted.
+    // exactly, or the whole seasonal cycle would be quietly shifted. A single day's weather
+    // strays from the normal on purpose (D33), so the normal itself is what is checked.
     const midJuly = 196 // July starts on day 181; this is the 16th
     const prng = new Prng(1)
     climate.rollDay(midJuly, 7, prng)
-    expect(climate.day.dailyHighC).toBeCloseTo(33, 1)
-    expect(climate.day.dailyLowC).toBeCloseTo(23, 1)
+    expect(climate.day.normalHighC).toBeCloseTo(33, 1)
+    expect(climate.day.normalLowC).toBeCloseTo(23, 1)
   })
 
   it('derives the annual mean and swing from the table, not from a constant', () => {
@@ -42,7 +43,7 @@ describe('climate from the monthly normals', () => {
     const readings: number[] = []
     for (const day of [360, 362, 364, 0, 2, 4]) {
       climate.rollDay(day, day > 300 ? 12 : 1, prng)
-      readings.push(climate.day.dailyMeanC)
+      readings.push((climate.day.normalHighC + climate.day.normalLowC) / 2)
     }
     for (let i = 1; i < readings.length; i += 1) {
       expect(Math.abs(readings[i]! - readings[i - 1]!)).toBeLessThan(1)

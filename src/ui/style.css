@@ -1088,6 +1088,13 @@ button {
 
 /* ---- Right now ---- */
 
+.now-weather {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
 .now-text {
   margin: 0;
   font-size: 14px;

@@ -436,6 +436,19 @@ export interface Params {
     readonly meanRainEventMm: Param<number>
     readonly heavyRainMm: Param<number>
     readonly dailyTemperaturePeakHour: Param<number>
+    readonly temperatureAnomalySdC: Param<number>
+    readonly temperatureAnomalyPersistence: Param<number>
+    readonly cloudyDayChance: Param<number>
+    readonly cloudDaytimeCoolingC: Param<number>
+    readonly rainRateMmPerHour: Param<number>
+    readonly rainMaxHours: Param<number>
+    readonly afternoonStormMonths: Param<readonly number[]>
+    readonly afternoonStormStartHour: Param<number>
+    readonly solarPeakHour: Param<number>
+    readonly solarDayCompression: Param<number>
+    readonly clearSkySurfaceHeatingC: Param<number>
+    readonly cloudySolarFraction: Param<number>
+    readonly rainTrailRetentionPerHour: Param<number>
   }
 }
 
@@ -888,6 +901,19 @@ export function buildParams(root: Raw): Params {
       meanRainEventMm: readScalar(root, 'climate.meanRainEventMm'),
       heavyRainMm: readScalar(root, 'climate.heavyRainMm'),
       dailyTemperaturePeakHour: readScalar(root, 'climate.dailyTemperaturePeakHour'),
+      temperatureAnomalySdC: readScalar(root, 'climate.temperatureAnomalySdC'),
+      temperatureAnomalyPersistence: readScalar(root, 'climate.temperatureAnomalyPersistence'),
+      cloudyDayChance: readScalar(root, 'climate.cloudyDayChance'),
+      cloudDaytimeCoolingC: readScalar(root, 'climate.cloudDaytimeCoolingC'),
+      rainRateMmPerHour: readScalar(root, 'climate.rainRateMmPerHour'),
+      rainMaxHours: readScalar(root, 'climate.rainMaxHours'),
+      afternoonStormStartHour: readScalar(root, 'climate.afternoonStormStartHour'),
+      solarPeakHour: readScalar(root, 'climate.solarPeakHour'),
+      solarDayCompression: readScalar(root, 'climate.solarDayCompression'),
+      clearSkySurfaceHeatingC: readScalar(root, 'climate.clearSkySurfaceHeatingC'),
+      cloudySolarFraction: readScalar(root, 'climate.cloudySolarFraction'),
+      rainTrailRetentionPerHour: readScalar(root, 'climate.rainTrailRetentionPerHour'),
+      afternoonStormMonths: readNumberList(root, 'climate.afternoonStormMonths'),
     },
   }
 }

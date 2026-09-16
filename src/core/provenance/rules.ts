@@ -230,6 +230,14 @@ export const RULE = {
     '5',
     'That a colony forages along a few short trunk trails is measured [A], and so is the finding that neighbouring colonies shape their directions. The model has no neighbours, so it draws the directions once from the colony’s seed and keeps them. That matches the randomness seen across colonies without pretending to model its cause.',
   ),
+  forageShelterFromRain: rule(
+    'foraging.shelterFromRain',
+    'Heading home out of the rain. No forager leaves the nest while it rains.',
+    'A',
+    'Kwapich & Tschinkel 2013',
+    '5',
+    'Foraging pauses during heavy rain [A]. Here it pauses in any rain, and a forager already out gives up her search and walks home on her homing vector, keeping any seed she holds. Both details are ours.',
+  ),
   forageSiteFidelity: rule(
     'foraging.siteFidelity',
     'Going back to within half a metre of where it last found food.',

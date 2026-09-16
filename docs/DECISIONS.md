@@ -1029,3 +1029,45 @@ together, which a start drawn evenly across months cannot give. No distribution 
 within the 210 to 360 days is published. Fitting one to the seasonal curve is the next step if
 the work continues, and it should be judged against Figure 3 of Kwapich & Tschinkel 2013 rather
 than against colony growth.
+
+## D33. Weather from day to day, and what rain and sun do to foraging
+
+**Date.** 2026-09-16.
+
+**Why.** The climate was the monthly normals and nothing else. Every July day had the same
+temperature, rain fell as a daily total with no hour, and it only wetted the sand. The one
+[A] link between weather and behaviour beyond digging, that foraging pauses during heavy rain
+and under exceptionally hot, cloudless conditions (Kwapich & Tschinkel 2013), was not modelled,
+and the heat curfew never fired because the surface never got hotter than about 30 °C.
+
+**What was built.** Kept small on purpose.
+
+- **Sky and temperature.** Each day is clear, overcast or rainy. A day's temperature strays from
+  the normal by a draw that carries over from the day before (persistence 0.7, spread 2.5 °C), so
+  warm and cool spells last a few days. Cloud and rain take 3 °C off the high and add half that to
+  the low. The normals, the rain totals and the rain draw itself are unchanged.
+- **When rain falls.** In June to September a day's rain starts within two hours of 15:00; in other
+  months at any hour. It falls at 10 mm an hour, for between one and ten hours.
+- **Sun on sand.** The sand surface is the soil model's seasonal value plus the day's temperature
+  departure plus up to 16 °C of sun, peaking at 13:30, a third of that under cloud and none during
+  rain. Over three simulated years that puts the surface above the 46 °C foraging limit for 1 to 8
+  daylight hours a month in June to September, and never otherwise.
+- **Ants.** No forager leaves while rain falls, a forager caught outside walks home keeping any
+  seed, and rain removes half the recruitment pheromone on the ground each hour.
+- **The picture.** The sky greys under cloud and rain falls over the ground strip, still for readers
+  who asked for reduced motion. "Right now" gives the weather and what it means for the foragers.
+
+**Determinism.** The new draws use their own random stream, seeded from the colony's seed and
+folded into the digest, so the rest of a run's random draws are unchanged. Runs still differ from
+before, because foraging now responds to the weather. Two climate tests that read a single day as
+the monthly normal now read the normal, which the day's weather is applied on top of.
+
+**What it does to growth.** Little. Seeds 2 to 4 over four years had 301, 271 and 275 workers,
+against 288, 272 and 315 without weather (D31), and colonies still level off near 300.
+
+**Tags.** The pause in heavy rain and under hot, clear conditions is **[A]**. Everything else here
+is **[C]**: the spread and persistence of temperature, the cloud chance and its cooling, the storm
+hour and rate, the heating of sand, and the washing of trails.
+
+**Not done.** Nuptial flights still do not follow heavy rain, since alates are not flown. Drought
+does not throttle foraging. Wet sand after rain already stopped digging before this change.
