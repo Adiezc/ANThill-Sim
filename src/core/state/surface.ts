@@ -104,26 +104,95 @@ export class SurfaceGrid {
     for (let p = 0; p < patches; p += 1) {
       const cx = prng.nextRange(-this.extentM, this.extentM)
       const cy = prng.nextRange(-this.extentM, this.extentM)
-      const minCol = Math.max(0, this.seedCeiling.colOf(cx - radiusM))
-      const maxCol = Math.min(this.cols - 1, this.seedCeiling.colOf(cx + radiusM))
-      const minRow = Math.max(0, this.seedCeiling.rowOf(cy - radiusM))
-      const maxRow = Math.min(this.rows - 1, this.seedCeiling.rowOf(cy + radiusM))
-      for (let row = minRow; row <= maxRow; row += 1) {
-        for (let col = minCol; col <= maxCol; col += 1) {
-          const dx = this.seedCeiling.xOf(col) - cx
-          const dy = this.seedCeiling.yOf(row) - cy
-          const d = Math.sqrt(dx * dx + dy * dy)
-          if (d > radiusM) continue
-          // Denser at the middle of a patch and thinning to its edge, so a patch has an
-          // inside worth staying in rather than a cliff at its rim.
-          const density = patchPeak * (1 - d / radiusM)
-          const i = this.seedCeiling.index(col, row)
-          if (this.seedCeiling.data[i]! < density) this.seedCeiling.data[i] = density
+      this.stampPatch(cx, cy, radiusM, patchPeak)
+    }
+
+    this.seeds.data.set(this.seedCeiling.data)
+  }
+
+  /**
+   * Raises the ceiling to a patch centred on (cx, cy), denser at the middle and thinning to its
+   * edge, so a patch has an inside worth staying in rather than a cliff at its rim.
+   */
+  private stampPatch(cx: number, cy: number, radiusM: number, peak: number): void {
+    const minCol = Math.max(0, this.seedCeiling.colOf(cx - radiusM))
+    const maxCol = Math.min(this.cols - 1, this.seedCeiling.colOf(cx + radiusM))
+    const minRow = Math.max(0, this.seedCeiling.rowOf(cy - radiusM))
+    const maxRow = Math.min(this.rows - 1, this.seedCeiling.rowOf(cy + radiusM))
+    for (let row = minRow; row <= maxRow; row += 1) {
+      for (let col = minCol; col <= maxCol; col += 1) {
+        const dx = this.seedCeiling.xOf(col) - cx
+        const dy = this.seedCeiling.yOf(row) - cy
+        const d = Math.sqrt(dx * dx + dy * dy)
+        if (d > radiusM) continue
+        const density = peak * (1 - d / radiusM)
+        const i = this.seedCeiling.index(col, row)
+        if (this.seedCeiling.data[i]! < density) this.seedCeiling.data[i] = density
+      }
+    }
+  }
+
+  /**
+   * Moves the ground under a colony that has moved its nest.
+   *
+   * The entrance stays the origin, so a colony that moves (dx, dy) whole cells sees the ground
+   * slide by the opposite amount. Seeds, the ceiling and trail pheromone come along; ground
+   * newly brought into view gets background seed and its share of new patches, drawn from the
+   * colony's own stream like the first ones.
+   */
+  shift(dxCells: number, dyCells: number, params: Params, prng: Prng): void {
+    if (dxCells === 0 && dyCells === 0) return
+    const { cols, rows } = this
+    const cellArea = this.cellSizeM * this.cellSizeM
+    const background = params.foraging.backgroundSeedsPerSquareMetre.value * cellArea
+    const exposed = new Uint8Array(cols * rows)
+    let exposedCount = 0
+    for (const [grid, fill] of [
+      [this.seeds, background],
+      [this.seedCeiling, background],
+      [this.recruitment, 0],
+    ] as const) {
+      const copy = grid.data.slice()
+      for (let row = 0; row < rows; row += 1) {
+        for (let col = 0; col < cols; col += 1) {
+          const fromCol = col + dxCells
+          const fromRow = row + dyCells
+          const i = row * cols + col
+          if (fromCol >= 0 && fromCol < cols && fromRow >= 0 && fromRow < rows) {
+            grid.data[i] = copy[fromRow * cols + fromCol]!
+          } else {
+            grid.data[i] = fill
+            if (grid === this.seeds) {
+              exposed[i] = 1
+              exposedCount += 1
+            }
+          }
         }
       }
     }
 
-    this.seeds.data.set(this.seedCeiling.data)
+    // New ground gets patches at the same density as the ground first laid down.
+    const patchesPerCell =
+      Math.max(0, Math.round(params.foraging.seedPatchCount.value)) / (cols * rows)
+    const newPatches = Math.round(patchesPerCell * exposedCount)
+    const radiusM = params.foraging.seedPatchRadiusM.value
+    const peak = params.foraging.standingSeedsPerSquareMetre.value * cellArea
+    for (let p = 0; p < newPatches; p += 1) {
+      let pick = Math.floor(prng.nextFloat() * exposedCount)
+      for (let i = 0; i < exposed.length; i += 1) {
+        if (exposed[i] === 0) continue
+        if (pick === 0) {
+          const col = i % cols
+          const row = (i - col) / cols
+          this.stampPatch(this.seedCeiling.xOf(col), this.seedCeiling.yOf(row), radiusM, peak)
+          break
+        }
+        pick -= 1
+      }
+    }
+    for (let i = 0; i < exposed.length; i += 1) {
+      if (exposed[i] === 1) this.seeds.data[i] = this.seedCeiling.data[i]!
+    }
   }
 
   inBounds(col: number, row: number): boolean {
@@ -161,8 +230,7 @@ export class SurfaceGrid {
   }
 
   buffers(): ArrayBufferView[] {
-    // The ceiling is drawn once and never written again, so it is not state that can
-    // diverge; the seeds standing on it are.
-    return [this.recruitment.data, this.seeds.data, this.trunkTrailTurns]
+    // The ceiling changes when the colony moves, so it is state as well.
+    return [this.recruitment.data, this.seeds.data, this.seedCeiling.data, this.trunkTrailTurns]
   }
 }

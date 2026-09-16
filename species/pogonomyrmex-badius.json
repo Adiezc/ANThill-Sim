@@ -382,6 +382,7 @@
     "durationDays": { "min": 4, "max": 6, "tag": "A" },
     "meanDistanceMetres": { "value": 4, "tag": "A" },
     "maxDistanceMetres": { "value": 10, "tag": "A" },
+    "mainTrailShare": { "value": 0.78, "tag": "A", "note": "Share of moves along the main trunk trail. Of 23 natural moves in 1976, 78 percent followed the main trail and 22 percent a secondary one (Harrison and Gentry 1981)." },
     "destinationConstrainedToTrunkTrail": { "value": true, "tag": "A", "note": "Moves always occur along a foraging trail, usually the main one." },
     "burdenPriority": { "value": ["seeds", "charcoal", "brood"], "tag": "A", "note": "In descending order of frequency." },
     "burdenedWorkerFractionRisesThroughMove": { "value": true, "tag": "A" },

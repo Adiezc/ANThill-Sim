@@ -46,8 +46,10 @@ Early, and honest about it. Founding, excavation, the demographic engine, climat
 the inside of the nest and the seed store are built. The founding queen digs her own nest to
 the measured 29 to 37 cm. Ants move around underground, brood is kept in chambers rather than
 merely counted, and seeds come home in four measured sizes, are carried down toward the seed
-chambers, germinate with the temperature of the soil they lie in and feed the larvae. Annual
-relocation is not built.
+chambers, germinate with the temperature of the soil they lie in and feed the larvae. Weather
+varies from day to day, and foragers stay in during rain and on the hottest afternoons. Colonies
+move their nest about once a year, but the new nest is taken to be a copy of the old one rather
+than dug. Winged queens and males fly after heavy rain, once a colony is big enough to rear them.
 
 The largest failure is growth. Larvae eat only what the foragers bring home. Colonies followed
 for five years level off at about 250 to 300 workers, where real colonies mature at about 700 and

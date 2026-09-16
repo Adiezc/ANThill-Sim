@@ -1110,3 +1110,51 @@ once colonies reach maturity.
 
 **Not modelled.** Mating, the survival of new queens, and founding by them. Alates that never fly
 still die only by the inside-worker hazard, and alate larvae are fed as worker larvae (SCIENCE §6).
+
+## D35. Colonies move their nest, and the new nest is taken to be a copy
+
+**Date.** 2026-09-16.
+
+**Why.** Relocation was the largest documented behaviour still missing, and the README had
+promised it since the first version. It is also the reason given in D28 for nests running deep in
+year five: a real colony moves into a new nest once or twice a year, and this one never did.
+
+**What the literature says.** Colonies move about once a year, some up to four times, from May to
+November, most in July. A move goes along an existing trail, the main trunk trail in 78 percent of
+23 natural moves, a mean of about 4 m and rarely over 10, and takes 4 to 6 days. Workers carry the
+seed store and brood and dig the new nest during the move. The new nest is statistically
+indistinguishable from the old one. Trails keep their directions. Why colonies move is unknown
+(Tschinkel 2013, 2014; Harrison & Gentry 1981).
+
+**What was built.** `systems/relocation.ts`.
+
+- Each day of the season a colony with workers may start a move. The chance is highest in July,
+  falls by a fifth for each month either side, and is scaled so that it comes to the measured one
+  move a year. That puts July a little under the 1 percent a day measured across a population,
+  which counts second and later moves too. At most four moves a season.
+- The direction is the main trunk trail with probability 0.78 (`relocation.mainTrailShare`, **[A]**),
+  otherwise another trail. The distance is exponential about 4 m, cut at 10 m. The move lasts 4 to 6
+  days and finishes at the first midnight with no forager out.
+- On finishing, the ground slides under the entrance: seeds, patches, trail pheromone and remembered
+  foraging sites shift by the distance moved, and ground newly in view gets background seed and its
+  share of new patches.
+- The diary marks the start and end of a move, and "Right now" shows which day of the move it is.
+  `runs.csv` gains `relocations` and `relocationDistanceM`.
+- Relocation draws from its own random stream, like the weather (D33). An early version drew from
+  the shared one, and although nothing in it kills an ant, the shifted stream happened to give
+  three colonies early queen deaths. Checked: the queen's daily draws over two years were evenly
+  spread, and she died on one very low draw. A separate stream keeps a run identical to the run
+  without relocation until its first move.
+
+**What was not built.** The new nest is not dug. Chambers, brood and the seed store are kept as they
+were, on the strength of the [A] finding that the replica is indistinguishable from the original.
+So nothing is carried, no excavation happens, colonies pay no size cost for moving, and a nest still
+never shrinks when its colony does. D28's deep fifth year is therefore not fixed. There is no choice
+of site either, so the departure recorded in D3 is not yet in effect.
+
+**What it gives.** Seeds 2 to 4 over five years: 18 moves in 15 colony-years (4, 9 and 5), about
+3.4 m each. Workers in year five 245, 329 and 217, against 271 to 301 in year four without
+relocation (D33), so moving to fresh ground does not change growth much.
+
+**Tags.** Season, peak, frequency, trail, distance, duration and the replica are **[A]**. The monthly
+fall-off, the exponential distance and treating the move as a shift of the ground are **[C]**.

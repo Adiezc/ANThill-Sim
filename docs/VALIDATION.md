@@ -235,3 +235,13 @@ About one move per year, mean distance ~4 m, rarely over 10 m, duration 4–6 da
 existing trunk trail, and the new nest statistically indistinguishable in size and shape
 from the vacated one. Successive moves describe a random walk around the original position.
 **[A]**
+
+| Property | Target | Status |
+|---|---|---|
+| Frequency | About one move a year, up to four | **Met.** 18 moves in 15 colony-years on seeds 2 to 4, and 4, 9 and 5 per colony over five years. By construction: the daily chance is scaled to the mean |
+| Season | May to November, peaking in July | **Met**, by construction |
+| Distance | Mean about 4 m, rarely over 10 m | **Met.** About 3.4 m per move across those runs, none over 10 m |
+| Along a trail | Main trunk trail 78 percent of the time | **Met**, by construction |
+| Duration | 4 to 6 days | **Met**, by construction |
+| The new nest | Indistinguishable from the old | **Met by assumption, not simulated.** The chambers, brood and store are kept as they were. Digging, carrying and the size cost of moving are not modelled, so a nest still never shrinks when its colony does (DECISIONS.md D35) |
+| Random walk around the origin | Successive moves wander around the first site | **Not measured.** The run does not track the entrance's position across moves |

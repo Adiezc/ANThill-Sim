@@ -21,6 +21,7 @@ import { ClimateModel } from '../systems/climate.js'
 import { makeExcavationSystem } from '../systems/excavation.js'
 import { createForagingState, makeForagingSystem, meanTripTicks } from '../systems/foraging.js'
 import { createFlightState, makeFlightSystem } from '../systems/flights.js'
+import { createRelocationState, makeRelocationSystem } from '../systems/relocation.js'
 import { createInteriorState, makeInteriorSystem } from '../systems/interior.js'
 import {
   createSeedStoreState,
@@ -37,6 +38,7 @@ import { RULE } from '../provenance/rules.js'
 import type { ExcavationState } from '../systems/excavation.js'
 import type { ForagingState } from '../systems/foraging.js'
 import type { FlightState } from '../systems/flights.js'
+import type { RelocationState } from '../systems/relocation.js'
 import type { InteriorState } from '../systems/interior.js'
 import type { SeedStoreState } from '../systems/seeds.js'
 import type { DemographyState } from '../systems/demography.js'
@@ -94,6 +96,9 @@ export interface ColonySummary {
   readonly nuptialFlights: number
   readonly gynesFlown: number
   readonly malesFlown: number
+  /** Nest moves completed, and how far the colony has moved in all. */
+  readonly relocations: number
+  readonly relocationDistanceM: number
 }
 
 export class Colony {
@@ -106,6 +111,7 @@ export class Colony {
   readonly surface: SurfaceGrid
   readonly foraging: ForagingState
   readonly flights: FlightState
+  readonly relocation: RelocationState
   readonly interior: InteriorState
   readonly seedStore: SeedStoreState
 
@@ -156,6 +162,7 @@ export class Colony {
     this.surface = new SurfaceGrid(params, this.sim.prng)
     this.foraging = createForagingState(this.surface, this.soil, this.climate)
     this.flights = createFlightState(this.climate)
+    this.relocation = createRelocationState(this.surface, this.demography, options.seed)
 
     // Movement, brood tending and the seed store, inside the nest. It borrows excavation's
     // per-cell ant counts rather than recounting them: excavation fills that array at the
@@ -202,6 +209,7 @@ export class Colony {
     this.sim.registerState('brood', () => this.demography.brood.buffers())
     this.sim.registerState('surface', () => this.surface.buffers())
     this.sim.registerState('weather', () => this.climate.buffers())
+    this.sim.registerState('relocation', () => [this.relocation.prng.snapshot()])
 
     this.sim.register('climate', () => this.rollWeather())
     this.sim.register('excavation', makeExcavationSystem(this.excavation))
@@ -210,6 +218,7 @@ export class Colony {
     this.sim.register('demography', makeDemographySystem(this.demography))
     this.sim.register('foraging', makeForagingSystem(this.foraging))
     this.sim.register('flights', makeFlightSystem(this.flights))
+    this.sim.register('relocation', makeRelocationSystem(this.relocation))
     this.sim.register('newAdults', () => this.settleNewAdults())
   }
 
@@ -296,6 +305,8 @@ export class Colony {
       nuptialFlights: this.flights.totalFlights,
       gynesFlown: this.flights.totalGynesFlown,
       malesFlown: this.flights.totalMalesFlown,
+      relocations: this.relocation.totalMoves,
+      relocationDistanceM: this.relocation.totalDistanceM,
     }
   }
 }

@@ -386,6 +386,7 @@ export interface Params {
     readonly durationDays: RangeParam
     readonly meanDistanceMetres: Param<number>
     readonly maxDistanceMetres: Param<number>
+    readonly mainTrailShare: Param<number>
     readonly destinationConstrainedToTrunkTrail: Param<boolean>
     readonly burdenPriority: Param<readonly string[]>
     readonly burdenedWorkerFractionRisesThroughMove: Param<boolean>
@@ -835,6 +836,7 @@ export function buildParams(root: Raw): Params {
 
     relocation: {
       movesPerYearMean: readScalar(root, 'relocation.movesPerYearMean'),
+      mainTrailShare: readScalar(root, 'relocation.mainTrailShare'),
       movesPerYearMax: readScalar(root, 'relocation.movesPerYearMax'),
       seasonWindowMonths: readNumberList(root, 'relocation.seasonWindowMonths'),
       peakMonth: readScalar(root, 'relocation.peakMonth'),

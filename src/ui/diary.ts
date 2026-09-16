@@ -144,6 +144,27 @@ export class ColonyDiary {
         'The colony is now big enough to start raising winged queens and males, the founders of new colonies.',
       )
     }
+    const reloc = colony.relocation
+    if (reloc.moveStartDay >= 0) {
+      const cell = colony.surface.cellSizeM
+      const metres = Math.hypot(reloc.moveDxCells * cell, reloc.moveDyCells * cell)
+      add(
+        'move-start-' + reloc.totalMoves,
+        'The colony starts moving to a new nest ' +
+          metres.toFixed(1) +
+          ' m away, along ' +
+          (reloc.moveAlongMainTrail ? 'its main trunk trail' : 'one of its foraging trails') +
+          '. In real colonies workers carry the seed store and the brood across while others dig; here the new nest is simply a copy of the old. Nobody knows why harvester ant colonies move.',
+      )
+    }
+    reloc.moves.forEach((m, n) => {
+      add(
+        'move-done-' + n,
+        'The move is done after ' +
+          m.days +
+          ' days. The new nest is taken to be a copy of the old one, as excavated nests were found to be, and the foragers have new ground to search.',
+      )
+    })
     colony.flights.flights.forEach((f, n) => {
       const who: string[] = []
       if (f.gynes > 0) who.push(f.gynes + (f.gynes === 1 ? ' winged queen' : ' winged queens'))
@@ -259,6 +280,15 @@ export class ColonyDiary {
       (workers === 1 ? ' worker' : ' workers') +
       (d.phase === 'queenless' ? ', and no queen.' : ' and the queen.')
     const doing: string[] = []
+    if (colony.relocation.moveStartDay >= 0) {
+      const r = colony.relocation
+      doing.push(
+        'moving house, day ' +
+          Math.min(r.moveDays, sim.clock.daysElapsed - r.moveStartDay + 1) +
+          ' of ' +
+          r.moveDays,
+      )
+    }
     if (colony.flights.aloft > 0) {
       doing.push(
         colony.flights.aloft === 1

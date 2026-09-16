@@ -141,6 +141,8 @@ interface YearRecord {
   nuptialFlights: number
   gynesFlown: number
   malesFlown: number
+  relocations: number
+  relocationDistanceM: number
   digest: string
 }
 
@@ -230,6 +232,8 @@ function summaryToYear(
     nuptialFlights: s.nuptialFlights,
     gynesFlown: s.gynesFlown,
     malesFlown: s.malesFlown,
+    relocations: s.relocations,
+    relocationDistanceM: Number(s.relocationDistanceM.toFixed(2)),
     digest,
   }
 }
