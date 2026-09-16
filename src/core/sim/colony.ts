@@ -20,6 +20,7 @@ import { SoilModel } from '../systems/soil.js'
 import { ClimateModel } from '../systems/climate.js'
 import { makeExcavationSystem } from '../systems/excavation.js'
 import { createForagingState, makeForagingSystem, meanTripTicks } from '../systems/foraging.js'
+import { createFlightState, makeFlightSystem } from '../systems/flights.js'
 import { createInteriorState, makeInteriorSystem } from '../systems/interior.js'
 import {
   createSeedStoreState,
@@ -35,6 +36,7 @@ import {
 import { RULE } from '../provenance/rules.js'
 import type { ExcavationState } from '../systems/excavation.js'
 import type { ForagingState } from '../systems/foraging.js'
+import type { FlightState } from '../systems/flights.js'
 import type { InteriorState } from '../systems/interior.js'
 import type { SeedStoreState } from '../systems/seeds.js'
 import type { DemographyState } from '../systems/demography.js'
@@ -88,6 +90,10 @@ export interface ColonySummary {
   readonly foragersOnSurface: number
   /** Mean completed foraging trip, in ticks. A tick is one simulated minute; see D7. */
   readonly meanTripTicks: number
+  /** Nuptial flights so far, and the winged queens and males that left on them. */
+  readonly nuptialFlights: number
+  readonly gynesFlown: number
+  readonly malesFlown: number
 }
 
 export class Colony {
@@ -99,6 +105,7 @@ export class Colony {
   readonly demography: DemographyState
   readonly surface: SurfaceGrid
   readonly foraging: ForagingState
+  readonly flights: FlightState
   readonly interior: InteriorState
   readonly seedStore: SeedStoreState
 
@@ -148,6 +155,7 @@ export class Colony {
     // before anything walks on them, so a colony's trails are a property of its seed.
     this.surface = new SurfaceGrid(params, this.sim.prng)
     this.foraging = createForagingState(this.surface, this.soil, this.climate)
+    this.flights = createFlightState(this.climate)
 
     // Movement, brood tending and the seed store, inside the nest. It borrows excavation's
     // per-cell ant counts rather than recounting them: excavation fills that array at the
@@ -201,6 +209,7 @@ export class Colony {
     this.sim.register('seeds', makeSeedStoreSystem(this.seedStore))
     this.sim.register('demography', makeDemographySystem(this.demography))
     this.sim.register('foraging', makeForagingSystem(this.foraging))
+    this.sim.register('flights', makeFlightSystem(this.flights))
     this.sim.register('newAdults', () => this.settleNewAdults())
   }
 
@@ -284,6 +293,9 @@ export class Colony {
       totalSeedsCollected: this.foraging.totalSeedsCollected,
       foragersOnSurface: this.foraging.antsOnSurface,
       meanTripTicks: meanTripTicks(this.foraging),
+      nuptialFlights: this.flights.totalFlights,
+      gynesFlown: this.flights.totalGynesFlown,
+      malesFlown: this.flights.totalMalesFlown,
     }
   }
 }

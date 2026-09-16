@@ -144,6 +144,18 @@ export class ColonyDiary {
         'The colony is now big enough to start raising winged queens and males, the founders of new colonies.',
       )
     }
+    colony.flights.flights.forEach((f, n) => {
+      const who: string[] = []
+      if (f.gynes > 0) who.push(f.gynes + (f.gynes === 1 ? ' winged queen' : ' winged queens'))
+      if (f.males > 0) who.push(f.males + (f.males === 1 ? ' male' : ' males'))
+      add(
+        'flight-' + n,
+        (n === 0 ? 'The first mating flight. ' : 'Another mating flight. ') +
+          'The morning after heavy rain, ' +
+          sentence(who) +
+          ' climb out and fly off to mate with ants from other colonies. Each new queen that survives will found a nest of her own.',
+      )
+    })
     if (d.phase === 'queenless') {
       add(
         'queenless',
@@ -247,6 +259,13 @@ export class ColonyDiary {
       (workers === 1 ? ' worker' : ' workers') +
       (d.phase === 'queenless' ? ', and no queen.' : ' and the queen.')
     const doing: string[] = []
+    if (colony.flights.aloft > 0) {
+      doing.push(
+        colony.flights.aloft === 1
+          ? 'the last winged ant leaving on its mating flight'
+          : colony.flights.aloft + ' winged queens and males leaving on their mating flight',
+      )
+    }
     if (foraging.antsOnSurface > 0) doing.push(foraging.antsOnSurface + ' out foraging')
     if (sand > 0) doing.push(sand + ' carrying sand')
     if (seeds > 0) doing.push(seeds + ' carrying seeds')

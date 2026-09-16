@@ -128,6 +128,8 @@ export function makeForagingSystem(state: ForagingState) {
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i)) continue
       if (ants.caste[i] === Caste.Queen) continue
+      // Winged queens and males on the sand are leaving on a flight, not foraging.
+      if (ants.caste[i] === Caste.Alate || ants.caste[i] === Caste.Male) continue
 
       if (ants.domain[i] === Domain.Surface) {
         // Caught out by rain, a forager gives up the search and heads home, still carrying

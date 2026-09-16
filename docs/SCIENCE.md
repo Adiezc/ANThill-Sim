@@ -36,6 +36,7 @@ labelled as such wherever the simulator surfaces it.
 | Mechanic | Rule as implemented | Tag | Source |
 |---|---|---|---|
 | Nuptial flight timing | Alates fly May to July, on a calm humid morning following heavy rain | **[A]** | AntWiki; Wikipedia species account |
+| Nuptial flights, as implemented **(new)** | **Implemented.** On the first morning without rain up to two days after a heavy rain in May to July, every winged queen and male at least a callow period old climbs out onto the sand by the entrance at 09:00 and takes off within the hour. Younger ones wait for the next rain. One flight per rain. Flights are highly synchronised across colonies and usually follow the first heavy summer rain; colonies have some of both sexes ready for it and keep rearing more for later flights. What happens to them after they leave is not modelled. Colonies in this model do not yet reach the 700 workers at which sexuals are reared (D31), so a naturally grown colony has none to send; the flight is exercised in `test/flights.spec.ts` on a colony given them directly. See DECISIONS.md D34 | **[A]** for the season, the rain trigger and repeated flights; **[C]** for the hour, the two days and the hour to leave | Smith & Tschinkel 2006 |
 | Mating | Queen mates with several males over successive days, then sheds wings | **[A]** | Wikipedia species account |
 | Claustral founding | Queen digs one shaft and a single chamber, takes in no food, and raises the first brood entirely from her own fat and flight-muscle reserves. Real queens then seal themselves in; the model does not plug the entrance | **[A]** | Wikipedia species account; Tschinkel 2004 |
 | Founding nest depth | Incipient nests 29 to 37 cm deep, drawn once per colony, and the queen digs all of it. Whether a real queen does is unknown: see the row below. This row said 40 to 50 cm until 2026-09-11; see the correction in section 2 | **[A]** for the depth | Tschinkel 2004 |
@@ -310,7 +311,7 @@ Seasonal biology to drive from this calendar:
 
 | Event | Rule as implemented | Tag | Source |
 |---|---|---|---|
-| Heavy rain | Saturated sand cannot be excavated; foraging stops. Also the trigger for nuptial flights | **[A]** for the flight trigger; **[B]** for the digging limit | Wikipedia species account (**[A]**); Monaenkova et al. 2015 (**[B]**) |
+| Heavy rain | Saturated sand cannot be excavated; foraging stops. Also the trigger for nuptial flights, implemented in section 1 | **[A]** for the flight trigger; **[B]** for the digging limit | Wikipedia species account (**[A]**); Monaenkova et al. 2015 (**[B]**) |
 | Drought and heat | Foraging is throttled to limit water loss; colonies differ in how plastic they are | **[B]** | Desert *Pogonomyrmex* water-loss literature |
 | Horned lizard | Introduced Texas horned lizard sits near the entrance and takes foragers | **[A]** | Wikipedia species account |
 | Parasitoid wasp | *Kapala floridana* attacks brood | **[A]** | Wikipedia species account |

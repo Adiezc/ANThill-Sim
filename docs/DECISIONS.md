@@ -1071,3 +1071,42 @@ hour and rate, the heating of sand, and the washing of trails.
 
 **Not done.** Nuptial flights still do not follow heavy rain, since alates are not flown. Drought
 does not throttle foraging. Wet sand after rain already stopped digging before this change.
+
+## D34. Winged queens and males leave on a flight after heavy rain
+
+**Date.** 2026-09-16.
+
+**Why.** Sexuals were reared once a colony passed 700 workers and then stayed in the nest until
+they died. The parameter file already recorded the flight season and its trigger as **[A]**, and
+D33 gave the model heavy rain on a particular day, so the flight could now be built on something.
+
+**What the literature says.** Smith & Tschinkel (2006) excavated 19 colonies. All 17 that reproduced
+had more than 700 workers. Sexual eggs are laid from early April, and production is highly
+synchronised among colonies, because flights are unpredictable events that usually follow the first
+heavy summer rain and need several colonies to take part. Colonies have some of both sexes ready
+when the first rain comes and go on rearing more for later flights. Flights run May to July, on a
+calm, humid morning after heavy rain.
+
+**What was built.** A small system, `systems/flights.ts`, after foraging.
+
+- A day in May to July whose rain passes `climate.heavyRainMm` arms a flight.
+- On each of the next `brood.nuptialFlightDaysAfterRain` mornings (2), at `brood.nuptialFlightHour`
+  (09:00), if no rain is falling, every winged queen and male older than a callow period climbs
+  onto the sand round the entrance. Each takes off at a random minute within
+  `brood.nuptialFlightDepartureTicks` (60) and leaves the run. Foraging ignores them.
+- Younger sexuals stay for the next rain. One flight per rain.
+- The run records each flight's date and counts. The study's `runs.csv` gains `nuptialFlights`,
+  `gynesFlown` and `malesFlown`. The simulator adds a diary entry per flight, and "Right now"
+  reports the ants leaving.
+
+**Tags.** The season, the rain trigger and repeated flights are **[A]**. The hour, the two days and
+the hour to leave are **[C]**. Nothing reads colony size.
+
+**The catch.** Colonies in this model level off near 300 workers (D31), below the 700 at which
+sexuals are reared, so a naturally grown colony never flies. The flight is tested on a colony
+given winged queens and males directly (`test/flights.spec.ts`), and was checked in the simulator
+the same way: 8 winged queens and 16 males left on 28 May of year two. It will show in ordinary runs
+once colonies reach maturity.
+
+**Not modelled.** Mating, the survival of new queens, and founding by them. Alates that never fly
+still die only by the inside-worker hazard, and alate larvae are fed as worker larvae (SCIENCE §6).

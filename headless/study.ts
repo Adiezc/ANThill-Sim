@@ -138,6 +138,9 @@ interface YearRecord {
   fedToLarvaeMg: number
   germinatedFedToLarvaeMg: number
   meanTripTicks: number
+  nuptialFlights: number
+  gynesFlown: number
+  malesFlown: number
   digest: string
 }
 
@@ -224,6 +227,9 @@ function summaryToYear(
     fedToLarvaeMg: Number(s.totalFedToLarvaeMg.toFixed(1)),
     germinatedFedToLarvaeMg: Number(s.totalGerminatedFedToLarvaeMg.toFixed(1)),
     meanTripTicks: Number(s.meanTripTicks.toFixed(2)),
+    nuptialFlights: s.nuptialFlights,
+    gynesFlown: s.gynesFlown,
+    malesFlown: s.malesFlown,
     digest,
   }
 }

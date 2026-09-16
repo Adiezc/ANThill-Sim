@@ -286,6 +286,9 @@ export interface Params {
     readonly eggDurationDays: Param<number>
     readonly larvaDurationDays: Param<number>
     readonly pupaDurationDays: Param<number>
+    readonly nuptialFlightHour: Param<number>
+    readonly nuptialFlightDaysAfterRain: Param<number>
+    readonly nuptialFlightDepartureTicks: Param<number>
     readonly callowDurationDays: Param<number>
     /** The four below are used only to draw brood at its real size. */
     readonly eggVolumeNl: Param<number>
@@ -740,6 +743,9 @@ export function buildParams(root: Raw): Params {
       larvaDurationDays: readScalar(root, 'brood.larvaDurationDays'),
       pupaDurationDays: readScalar(root, 'brood.pupaDurationDays'),
       callowDurationDays: readScalar(root, 'brood.callowDurationDays'),
+      nuptialFlightHour: readScalar(root, 'brood.nuptialFlightHour'),
+      nuptialFlightDaysAfterRain: readScalar(root, 'brood.nuptialFlightDaysAfterRain'),
+      nuptialFlightDepartureTicks: readScalar(root, 'brood.nuptialFlightDepartureTicks'),
       eggVolumeNl: readScalar(root, 'brood.eggVolumeNl'),
       eggLengthToWidth: readScalar(root, 'brood.eggLengthToWidth'),
       matureLarvaLengthToMinorWorker: readScalar(root, 'brood.matureLarvaLengthToMinorWorker'),
