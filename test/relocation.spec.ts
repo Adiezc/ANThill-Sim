@@ -5,7 +5,7 @@ import { loadSpecies } from '../src/core/params/index.js'
 import { Colony } from '../src/core/sim/colony.js'
 import { SurfaceGrid } from '../src/core/state/surface.js'
 import { Prng } from '../src/core/math/prng.js'
-import { moveChanceForMonth } from '../src/core/systems/relocation.js'
+import { moveChanceForMonth, seedsInTransit } from '../src/core/systems/relocation.js'
 
 const PARAMS = loadSpecies(
   JSON.parse(
@@ -43,6 +43,40 @@ describe('nest relocation', () => {
       PARAMS.foraging.backgroundSeedsPerSquareMetre.value * surface.cellSizeM * surface.cellSizeM
     expect(surface.seeds.get(surface.cols - 1, 0)).toBeGreaterThanOrEqual(background - 1e-6)
   })
+
+  it('starts a new nest at the new site and brings the whole seed store', () => {
+    const c = new Colony({ seed: 9, params: PARAMS, capacity: 60 })
+    c.run(c.sim.clock.ticksPerDay * 20)
+    const { nest } = c
+    // A store to carry, in a cell that has been dug. Very large seeds, which the ants cannot
+    // open, so none is eaten while the test waits for midnight.
+    const where = nest.deepestVoid()
+    nest.addSeed(3, where.col, where.row, 40)
+    let before = 0
+    for (let i = 0; i < nest.seeds.data.length; i += 1) before += nest.seeds.data[i]!
+    const generation = nest.generation
+
+    const r = c.relocation
+    r.moveDxCells = 8
+    r.moveDyCells = 0
+    r.moveDays = 4
+    r.movePending = true
+    // Past the next midnight, when the colony changes site if nobody is out.
+    const tpd = c.sim.clock.ticksPerDay
+    c.run(tpd - (c.sim.clock.tick % tpd) + 1)
+
+    expect(r.moveStartDay).toBeGreaterThanOrEqual(0)
+    expect(nest.generation).toBe(generation + 1)
+    // The new nest is the incipient shaft and chamber, not the old nest.
+    const incipient = PARAMS.nest.incipientDepthCm
+    expect(nest.maxDepthCm).toBeGreaterThanOrEqual(incipient.min - 1)
+    expect(nest.maxDepthCm).toBeLessThanOrEqual(incipient.max + 1)
+    // Every seed is either set down in the new nest or still on its way.
+    let inCells = 0
+    for (let i = 0; i < nest.seeds.data.length; i += 1) inCells += nest.seeds.data[i]!
+    // A seed or two may germinate in a day; none is lost in the move.
+    expect(inCells + seedsInTransit(r)).toBeGreaterThanOrEqual(before - 1)
+  }, 120000)
 
   it('moves along a trail, within the season, up to the yearly limit and the measured distance', () => {
     // Tschinkel 2014; Harrison & Gentry 1981.

@@ -119,6 +119,11 @@ export class SoilModel {
    * the normalisation cancels it; a denser sand would change the ratio if the model is ever
    * extended to compare substrates.
    */
+  /** Puts the stress field back to undisturbed sand, for a nest that has been filled back in. */
+  resetStress(): void {
+    this.stress.data.set(this.overburden)
+  }
+
   private initialiseStress(): void {
     const maxDepth = this.stress.yOf(this.stress.height - 1)
     this.stress.fillByRow((_row, depthCm) => depthCm / maxDepth)

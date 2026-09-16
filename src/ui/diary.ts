@@ -154,7 +154,7 @@ export class ColonyDiary {
           metres.toFixed(1) +
           ' m away, along ' +
           (reloc.moveAlongMainTrail ? 'its main trunk trail' : 'one of its foraging trails') +
-          '. In real colonies workers carry the seed store and the brood across while others dig; here the new nest is simply a copy of the old. Nobody knows why harvester ant colonies move.',
+          '. The workers start digging a new nest and carry the seed store in as they make room. Nobody knows why harvester ant colonies move.',
       )
     }
     reloc.moves.forEach((m, n) => {
@@ -162,7 +162,7 @@ export class ColonyDiary {
         'move-done-' + n,
         'The move is done after ' +
           m.days +
-          ' days. The new nest is taken to be a copy of the old one, as excavated nests were found to be, and the foragers have new ground to search.',
+          ' days. The workers go on enlarging the new nest, and the foragers have new ground to search.',
       )
     })
     colony.flights.flights.forEach((f, n) => {

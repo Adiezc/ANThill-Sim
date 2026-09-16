@@ -21,7 +21,11 @@ import { ClimateModel } from '../systems/climate.js'
 import { makeExcavationSystem } from '../systems/excavation.js'
 import { createForagingState, makeForagingSystem, meanTripTicks } from '../systems/foraging.js'
 import { createFlightState, makeFlightSystem } from '../systems/flights.js'
-import { createRelocationState, makeRelocationSystem } from '../systems/relocation.js'
+import {
+  createRelocationState,
+  makeRelocationSystem,
+  seedsInTransit,
+} from '../systems/relocation.js'
 import { createInteriorState, makeInteriorSystem } from '../systems/interior.js'
 import {
   createSeedStoreState,
@@ -162,7 +166,13 @@ export class Colony {
     this.surface = new SurfaceGrid(params, this.sim.prng)
     this.foraging = createForagingState(this.surface, this.soil, this.climate)
     this.flights = createFlightState(this.climate)
-    this.relocation = createRelocationState(this.surface, this.demography, options.seed)
+    this.relocation = createRelocationState(
+      this.surface,
+      this.nest,
+      this.soil,
+      this.demography,
+      options.seed,
+    )
 
     // Movement, brood tending and the seed store, inside the nest. It borrows excavation's
     // per-cell ant counts rather than recounting them: excavation fills that array at the
@@ -288,7 +298,7 @@ export class Colony {
       nestDepthCm: this.nest.maxDepthCm,
       soilMovedCells: this.nest.excavatedCells,
       phase: this.demography.phase,
-      seedsStored: this.interior.seedsInStore,
+      seedsStored: this.interior.seedsInStore + seedsInTransit(this.relocation),
       seedsInTransit: this.interior.seedsCarried,
       seedStoreByClass: Array.from(store.storedByClass),
       unopenableShareOfStore: unopenableShareByWeight(this.sim.params, store),

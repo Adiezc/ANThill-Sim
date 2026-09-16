@@ -243,5 +243,5 @@ from the vacated one. Successive moves describe a random walk around the origina
 | Distance | Mean about 4 m, rarely over 10 m | **Met.** About 3.4 m per move across those runs, none over 10 m |
 | Along a trail | Main trunk trail 78 percent of the time | **Met**, by construction |
 | Duration | 4 to 6 days | **Met**, by construction |
-| The new nest | Indistinguishable from the old | **Met by assumption, not simulated.** The chambers, brood and store are kept as they were. Digging, carrying and the size cost of moving are not modelled, so a nest still never shrinks when its colony does (DECISIONS.md D35) |
+| The new nest | Indistinguishable from the old | **Partly met.** The new nest is dug by the colony, from an incipient shaft, so its size follows the colony as it is. After five years on seeds 2 and 3 nests were 84 and 95 cm deep, 1.2 and 1.3 times Tschinkel's depth law, where copying the old nest gave 130 and 152 cm, about twice. Forty days after a forced move a colony of about 80 workers had dug 151 cells against 385 in the nest it left, so the new nest is smaller than the old for weeks. DECISIONS.md D36 |
 | Random walk around the origin | Successive moves wander around the first site | **Not measured.** The run does not track the entrance's position across moves |

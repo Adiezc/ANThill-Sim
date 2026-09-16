@@ -192,6 +192,40 @@ export class NestGrid {
     return true
   }
 
+  /**
+   * Bumped whenever the nest is filled back in, so anything that caches the shape of the
+   * burrows can tell the new nest from the old one.
+   */
+  generation = 0
+
+  /**
+   * Fills the whole nest back in: solid sand everywhere, nothing stored, no pheromone. Used when
+   * a colony moves and starts a new nest; the grid stays the same object so every system that
+   * holds it keeps working.
+   */
+  clearToSoil(): void {
+    this.occupancy.fill(SOIL)
+    for (const grid of [
+      this.spoil,
+      this.building,
+      this.seeds,
+      ...this.seedsByClass,
+      this.germinating,
+      this.germinatingMg,
+      this.brood,
+    ]) {
+      grid.data.fill(0)
+    }
+    this.excavatedCells = 0
+    this.deepestRow = 0
+    this.blockVoidCount.fill(0)
+    this.activeMinCol = this.cols
+    this.activeMaxCol = -1
+    this.activeMinRow = this.rows
+    this.activeMaxRow = -1
+    this.generation += 1
+  }
+
   /** Index of the density block a cell belongs to. */
   blockIndex(col: number, row: number): number {
     return Math.floor(row / this.blockSize) * this.blockCols + Math.floor(col / this.blockSize)

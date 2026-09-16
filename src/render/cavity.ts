@@ -84,7 +84,14 @@ export class CavityOutline {
    * The inside of the burrows, to fill, and their walls, to stroke, over the cells asked for.
    * Both in centimetres.
    */
+  private generation = 0
+
   paths(nest: NestGrid, range: CellRange): { fill: Path2D; walls: Path2D } {
+    // A colony that moved has a new nest in the same grid; nothing traced from the old one holds.
+    if (nest.generation !== this.generation) {
+      this.patches.clear()
+      this.generation = nest.generation
+    }
     const fill = new Path2D()
     const walls = new Path2D()
     const dug = nest.pheromoneBounds()

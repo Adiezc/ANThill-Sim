@@ -1158,3 +1158,46 @@ relocation (D33), so moving to fresh ground does not change growth much.
 
 **Tags.** Season, peak, frequency, trail, distance, duration and the replica are **[A]**. The monthly
 fall-off, the exponential distance and treating the move as a shift of the ground are **[C]**.
+
+## D36. A colony that moves digs its new nest
+
+**Date.** 2026-09-17.
+
+**Why.** D35 took the new nest to be a copy of the old one. That matched the measurement that
+replicas are indistinguishable, but it meant a nest never shrank when its colony did, which is
+what makes the fifth year run deep (D28). Workers dig the new nest during the move and after it
+**[A]**, so the model should too.
+
+**What was built.** At the first midnight with no forager out after a move is decided, the ground
+shifts under the new entrance as before. The nest grid is then filled back in (`NestGrid.clearToSoil`,
+the same object, so every system keeps its reference) and the soil stress reset. Every ant
+underground goes to the entrance, sand in mandibles is dropped, and each ant's digging tally
+(`dugCells`, D28) starts again, since it was the tally for the nest she dug. The whole seed store,
+including seeds in mandibles, goes into a store in transit and is set down hour by hour in the
+topmost dug cells below the entrance, up to the packing limit. Brood is placed where the queen is by
+the daily reconciliation, as before. The renderer's burrow cache is dropped when the nest's
+generation changes.
+
+**Two things that failed first.** Starting the new nest from a single cell, 142 workers dug 10 cells
+in 40 days: the digging rules cannot start a nest from nothing, which is why the founding queen has
+her own rule (D27). So the new nest starts as the shaft and chamber a founding queen digs, at the
+incipient depth, and workers enlarge it **[C]**. Before that, ants still holding seeds at the moment
+of the move could not put them down in a nest whose only cell the store had filled, and nobody dug
+at all; seeds in mandibles now join the store in transit, and the store is never set down in the
+entrance cell.
+
+**What it gives.** A forced move in July of year three on seed 3, about 80 workers: the store was in
+the new nest within a day, no larvae starved, and in 40 days the nest grew from the 79-cell shaft to
+151 cells, against 385 in the nest left behind. Five years on seeds 2 to 4:
+
+| Seed | Workers, year 5 | Depth, dug nest | Depth, copied nest (D35) | Depth law |
+|---|---|---|---|---|
+| 2 | 264 | 84 cm | 130 cm | 70 cm |
+| 3 | 310 | 95 cm | 152 cm | 74 cm |
+| 4 | queen died in year 3 | – | 114 cm in year 4 | – |
+
+So nests run about 1.2 to 1.3 times the law after five years, against about twice when copied.
+Growth is about the same. Seed 4's queen died of the ordinary daily hazard.
+
+**Not done.** The walk between sites, the size cost of moving, germinating seeds carried across, and
+any choice of site (D3).
