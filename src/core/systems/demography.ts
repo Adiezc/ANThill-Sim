@@ -141,13 +141,22 @@ export function countForagers(sim: Simulation): number {
 /**
  * Age at which a worker eclosing on this day of year will first forage.
  *
- * This is the whole mechanism. Summer-born workers reach it in 43 days; autumn-born ones
- * overwinter and take 210 to 360. Nothing about colony need enters into it.
+ * This is the whole mechanism. The year's own workers reach it in 43 days. Workers born in
+ * the autumn overwinter and take 210 to 360. Nothing about colony need enters into it.
+ *
+ * "The year's own workers" means everything that ecloses in the active season before the
+ * autumn fattening begins. Kwapich & Tschinkel 2013 describe them as the first cohorts of the
+ * year, eclosing from late May alongside the sexual alates. This rule used to read June to
+ * August only, which put a growing colony's May callows on the overwintering schedule. They
+ * sat inside through their first summer and foraged the following spring. Nothing ecloses in
+ * March or April in the field, so the wider window changes nothing a paper measured.
  */
 function ageAtFirstForagingDays(dayOfYear: number, params: Params, sim: Simulation): number {
   const month = monthOfDayOfYear(dayOfYear)
-  const summerBorn = month >= 6 && month <= 8
-  if (summerBorn) {
+  const autumnBorn =
+    month >= Math.min(...params.brood.autumnFatGainMonths.value) - 1 ||
+    !params.labour.foragingSeasonMonths.value.includes(month)
+  if (!autumnBorn) {
     const mean = params.labour.ageAtFirstForagingDaysSummerBorn.value
     const sd = params.labour.ageAtFirstForagingSummerBornSd.value
     return Math.max(1, mean + sim.prng.nextNormal() * sd)
@@ -418,6 +427,8 @@ function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: numbe
   const fatThreshold = params.labour.foragerFatThreshold.value
   const month = monthOfDayOfYear(dayOfYear)
   const inForagingSeason = params.labour.foragingSeasonMonths.value.includes(month)
+  const lastSeasonMonth = Math.max(...params.labour.foragingSeasonMonths.value)
+  const seasonEndDayOfYear = MONTH_START[lastSeasonMonth - 1]! + DAYS_IN_MONTH[lastSeasonMonth - 1]!
 
   // How readily a worker whose own schedule has come due actually takes up foraging today.
   //
@@ -468,14 +479,39 @@ function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: numbe
     // They did race, in the first version: a flat two percent a day put every worker past
     // the threshold in 45 days regardless of when it eclosed, the autumn cohort foraged
     // into the winter, and no colony survived its first year.
+    //
+    // The age is counted from eclosion, and a callow burns nothing, so the fall is spread
+    // over the days left after the callow stage. Spreading it over the whole age put every
+    // worker two weeks behind its own schedule: the 43-day cohort foraged at 57.
+    //
+    // A worker that has gained fat since then burns faster, so that it still reaches the
+    // threshold on the day it is due. The 210 to 360 days are counted from eclosion and
+    // already include the autumn fattening below. Burning at the plain rate counted that
+    // fattening twice: it cancelled the whole autumn's fall, so the autumn cohort's clock
+    // effectively restarted on 1 December. None of it foraged before mid-June, spring brood
+    // starved with no one bringing seed home, and the paper has that cohort foraging from
+    // March.
     const dueDays = Math.max(1, ants.timer[i]!)
-    const burnPerDay = (1 - fatThreshold) / dueDays
+    const daysToDue = dueDays - ageDays
+    const plainBurnPerDay = (1 - fatThreshold) / Math.max(1, dueDays - callowDays)
+    const burnPerDay =
+      daysToDue > 1
+        ? Math.max(plainBurnPerDay, (ants.fat[i]! - fatThreshold) / daysToDue)
+        : plainBurnPerDay
     ants.fat[i] = Math.max(0, ants.fat[i]! - burnPerDay)
 
-    // Autumn: workers gain about 24 percent in weight before winter, storing the fat that
-    // pays for next year's alates. That is what carries the autumn cohort through to spring
-    // rather than burning it out on foraging trips in December.
-    if (params.brood.autumnFatGainMonths.value.includes(monthOfDayOfYear(dayOfYear))) {
+    // Autumn. Workers gain about 24 percent in weight before winter, storing the fat that pays
+    // for next year's alates. That carries the autumn cohort through to spring rather than
+    // burning it out on foraging trips in December.
+    //
+    // It applies only to a worker that will not reach foraging age before the season ends.
+    // Applied to everyone, it froze the summer cohort in September: a worker born in late
+    // July and due to forage in mid-September had its fat topped back up and waited until
+    // March. Kwapich & Tschinkel 2013 found those workers foraging, and dead, by September.
+    // It froze a founding colony's first workers in the same way, so no food at all came in
+    // during the colony's first year.
+    const foragesThisSeason = dueDays - ageDays <= seasonEndDayOfYear - dayOfYear
+    if (!foragesThisSeason && params.brood.autumnFatGainMonths.value.includes(month)) {
       const autumnDays = params.brood.autumnFatGainMonths.value.reduce(
         (sum, m) => sum + DAYS_IN_MONTH[m - 1]!,
         0,
