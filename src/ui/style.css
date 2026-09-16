@@ -777,9 +777,15 @@ button {
 
 @media (max-width: 600px) {
   .map-inset {
-    right: 14px;
-    bottom: 14px;
-    width: 128px;
+    right: 10px;
+    bottom: 10px;
+    width: 96px;
+  }
+
+  /* On a phone the labels cover the view they describe; the camera buttons already name it. */
+  .view-label,
+  .map-inset-label {
+    display: none;
   }
 }
 
