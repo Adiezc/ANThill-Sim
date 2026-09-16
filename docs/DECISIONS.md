@@ -4,8 +4,51 @@ Every point where the build brief, `SCIENCE.md` and `species/pogonomyrmex-badius
 disagreed, or were silent, and how it was resolved. Anyone auditing the model's fidelity
 should read this file alongside `SCIENCE.md`.
 
-Format: the conflict, the resolution, and — where the resolution departs from the
-literature — the tag the resulting mechanic carries.
+Each entry gives the problem, what was decided, and the tag the resulting mechanic carries where it
+departs from the literature. Entries are a dated log: a later one can overturn an earlier one, and
+says so. The current state of the model is summarised in the README and in `VALIDATION.md`.
+
+## Contents
+
+- [D1. Space is modelled as two coupled 2D domains](#d1-space-is-modelled-as-two-coupled-2d-domains)
+- [D2. `maxHarvestableSeedWidthMm` is read as maximum _openable_ width](#d2-maxharvestableseedwidthmm-is-read-as-maximum-_openable_-width)
+- [D3. Relocation candidate sites genuinely differ — a deliberate departure from [A]](#d3-relocation-candidate-sites-genuinely-differ--a-deliberate-departure-from-a)
+- [D4. Colony death: a [C] queen mortality hazard](#d4-colony-death-a-c-queen-mortality-hazard)
+- [D5. The top-heaviness contradiction, resolved by the primary source](#d5-the-top-heaviness-contradiction-resolved-by-the-primary-source)
+- [D6. Building pheromone persistence was specified twice](#d6-building-pheromone-persistence-was-specified-twice)
+- [D7. Tick duration is defined as one simulated minute](#d7-tick-duration-is-defined-as-one-simulated-minute)
+- [D8. Missing demographic and seed parameters](#d8-missing-demographic-and-seed-parameters)
+- [D9. A fixed 365-day calendar](#d9-a-fixed-365-day-calendar)
+- [D10. Primary sources added, and sections 2 and 3 rewritten from them](#d10-primary-sources-added-and-sections-2-and-3-rewritten-from-them)
+- [D11. A vertical slice needs an out-of-plane thickness](#d11-a-vertical-slice-needs-an-out-of-plane-thickness)
+- [D12. Excavation rate: the papers give two, and only one is a per-ant rate](#d12-excavation-rate-the-papers-give-two-and-only-one-is-a-per-ant-rate)
+- [D13. The figures disagree with the text, twice](#d13-the-figures-disagree-with-the-text-twice)
+- [D14. The collision rule runs the other way round](#d14-the-collision-rule-runs-the-other-way-round)
+- [D15. Fat is the mechanism, not a second rule beside the schedule](#d15-fat-is-the-mechanism-not-a-second-rule-beside-the-schedule)
+- [D16. Session boundary, 2026-09-06](#d16-session-boundary-2026-09-06)
+- [D17. A grid cell is smaller than an ant, and that broke the crowding rule](#d17-a-grid-cell-is-smaller-than-an-ant-and-that-broke-the-crowding-rule)
+- [D18. Foraging onset follows temperature, not the calendar](#d18-foraging-onset-follows-temperature-not-the-calendar)
+- [D19. The simulation spent half its time on empty sand](#d19-the-simulation-spent-half-its-time-on-empty-sand)
+- [D20. The inside of the nest: two places for the brood, and a fiction for everyone else](#d20-the-inside-of-the-nest-two-places-for-the-brood-and-a-fiction-for-everyone-else)
+- [D21. The papers, read to the end, and what they corrected](#d21-the-papers-read-to-the-end-and-what-they-corrected)
+- [D22. A seed germinates a hundred times more slowly in a chamber than on damp plaster](#d22-a-seed-germinates-a-hundred-times-more-slowly-in-a-chamber-than-on-damp-plaster)
+- [D23. Session boundary, 2026-09-10](#d23-session-boundary-2026-09-10)
+- [D24. The food account starves the colony, and the proxy had been hiding why](#d24-the-food-account-starves-the-colony-and-the-proxy-had-been-hiding-why)
+- [D25. The soil model, fitted to the soil the ants actually live in](#d25-the-soil-model-fitted-to-the-soil-the-ants-actually-live-in)
+- [D26. Everything in the nest at its real size](#d26-everything-in-the-nest-at-its-real-size)
+- [D27. The founding queen digs her own nest, and the slice is drawn like an ant farm](#d27-the-founding-queen-digs-her-own-nest-and-the-slice-is-drawn-like-an-ant-farm)
+- [D28. An ant digs less the more she has dug, and most diggers dig where they rest](#d28-an-ant-digs-less-the-more-she-has-dug-and-most-diggers-dig-where-they-rest)
+- [D29. Foragers keep to their own schedule, and the autumn cohort forages from March to mid-July](#d29-foragers-keep-to-their-own-schedule-and-the-autumn-cohort-forages-from-march-to-mid-july)
+- [D30. The foraging range stays at 25 m, because distance is not what starves the colony](#d30-the-foraging-range-stays-at-25-m-because-distance-is-not-what-starves-the-colony)
+- [D31. The queen lays fewer eggs, and the seed on the ground now sets the ceiling](#d31-the-queen-lays-fewer-eggs-and-the-seed-on-the-ground-now-sets-the-ceiling)
+- [D32. Foragers are as many as measured, but their peak comes two months late](#d32-foragers-are-as-many-as-measured-but-their-peak-comes-two-months-late)
+- [D33. Weather from day to day, and what rain and sun do to foraging](#d33-weather-from-day-to-day-and-what-rain-and-sun-do-to-foraging)
+- [D34. Winged queens and males leave on a flight after heavy rain](#d34-winged-queens-and-males-leave-on-a-flight-after-heavy-rain)
+- [D35. Colonies move their nest, and the new nest is taken to be a copy](#d35-colonies-move-their-nest-and-the-new-nest-is-taken-to-be-a-copy)
+- [D36. A colony that moves digs its new nest](#d36-a-colony-that-moves-digs-its-new-nest)
+- [D37. The dead are carried out](#d37-the-dead-are-carried-out)
+- [D38. The overwintered cohort comes due together, and foraging peaks in June](#d38-the-overwintered-cohort-comes-due-together-and-foraging-peaks-in-june)
+- [D39. Colony size: the model's main limit, and why it is left there](#d39-colony-size-the-models-main-limit-and-why-it-is-left-there)
 
 ---
 

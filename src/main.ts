@@ -885,6 +885,13 @@ function startSimulator(): void {
         redraw()
       },
     }
+    // ?watch&days=400 on the development server starts the colony that many days in, for
+    // screenshots of a grown nest. Vite removes this with the rest of the block in production.
+    const days = Number(new URLSearchParams(window.location.search).get('days') ?? 0)
+    if (days > 0) {
+      colony.run(colony.sim.clock.ticksPerDay * days)
+      redraw()
+    }
   }
 }
 
@@ -1066,4 +1073,6 @@ function syncThumb(thumb: HTMLSpanElement, chosen: HTMLButtonElement): void {
   thumb.dataset.ready = 'true'
 }
 
-startThreshold()
+// A link that ends in ?watch opens straight onto a colony, for sharing and for screenshots.
+if (new URLSearchParams(window.location.search).has('watch')) startSimulator()
+else startThreshold()

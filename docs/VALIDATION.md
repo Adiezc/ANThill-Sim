@@ -4,10 +4,22 @@ What the model must reproduce before a stage is considered done. These are accep
 gates, not aspirations: the order of work in the build brief says excavation does not
 proceed until the nest signature matches.
 
+## Where the model stands, 2026-09-17
+
+| Gate | Status |
+|---|---|
+| G1 Nest architecture | Substantially met. Depth follows the worker-number law within about a third, and moving colonies dig new nests so older nests no longer run twice too deep. Deep chamber spacing, branch depth and the surface-to-bottom width ratio are not met |
+| G2 Determinism | Met |
+| G3 Demography | Partly met. Forager share peaks in June at about the measured height, but spring starts too late. **Colonies level off at 250 to 330 workers against about 700 at maturity and 4300 mature** (DECISIONS.md D39) |
+| G4 Vertical stratification | Partly met. Nurses settle below foragers, but the measured fractions are not reproduced across the whole workforce |
+| G4b Foraging | Mostly met. Recruitment trails make no measurable difference |
+| G5 Seeds and germination | Mostly met in the mechanism; the store holds more unopenable seed than measured, and growth on it fails as in G3 |
+| G6 Relocation | Met for frequency, season, distance, trail and duration. The new nest is dug, but starts smaller than the one left behind |
+
 ## A note on 2D versus 3D statistics
 
 Every architectural number in `SCIENCE.md` §2 is a measurement of a real three-dimensional
-nest — chamber _area_ in cm², total volume in litres, area per depth decile. The simulation
+nest: chamber _area_ in cm², total volume in litres, area per depth decile. The simulation
 models a vertical slice, in which the corresponding quantity is a cross-sectional _length_
 per depth band, not an area. Comparing the two directly would be meaningless, so each gate
 below states the mapping it uses. Where a mapping is assumed rather than derived, it is
@@ -43,20 +55,20 @@ Four things, in order of how much they mattered.
 and a minor worker is 6.35 mm long, so two ants in adjacent cells are touching: counting
 co-occupancy of one cell is not a collision rate, it is a rounding artefact, and it reports
 every narrow shaft as permanently packed. Measuring ants per unit of open space over a 4 cm
-neighbourhood instead took the whole-nest build time from about seventy days to six — the
-figure the species is reported to manage — and made chamber spacing widen with depth
+neighbourhood instead took the whole-nest build time from about seventy days to six, the
+figure the species is reported to manage, and made chamber spacing widen with depth
 properly for the first time.
 
 **The excavation rate was the wrong number.** Tschinkel's 0.45 cm² of chamber and 0.13 cm
 of shaft per worker-day are averages over every penned worker, most of whom were not at a
 face at any moment. Applying that average to an ant that *is* at a face counts the queueing
-twice. The physical rate is in the same paper — 300 to 400 times body weight in sand per day
-while excavating — and worker mass came from Tschinkel 1998's Figure 5 rather than from the
+twice. The physical rate is in the same paper (300 to 400 times body weight in sand per day
+while excavating), and worker mass came from Tschinkel 1998's Figure 5 rather than from the
 estimate of 1.7 mg used before, which was wrong by nearly a factor of two.
 
 **Chambers open along the whole shaft, not only at its tip.** One rule turned a nest with a
-single working face into one with hundreds, and produced the top-heavy distribution — stuck
-at 0.19 — as a side effect rather than as a target.
+single working face into one with hundreds, and produced the top-heavy distribution, stuck
+at 0.19, as a side effect rather than as a target.
 
 **The figures, not just the text.** Figure 10 gives spacing by decile peaking near 12 cm,
 against the body text's 20-30. Figure 9B gives chamber area by depth, which fixes widths.
@@ -86,7 +98,7 @@ more than a chamber's height past it.
 
 Tschinkel's nests obey a law. Total chamber area tracks worker number and depth goes with it,
 `log(depth) = 0.95 + 0.37 log(workers)`, so 600 workers predicts a nest about 96 cm deep.
-**The model used to dig until it ran out of grid** — 320 cm, whatever the colony size — and a
+**The model used to dig until it ran out of grid**, 320 cm whatever the colony size, and a
 founding colony of a dozen nanitics reached 2.2 to 2.7 m in its first year against an incipient
 29 to 37 cm.
 
@@ -131,7 +143,7 @@ others. The two values the rules need are invented and fitted, and the parameter
 
 Chamber "area" in the slice is total chamber cross-sectional length per depth decile. A void
 cell counts as chamber rather than shaft when its horizontal run exceeds twice the shaft
-bore — Tschinkel's own distinction — so the threshold is read from `nest.shaftBoreDiameterCm`
+bore (Tschinkel's own distinction), so the threshold is read from `nest.shaftBoreDiameterCm`
 rather than invented. Converting a slice length to a volume needs an out-of-plane thickness,
 which a slice does not have; `discretisation.sliceThicknessCm` supplies one, tagged **[C]**,
 taken as the shaft bore. It is about right for shafts and understates chambers, which are
@@ -154,10 +166,10 @@ wider out of plane than in it.
 | Forager lifespan | Emergent mean near 27 days from first foraging, from a 3–4%/day hazard rather than a hard cap   | **[A]**           |
 | No reversion     | Removing 50% of foragers draws no replacements from other castes; larval survival falls instead | **[A]** HARD RULE |
 
-**Forager fraction, measured 2026-09-16 on colonies grown from a queen.** The annual maximum is
-0.31 to 0.43, on the measured 35 to 41 percent. It comes in July to September instead of May to
-June, and the spring share is 0.02 to 0.22 where the measured curve is rising to its maximum.
-DECISIONS.md D32.
+**Forager fraction, measured on colonies grown from a queen.** After D38 the annual maximum comes
+in June, 0.39 to 0.53 on three colonies in their third year, against a measured 35 to 41 percent
+in mature colonies and 60 in immature ones. March and April are still close to zero where the
+measured share is already rising. DECISIONS.md D32 and D38.
 
 ## G4. Vertical stratification
 
@@ -171,7 +183,7 @@ brood-care workers settling below foragers when both start at the same depth.
 |---|---|---|
 | Nurses below foragers | The measured sorting | **Met** for workers the interior system owns |
 | The distribution across the whole workforce | The measured fractions | **Not met.** About four workers in five pass the persistent-digging test and belong to the excavation system, which walks them to the dig face at the bottom of the nest and keeps them there. In a grown colony most of the workforce is therefore deep whatever its task, and the measured fractions cannot be recovered from it. This is the same defect as the runaway digging in G1 and it will not be fixed here |
-| The mechanism | — | **Invented.** An ant walks toward a depth it is handed. See DECISIONS.md D20 |
+| The mechanism | None | **Invented.** An ant walks toward a depth it is handed. See DECISIONS.md D20 |
 
 ### Brood placement
 
@@ -184,14 +196,14 @@ deep chambers and that callows eclose there. What it does not reproduce is any m
 ## G4b. Foraging
 
 Encoded in `test/foraging.spec.ts`. Foraging cannot be measured on a naturally grown colony
-inside a test suite — a worker does not forage before 43 days old and a founding colony has
-eleven workers — so these run on an artificial age structure. Nothing demographic may be
+inside a test suite (a worker does not forage before 43 days old and a founding colony has
+eleven workers), so these run on an artificial age structure. Nothing demographic may be
 read off them; they are about what a forager *does*.
 
 | Property | Target | Status |
 |---|---|---|
 | Trunk trails | 1-4 short trails into a surrounding range | **Met.** Drawn once per colony from its own seed |
-| Trail direction | Random at population level | **Met**, by construction. The [A] cause — the position of neighbouring colonies — is not modelled, because no neighbours are |
+| Trail direction | Random at population level | **Met**, by construction. The [A] cause, the position of neighbouring colonies, is not modelled, because no neighbours are |
 | Site fidelity | Return to within ~0.5 m of the last site | **Met** |
 | Path integration | Home on an accumulated vector, not on a read of position | **Met** structurally. Drift is **not modelled**; the vector is exact. See the not-modelled panel |
 | Trip duration is search time | Trip length dominated by searching, not by walking | **Met.** Mean trip is well above the walk across the range |
@@ -208,7 +220,7 @@ read off them; they are about what a forager *does*.
 No seed rain is published for these sandhills, so the standing crop, its patchiness and its
 replenishment are all invented and tagged **[C]**. Patchiness is not decoration. With seeds
 spread evenly, every ant finds one within a few steps of the entrance, every trip succeeds,
-and site fidelity and recruitment trails are ornaments on a conveyor belt — which is exactly
+and site fidelity and recruitment trails are ornaments on a conveyor belt, which is exactly
 what the first implementation did, at a 100 % trip success rate. With patches, trip success
 runs 34-62 % and falls as a colony grows and depletes the patches nearest home.
 
