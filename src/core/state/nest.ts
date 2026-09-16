@@ -55,6 +55,8 @@ export class NestGrid {
    * answer by carrying it. The two are reconciled once a day; see systems/interior.ts.
    */
   readonly brood: Grid2D
+  /** Dead ants lying where they died, per cell, until a worker carries them out. */
+  readonly corpses: Grid2D
 
   readonly cols: number
   readonly rows: number
@@ -120,6 +122,7 @@ export class NestGrid {
     this.germinating = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.germinatingMg = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.brood = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
+    this.corpses = new Grid2D(this.cols, this.rows, cell, -widthCm / 2, 0)
     this.entranceCol = Math.floor(this.cols / 2)
     this.blockSize = Math.max(1, Math.round(params.excavation.crowdingRadiusCm.value / cell))
     this.blockCols = Math.ceil(this.cols / this.blockSize)
@@ -213,6 +216,7 @@ export class NestGrid {
       this.germinating,
       this.germinatingMg,
       this.brood,
+      this.corpses,
     ]) {
       grid.data.fill(0)
     }
@@ -408,6 +412,7 @@ export class NestGrid {
       this.germinating.data,
       this.germinatingMg.data,
       this.brood.data,
+      this.corpses.data,
     ]
   }
 }

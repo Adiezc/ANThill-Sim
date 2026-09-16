@@ -282,7 +282,7 @@ function runDay(sim: Simulation, state: DemographyState): void {
   } else if (state.queenSlot >= 0) {
     const dailyHazard = 1 - exp(-1 / (params.colony.queenLifespanYears.value * 365))
     if (prng.chance(dailyHazard)) {
-      ants.kill(state.queenSlot)
+      dieInNest(sim, state, state.queenSlot)
       state.queenSlot = -1
       state.phase = 'queenless'
     }
@@ -594,7 +594,7 @@ function applyMortality(sim: Simulation, state: DemographyState, dayOfYear: numb
       ageDays > params.brood.insideWorkerLifespanDays.value &&
       prng.chance(params.brood.insideWorkerMortalityPerDay.value)
     ) {
-      ants.kill(i)
+      dieInNest(sim, state, i)
       continue
     }
 
@@ -602,7 +602,23 @@ function applyMortality(sim: Simulation, state: DemographyState, dayOfYear: numb
     // in proportion foraging comes from more foragers *and* a smaller colony, so the losses
     // have to be real rather than an artefact of how the proportion is counted.
     if (!inSeason && prng.chance(params.labour.winterWorkerMortalityPerDay.value)) {
-      ants.kill(i)
+      dieInNest(sim, state, i)
     }
   }
+}
+
+/**
+ * An ant that dies underground leaves her body where she died, for the workers to carry out.
+ * A forager's death is the risk of foraging, and she dies out on the ground, so the forager
+ * hazard above kills without leaving a body in the nest.
+ */
+function dieInNest(sim: Simulation, state: DemographyState, slot: number): void {
+  const { ants } = sim
+  const { nest } = state
+  if (ants.domain[slot] === Domain.Nest) {
+    const col = nest.colOfOffset(ants.x[slot]!)
+    const row = nest.rowOfDepth(ants.y[slot]!)
+    if (nest.inBounds(col, row) && nest.isVoid(col, row)) nest.corpses.add(col, row, 1)
+  }
+  ants.kill(slot)
 }

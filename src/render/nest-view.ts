@@ -127,6 +127,9 @@ export interface NestDrawOptions {
   }
 }
 
+/** A dead worker: the living colours, drained. */
+const DEAD_COLOURS = { body: '#5e5145', head: '#52463b', limb: '#6e6154' }
+
 /** Width of the depth ruler gutter, in device-independent pixels. */
 const RULER_WIDTH = 54
 
@@ -903,7 +906,8 @@ export class NestView {
       for (let col = view.firstCol; col <= view.lastCol; col += 1) {
         const seeds = nest.seeds.get(col, row)
         const brood = nest.brood.get(col, row)
-        if (seeds < 0.05 && brood < 0.05) continue
+        const corpses = nest.corpses.get(col, row)
+        if (seeds < 0.05 && brood < 0.05 && corpses < 0.5) continue
         const cx = xOf(nest.offsetOf(col))
         // Seeds and brood lie on the floor of a chamber rather than float in the middle of it.
         const onFloor = nest.isSoil(col, row + 1)
@@ -923,6 +927,34 @@ export class NestView {
           }
           ctx.globalAlpha = 1
           continue
+        }
+
+        // A dead ant lies on her back on the chamber floor, legs up, until a worker carries her
+        // out. Drawn from the cell at the bottom of the space she died in.
+        if (corpses >= 0.5) {
+          let floorRow = row
+          while (floorRow < row + 4 && nest.isVoid(col, floorRow + 1)) floorRow += 1
+          const floorY = yOf(nest.depthOf(floorRow)) + cellPx / 2
+          const body = antBodyFor(Caste.MinorWorker, sizes.minorLengthMm, sizes, pxPerMm)
+          const n = Math.min(3, Math.round(corpses))
+          for (let k = 0; k < n; k += 1) {
+            const x = cx + (fract(col, row, k + 777) - 0.5) * cellPx * 1.5
+            const facing = fract(col, row, k + 778) < 0.5 ? 1 : -1
+            drawAntSide(
+              ctx,
+              x,
+              floorY - sideStandHeight(body) * 0.35,
+              body,
+              facing,
+              0,
+              0,
+              -1,
+              DEAD_COLOURS,
+              Burden.Nothing,
+              0,
+              0,
+            )
+          }
         }
 
         // Countable. Positions and angles come from a hash of the cell, so nothing jitters

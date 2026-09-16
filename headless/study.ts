@@ -143,6 +143,7 @@ interface YearRecord {
   malesFlown: number
   relocations: number
   relocationDistanceM: number
+  corpsesCarriedOut: number
   digest: string
 }
 
@@ -234,6 +235,7 @@ function summaryToYear(
     malesFlown: s.malesFlown,
     relocations: s.relocations,
     relocationDistanceM: Number(s.relocationDistanceM.toFixed(2)),
+    corpsesCarriedOut: s.corpsesCarriedOut,
     digest,
   }
 }

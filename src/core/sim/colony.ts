@@ -103,6 +103,9 @@ export interface ColonySummary {
   /** Nest moves completed, and how far the colony has moved in all. */
   readonly relocations: number
   readonly relocationDistanceM: number
+  /** Dead nestmates lying in the nest, and bodies workers have carried out. */
+  readonly corpsesInNest: number
+  readonly corpsesCarriedOut: number
 }
 
 export class Colony {
@@ -317,6 +320,8 @@ export class Colony {
       malesFlown: this.flights.totalMalesFlown,
       relocations: this.relocation.totalMoves,
       relocationDistanceM: this.relocation.totalDistanceM,
+      corpsesInNest: this.interior.corpsesInNest,
+      corpsesCarriedOut: this.interior.totalCorpsesCarriedOut,
     }
   }
 }

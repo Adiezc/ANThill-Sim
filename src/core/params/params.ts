@@ -336,6 +336,7 @@ export interface Params {
     readonly preferredDepthRedrawDays: Param<number>
     readonly tendingAttraction: Param<number>
     readonly broodPickUpChancePerTick: Param<number>
+    readonly corpsePickUpChancePerTick: Param<number>
     readonly maxBroodPerCell: Param<number>
     readonly broodSearchRadiusCm: Param<number>
     readonly broodChamberDepthFraction: Param<number>
@@ -784,6 +785,7 @@ export function buildParams(root: Raw): Params {
       preferredDepthRedrawDays: readScalar(root, 'interior.preferredDepthRedrawDays'),
       tendingAttraction: readScalar(root, 'interior.tendingAttraction'),
       broodPickUpChancePerTick: readScalar(root, 'interior.broodPickUpChancePerTick'),
+      corpsePickUpChancePerTick: readScalar(root, 'interior.corpsePickUpChancePerTick'),
       maxBroodPerCell: readScalar(root, 'interior.maxBroodPerCell'),
       broodSearchRadiusCm: readScalar(root, 'interior.broodSearchRadiusCm'),
       broodChamberDepthFraction: readScalar(root, 'interior.broodChamberDepthFraction'),

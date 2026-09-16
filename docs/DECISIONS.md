@@ -1201,3 +1201,24 @@ Growth is about the same. Seed 4's queen died of the ordinary daily hazard.
 
 **Not done.** The walk between sites, the size cost of moving, germinating seeds carried across, and
 any choice of site (D3).
+
+## D37. The dead are carried out
+
+**Date.** 2026-09-17.
+
+**Why.** Ants died and vanished. The pheromone parameters for a necrophoric cue had sat unused
+since the first version, and SCIENCE §10 records that workers carry corpses further from the nest
+than inert rubbish and that removing them raises the survival of the rest **[B]**.
+
+**What was built.** `NestGrid.corpses` counts bodies per cell. Deaths underground from the
+inside-worker hazard, winter mortality and the queen's daily hazard leave a body where the ant was.
+A forager's death does not, because it is the risk of foraging and happens outside. In the
+interior system a worker that is not a forager, within reach of a body, picks it up with a chance
+of 0.02 a step (`interior.corpsePickUpChancePerTick`, **[C]**) and walks it up to the entrance,
+where it leaves the nest. The run counts bodies in the nest and bodies carried out, `runs.csv` gains
+`corpsesCarriedOut`, the nest view draws a body on its back on the chamber floor, the diary notes
+the first one carried out and "Right now" counts workers carrying the dead.
+
+**Not done.** The chemical cue itself, how far from the nest a body is taken, and any effect of
+bodies left lying on the health of the colony. Nothing in the model makes a body dangerous, so
+removing it changes nothing but where it is.

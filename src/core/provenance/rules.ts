@@ -230,12 +230,20 @@ export const RULE = {
     '5',
     'That a colony forages along a few short trunk trails is measured [A], and so is the finding that neighbouring colonies shape their directions. The model has no neighbours, so it draws the directions once from the colony’s seed and keeps them. That matches the randomness seen across colonies without pretending to model its cause.',
   ),
+  corpseRemoval: rule(
+    'interior.corpseRemoval',
+    'Carrying a dead nestmate out of the nest.',
+    'B',
+    'Diez et al. 2012, 2014',
+    '8',
+    'Workers of other ant species carry corpses out of the nest, further than inert refuse, and removing them measurably raises the survival of the rest [B]. No study of badius was found. The chance of picking a body up is ours, and where the body is left outside is not modelled.',
+  ),
   nuptialFlight: rule(
     'demography.nuptialFlight',
     'Leaving on the mating flight, the morning after heavy rain.',
     'A',
     'Smith & Tschinkel 2006',
-    '9',
+    '1',
     'Winged queens and males fly from May to July on a calm morning after heavy rain, and colonies keep rearing more for later flights [A]. The hour, the days allowed after the rain and how long they take to leave are ours.',
   ),
   forageShelterFromRain: rule(

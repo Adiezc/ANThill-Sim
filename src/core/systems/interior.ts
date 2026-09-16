@@ -81,6 +81,9 @@ export interface InteriorState {
   totalSeedsDeposited: number
   totalSeedsTakenDeeper: number
   totalBroodCarried: number
+  /** Dead nestmates lying in the nest, recounted daily, and bodies carried out so far. */
+  corpsesInNest: number
+  totalCorpsesCarriedOut: number
 }
 
 export function createInteriorState(
@@ -98,6 +101,8 @@ export function createInteriorState(
     seedsCarried: 0,
     totalSeedsDeposited: 0,
     totalSeedsTakenDeeper: 0,
+    corpsesInNest: 0,
+    totalCorpsesCarriedOut: 0,
     totalBroodCarried: 0,
   }
 }
@@ -366,6 +371,25 @@ function depositSeed(
   }
 }
 
+/** A worker carrying a dead nestmate up and out of the entrance. */
+function carryCorpseOut(
+  sim: Simulation,
+  state: InteriorState,
+  slot: number,
+  col: number,
+  row: number,
+): void {
+  const { ants } = sim
+  ants.ruleId[slot] = RULE.corpseRemoval
+  if (row > 0) {
+    walkToward(sim, state, slot, col, row, 0)
+    return
+  }
+  // At the entrance. Where the body is left outside is not modelled.
+  ants.burden[slot] = Burden.Nothing
+  state.totalCorpsesCarriedOut += 1
+}
+
 /** A transfer worker taking a seed down toward the seed chambers. */
 function carrySeedDown(
   sim: Simulation,
@@ -489,7 +513,25 @@ export function makeInteriorSystem(state: InteriorState) {
         continue
       }
 
+      if (ants.burden[i] === Burden.Corpse) {
+        carryCorpseOut(sim, state, i, col, row)
+        continue
+      }
+
       const depthCm = nest.depthOf(row)
+
+      // A worker that is not a forager, finding a dead nestmate within reach, carries her out.
+      if (task !== Task.Forager) {
+        const from = withinReach(state, nest.corpses, col, row)
+        if (from !== null && prng.chance(params.interior.corpsePickUpChancePerTick.value)) {
+          nest.corpses.add(from.col, from.row, -1)
+          if (nest.corpses.get(from.col, from.row) < 0) nest.corpses.set(from.col, from.row, 0)
+          state.corpsesInNest = Math.max(0, state.corpsesInNest - 1)
+          ants.burden[i] = Burden.Corpse
+          ants.ruleId[i] = RULE.corpseRemoval
+          continue
+        }
+      }
 
       // A worker that is not a forager, coming across seeds that are still too shallow,
       // takes one deeper. This is the whole of the downward wave: no ant is told where the
@@ -586,6 +628,7 @@ function recount(sim: Simulation, state: InteriorState): void {
   const bounds = nest.pheromoneBounds()
   let seeds = 0
   let brood = 0
+  let corpses = 0
   for (let row = Math.max(0, bounds.minRow); row <= Math.min(nest.rows - 1, bounds.maxRow); row++) {
     for (
       let col = Math.max(0, bounds.minCol);
@@ -594,10 +637,12 @@ function recount(sim: Simulation, state: InteriorState): void {
     ) {
       seeds += nest.seeds.get(col, row)
       brood += nest.brood.get(col, row)
+      corpses += nest.corpses.get(col, row)
     }
   }
   state.seedsInStore = seeds
   state.broodInCells = brood
+  state.corpsesInNest = corpses
 }
 
 /**

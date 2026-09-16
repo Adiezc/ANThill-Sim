@@ -144,6 +144,12 @@ export class ColonyDiary {
         'The colony is now big enough to start raising winged queens and males, the founders of new colonies.',
       )
     }
+    if (colony.interior.totalCorpsesCarriedOut > 0) {
+      add(
+        'first-corpse',
+        'A worker carries a dead nestmate up and out of the nest. Ants in other species do this too, taking bodies further from the nest than other rubbish.',
+      )
+    }
     const reloc = colony.relocation
     if (reloc.moveStartDay >= 0) {
       const cell = colony.surface.cellSizeM
@@ -266,6 +272,7 @@ export class ColonyDiary {
     let sand = 0
     let seeds = 0
     let moving = 0
+    let dead = 0
     const { ants } = sim
     for (let i = 0; i < ants.count; i += 1) {
       if (!ants.isAlive(i)) continue
@@ -273,6 +280,7 @@ export class ColonyDiary {
       if (burden === Burden.SoilPellet) sand += 1
       else if (burden === Burden.Seed) seeds += 1
       else if (burden === Burden.Brood) moving += 1
+      else if (burden === Burden.Corpse) dead += 1
     }
     const workers = countWorkers(sim)
     let now =
@@ -300,6 +308,7 @@ export class ColonyDiary {
     if (sand > 0) doing.push(sand + ' carrying sand')
     if (seeds > 0) doing.push(seeds + ' carrying seeds')
     if (moving > 0) doing.push(moving + ' moving brood')
+    if (dead > 0) doing.push(dead + ' carrying the dead out')
     if (doing.length > 0) now += ' ' + sentence(doing) + '.'
     now += brood === '' ? ' No brood right now.' : ' Brood: ' + brood + '.'
 
