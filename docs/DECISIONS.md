@@ -1222,3 +1222,55 @@ the first one carried out and "Right now" counts workers carrying the dead.
 **Not done.** The chemical cue itself, how far from the nest a body is taken, and any effect of
 bodies left lying on the health of the colony. Nothing in the model makes a body dangerous, so
 removing it changes nothing but where it is.
+
+## D38. The overwintered cohort comes due together, and foraging peaks in June
+
+**Date.** 2026-09-17.
+
+**The problem.** D32 found the right height of foraging and the wrong season: 31 to 43 percent at
+the peak, measured 35 to 41, but in July to September instead of May to June. The overwintered
+cohort's foraging dates were spread evenly over March to mid-July, and a forager lives about a month,
+so few of them were out at once.
+
+**What was changed.** An autumn-born worker's foraging date is now drawn from a triangle between the
+earliest date her 210 days allow and 15 July, most likely on 1 June
+(`labour.autumnBornOnsetPeakDayOfYear`, **[C]**). The measured range, the window and the one-way
+schedule are unchanged, and the draw still takes one random number.
+
+**What it gives.** Three colonies over three years, share of workers foraging:
+
+| | April | May | June | July |
+|---|---|---|---|---|
+| Before, year 3 | 0.02 to 0.07 | 0.11 to 0.18 | 0.12 to 0.25 | (year 2) 0.26 to 0.48 |
+| After, year 3 | 0 to 0.03 | 0.07 to 0.14 | 0.39 to 0.53 | (year 2) 0.29 to 0.32 |
+
+June is now the peak, at about the measured height (60 percent in immature colonies, 35 to 41 in
+mature ones). March and April are still close to zero where the paper has foraging beginning and
+rising, which remains a mismatch.
+
+## D39. Colony size: the model's main limit, and why it is left there
+
+**Date.** 2026-09-17.
+
+**The gap.** Colonies level off at about 250 to 330 workers in their fourth and fifth years. Real
+colonies mature at about 700 and average about 4300 once mature **[A]**.
+
+**What was looked for.** A measured density or rain of seed on the ground in the Florida sandhills,
+since D30 showed the invented standing crop caps what foragers bring home. A web search found none.
+Soil seed-bank counts for longleaf pine sites exist, but they count buried seeds, not the harvestable
+crop on the surface. Tschinkel & Kwapich 2016 give stores of up to 300 000 seeds and half a kilogram
+in mature colonies, which says what a colony accumulates over its life, not what the ground offers in
+a year.
+
+**The nearest comparison.** Colonies of other harvester ants collect 0.44 to 18 seeds a minute while
+foraging (Flanagan et al. 2012, desert *Pogonomyrmex*), and large *P. occidentalis* colonies about
+30 an hour (as reported by Tschinkel & Kwapich 2016). The model's colonies of about 250 workers
+collect about 8 700 seeds a year, roughly 2 an active hour. Per worker that is close to the
+*P. occidentalis* figure, so nothing measured says the model's foragers bring home too little.
+
+**The decision.** The seed on the ground is left as it is. Raising it until colonies mature would make
+maturity a fitted result. The invented values that could equally be responsible, among them the
+larval conversion efficiency (0.4) and the laying rate (D31), have no measurement to tune against
+either. Colony size is recorded as the model's main limit in the README, VALIDATION and the study
+report, and a reader who changes the seed density can see the effect for themselves with
+`npm run study`.

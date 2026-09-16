@@ -221,6 +221,7 @@ export interface Params {
     readonly ageAtFirstForagingDaysAutumnBorn: Param<number>
     readonly ageAtFirstForagingDaysAutumnBornRange: RangeParam
     readonly autumnBornLastOnsetDayOfYear: Param<number>
+    readonly autumnBornOnsetPeakDayOfYear: Param<number>
     readonly ageAtFirstForagingSummerBornSd: Param<number>
     readonly maxProportionForaging: RangeParam
     readonly proportionForagingMatureMean: Param<number>
@@ -682,6 +683,7 @@ export function buildParams(root: Raw): Params {
         'labour.ageAtFirstForagingDaysAutumnBornRange',
       ),
       autumnBornLastOnsetDayOfYear: readScalar(root, 'labour.autumnBornLastOnsetDayOfYear'),
+      autumnBornOnsetPeakDayOfYear: readScalar(root, 'labour.autumnBornOnsetPeakDayOfYear'),
       ageAtFirstForagingSummerBornSd: readScalar(root, 'labour.ageAtFirstForagingSummerBornSd'),
       maxProportionForaging: readRange(root, 'labour.maxProportionForaging'),
       proportionForagingMatureMean: readScalar(root, 'labour.proportionForagingMatureMean'),

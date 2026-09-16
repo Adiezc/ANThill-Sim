@@ -170,7 +170,24 @@ function ageAtFirstForagingDays(dayOfYear: number, params: Params, sim: Simulati
   const lastOnset = params.labour.autumnBornLastOnsetDayOfYear.value
   const daysToLastOnset = (lastOnset - dayOfYear + DAYS_IN_YEAR) % DAYS_IN_YEAR
   const latest = Math.max(range.min, Math.min(range.max, daysToLastOnset))
-  return sim.prng.nextRange(range.min, latest)
+
+  // Most of the cohort comes due together, around the measured early-summer peak, rather than
+  // evenly across March to July. Each forager lives about a month, so a cohort spread over four
+  // months never has many out at once, and the model's foraging peaked in August on the year's
+  // own workers instead of in May and June on these (D32, D38).
+  const peak = params.labour.autumnBornOnsetPeakDayOfYear.value
+  const daysToPeak = (peak - dayOfYear + DAYS_IN_YEAR) % DAYS_IN_YEAR
+  const mode = Math.max(range.min, Math.min(latest, daysToPeak))
+  return triangular(range.min, mode, latest, sim.prng.nextFloat())
+}
+
+/** A draw from the triangular distribution on [low, high] peaking at mode, from one uniform u. */
+function triangular(low: number, mode: number, high: number, u: number): number {
+  if (high <= low) return low
+  const split = (mode - low) / (high - low)
+  return u < split
+    ? low + Math.sqrt(u * (high - low) * (mode - low))
+    : high - Math.sqrt((1 - u) * (high - low) * (high - mode))
 }
 
 function monthOfDayOfYear(dayOfYear: number): number {
