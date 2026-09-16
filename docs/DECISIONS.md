@@ -599,7 +599,7 @@ Open, in the order to pick them up:
    need rewriting against the measurements. Not decided.
 3. `VALIDATION.md` G5 and the README status still describe the store as unbuilt.
 4. The foraging range is several times too large for this species (D21). The likely reason
-   recruitment does nothing, untested.
+   recruitment does nothing, untested. (Tested in D30: a smaller range lowers income, so it is left.)
 
 ## D24. The food account starves the colony, and the proxy had been hiding why
 
@@ -896,3 +896,41 @@ test now counts on day 360, early June, when both cohorts are alive.
 was added, one seed reached 201 workers by November of year two and then collapsed from 153 to
 37 in the summer of year three, when about 67 foragers brought home about 19 mg of seed a day
 against about 29 mg of larval demand. The foraging range (D21) is still the next step.
+
+## D30. The foraging range stays at 25 m, because distance is not what starves the colony
+
+**Date.** 2026-09-16.
+
+**The question.** D21 found the modelled range several times larger than any measured *badius*
+range, and D24 named it as one reason foragers bring home too little. A smaller range should
+mean shorter walks and more seed per trip.
+
+**The test.** Three colonies (seeds 2 to 4) over four years, after D29, on three sizes of
+ground. The modelled ground is `discretisation.surfaceExtentM` either side of the nest.
+`foraging.foragingRangeMetres` was set to match, and the number of seed patches was scaled
+with area, so that seed lay as densely on the ground in every run.
+
+| Half-width | Patches | Workers in year 4 | Seeds collected over 4 years | Mean trip, ticks |
+|---|---|---|---|---|
+| 25 m (unchanged) | 45 | 111 to 150 | 23 543 to 25 343 | 87 |
+| 15 m, the Florida density cap | 16 | 49 to 67 | 8 825 to 9 949 | 85 |
+| 11 m | 9 | 21 to 47 | 4 881 to 5 608 | 84 |
+
+**What it shows.** Trips last as long on the smallest ground as on the largest, because a trip
+is spent searching and not walking, which is what Beverly et al. describe. Seed collected
+tracks the number of patches almost exactly. So in this model the colony's income is capped by
+how much seed lies on the ground, not by how far foragers walk. D21's reasoning does not hold
+here. The standing crop (`standingSeedsPerSquareMetre`, `seedPatchCount`,
+`seedReplenishmentPerDay`) is invented **[C]**, and no seed density has been published for these
+sandhills.
+
+**What was decided.** The range is left at 25 m. Shrinking it to the measured size while keeping
+the invented seed density cuts colony growth by half or more. Shrinking it and raising the
+seed density to compensate would mean tuning an invented number until colonies grow, which
+would make growth a fitted result rather than an outcome. With D29 and this range, colonies no
+longer collapse in their third year. They still grow more slowly than real colonies, which pass
+a thousand workers by their fifth year, and the growth gate in `VALIDATION.md` still fails.
+
+**Next, if the work continues.** A measured seed density or seed rain for Florida sandhills
+would settle this. Without one, the range should stay a known mismatch rather than become a
+tuning knob.
