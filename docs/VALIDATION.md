@@ -104,7 +104,9 @@ down to the deepest face, so what they move widens chambers rather than driving 
 while a fixed one in twenty still goes down, which is what keeps a growing nest deepening.
 
 Measured over colonies rather than in the gate harness, because that harness has no interior
-system and so cannot place a resting ant:
+system and so cannot place a resting ant. These runs predate the food account (G5), under which
+colonies stay far smaller, so the larger worker numbers below will not recur until growth is
+fixed:
 
 | Run | Workers | Depth | Law | Depth / law |
 |---|---|---|---|---|
@@ -190,7 +192,7 @@ read off them; they are about what a forager *does*.
 | Trip duration is search time | Trip length dominated by searching, not by walking | **Met.** Mean trip is well above the walk across the range |
 | **Worker size predicts nothing** | Majors and minors range equally far | **Met.** Mean distances within 15 % across castes. HARD RULE |
 | Range not defended | No territorial behaviour anywhere | **Met**, by absence |
-| Non-linear recruitment | Trails should earn their keep | **Not met.** Measured 2026-09-10 on the code before seeds had sizes, four colonies each for six days: 682 seeds with trail following against 681 without, 681 against 682, and 1129 against 1124, on three sets of seeds. This row used to say *met*, on the strength of a test that was passing by one seed; a change to the random stream elsewhere flipped it. Trails are laid and followed and do not measurably change what a colony finds. The test is now skipped and carries these numbers. The likely cause is that the model's foraging range is several times too large for this species (DECISIONS.md D21), so the ground is too big for a trail to concentrate foragers on anything, but that has not been tested |
+| Non-linear recruitment | Trails should earn their keep | **Not met.** Measured 2026-09-10 on the code before seeds had sizes, four colonies each for six days: 682 seeds with trail following against 681 without, 681 against 682, and 1129 against 1124, on three sets of seeds. This row used to say *met*, on the strength of a test that was passing by one seed; a change to the random stream elsewhere flipped it. Trails are laid and followed and do not measurably change what a colony finds. The test is now skipped and carries these numbers. The range was suspected (DECISIONS.md D21), but D30 shows trips last as long on 11 m of ground as on 25 m, so the ground's size is not what makes trails idle. The cause is still unknown |
 | Heat curfew | Foraging stops when the surface is too hot | **Met.** The threshold is invented; that there is one is [B] |
 | Diurnal | No foraging at night | **Met** |
 | **Seeds feed the colony** | Larval survival should depend on what foragers deliver | **Met in the mechanism, and it fails the colony.** Larvae eat only what the store yields (G5), and what the foragers deliver is not enough to raise a growing brood. See G5 |
@@ -220,7 +222,7 @@ preferentially to larvae. **[A]**
 | Size classes | Large seeds reach 70 % of stores | **Met, perhaps too well.** Four classes at their measured masses. After four years on seeds 2 to 5, 97 to 99.8 % of the stored mass is in sizes the ants cannot open, against the measured 70 % or more. Small and medium seeds are opened at their measured daily rates whatever the larvae need, so almost none stay in store |
 | Germination | Tracks soil temperature and depth | **Met in the mechanism.** Each class follows its laboratory temperature response at the soil temperature of its depth, scaled to the germinating seeds counted in natural chambers (DECISIONS.md D22), and asserted in `test/seeds.spec.ts`. Whether the seasonal peaks fall in the measured April and December depends on the soil temperature model, which is itself only roughly right |
 | Germinating seeds fed to larvae | The mechanic that unlocks large seeds | **Met in the mechanism**, and asserted in `test/seeds.spec.ts`. In practice germinating seed is 3 to 5 % of what the larvae ate over four years on seeds 2 to 5; nearly all their food is small and medium seed the workers opened |
-| A colony grows on what it collects | Maturity at 4 to 5 years and about 4300 workers **[A]** | **Not met, badly.** At the end of the fourth year, on seeds 2 to 5, colonies had 84, 59, 61 and 49 workers, where the same seeds under the old forager-to-larva proxy had 1349, 1133, 1736 and 508. The larvae ate almost everything openable the foragers brought home, 1.9 to 5.7 g in four years, which builds 250 to 730 workers. The shortfall is in what is brought home: too few foragers over too large a range. DECISIONS.md D24 |
+| A colony grows on what it collects | Maturity at 4 to 5 years and about 4300 workers **[A]** | **Not met, badly.** At the end of the fourth year, on seeds 2 to 5, colonies had 84, 59, 61 and 49 workers, where the same seeds under the old forager-to-larva proxy had 1349, 1133, 1736 and 508. The larvae ate almost everything openable the foragers brought home, 1.9 to 5.7 g in four years, which builds 250 to 730 workers. After D29 gave the spring its foragers back, seeds 2 to 4 had 118, 111 and 150 workers at the end of the fourth year, with no collapse in the third. That is still a tenth of a real colony. Seed collected tracks the invented seed density on the ground, not the size of the range (D30), so the shortfall now sits in a value no paper supplies. DECISIONS.md D24, D29 and D30 |
 
 ## G6. Relocation
 

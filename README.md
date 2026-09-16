@@ -1,6 +1,6 @@
 # Anthill
 
-**[▶ Try it live](https://adiezc.github.io/ANThill-Sim/)** — it runs in your browser, with
+**[▶ Try it live](https://adiezc.github.io/ANThill-Sim/)**. It runs in your browser, with
 nothing to install.
 
 An agent-based simulation of a single colony of the Florida harvester ant,
@@ -23,7 +23,7 @@ simulator itself:
 | **[B]** | Generalised from another ant species because _badius_ data does not exist |
 | **[C]** | Invented for playability or tractability, with no direct evidential basis |
 
-The simulator also ships a panel for mechanics it deliberately **refuses** to model —
+The simulator also ships a panel for mechanics it deliberately **refuses** to model:
 intuitive assumptions that were tested in this species and rejected. What a model declines
 to do is as instructive as what it does. See [`docs/SCIENCE.md`](docs/SCIENCE.md) §11.
 
@@ -43,22 +43,21 @@ simulated year. Replicates are independent, sharded by seed, and embarrassingly 
 ## Status
 
 Early, and honest about it. Founding, excavation, the demographic engine, climate, foraging,
-the inside of the nest and the seed store are built: ants move around underground, the queen
-sits in the brood chambers, brood is kept somewhere rather than merely counted, and seeds come
-home in four measured sizes, are carried down toward the seed chambers, germinate with the
-temperature of the soil they lie in, and feed the larvae. Annual relocation is not built.
+the inside of the nest and the seed store are built. The founding queen digs her own nest to
+the measured 29 to 37 cm. Ants move around underground, brood is kept in chambers rather than
+merely counted, and seeds come home in four measured sizes, are carried down toward the seed
+chambers, germinate with the temperature of the soil they lie in and feed the larvae. Annual
+relocation is not built.
 
-The largest failure is the newest. Larvae now eat only what the foragers bring home, and too
-few workers forage over too large a range to feed them, so a colony that grew past a thousand
-workers in four years on the old stand-in for feeding now stalls at a few dozen. See
-`docs/DECISIONS.md` D24.
+The largest failure is growth. Larvae eat only what the foragers bring home, and that is not
+enough. Three colonies followed for four years reached 111 to 150 workers, where real colonies
+pass a thousand by their fifth year (`docs/DECISIONS.md` D24, D29 and D30). Shrinking the
+foraging range to its measured size made this worse, because in the model a colony's income is
+capped by how much seed lies on the ground, and no one has measured that for these sandhills.
 
-Two older failures are worth knowing before you watch it. A founding queen digs about 5 cm before
-her first daughters eclose, against the 29 to 37 cm the species digs, so the opening minutes
-are quiet. And colonies dig far deeper than their worker number warrants, which leaves most
-of the workforce at a dig face: the vertical sorting of workers by task barely shows in a
-grown colony, and about two fifths of the seed store reaches the chambers at 20 to 80 cm
-where it belongs rather than most of it. Both failures have the same cause. See
+The nest itself is closer. Depth follows Tschinkel's law between worker number and depth to
+within about a third over a colony's first years. The measured sorting of workers by depth, with
+foragers near the surface and nurses deep, is not yet met across the whole workforce. See
 [`docs/VALIDATION.md`](docs/VALIDATION.md) for the acceptance gates this model meets and the
 ones it fails, and `docs/DECISIONS.md` for the open questions.
 
