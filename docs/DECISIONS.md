@@ -51,6 +51,9 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D39. Colony size: the model's main limit, and why it is left there](#d39-colony-size-the-models-main-limit-and-why-it-is-left-there)
 - [D40. Overwintered foragers live longer at it than summer ones](#d40-overwintered-foragers-live-longer-at-it-than-summer-ones)
 - [D41. A forager with nowhere to go takes the strongest trail](#d41-a-forager-with-nowhere-to-go-takes-the-strongest-trail)
+- [D44. The overwintered cohort's foraging dates peak on 1 May](#d44-the-overwintered-cohorts-foraging-dates-peak-on-1-may)
+- [D45. The store and the brood are carried to the new nest](#d45-the-store-and-the-brood-are-carried-to-the-new-nest)
+- [D46. Alarm on the foraging ground](#d46-alarm-on-the-foraging-ground)
 
 ---
 
@@ -1372,4 +1375,96 @@ Before the change the same comparison gave 1, 6 and 2 percent. The gain is now p
 set, and still small. Site fidelity carries most of the work: a forager that found seed goes back
 to the same spot and needs no trail. The test that asks trails to earn their place stays skipped,
 because a margin of a few percent is the kind a change to the random stream elsewhere can erase.
+
+## D44. The overwintered cohort's foraging dates peak on 1 May
+
+**Date.** 2026-09-17.
+
+**The gap.** D38 moved the most likely foraging date of the overwintered cohort to 1 June to put
+the peak of foraging in June, and left March and April close to zero. Kwapich & Tschinkel 2013
+have foraging beginning in March or April and rising to its maximum between May and June, with
+foragers preceding the larvae by 30 to 40 days **[A]**. With few foragers until June, the spring
+brood in the model had almost nobody bringing food.
+
+**What was changed.** `labour.autumnBornOnsetPeakDayOfYear` from 151 to 121, 1 May (**[C]** as
+before). The triangle, its limits and the one-way schedule are unchanged.
+
+**What it gives.** Share of workers foraging, three colonies, with D40 in place:
+
+| | April | May | June |
+|---|---|---|---|
+| Second summer, peak 1 June | 0 to 0.11 | 0 to 0.13 | 0.17 to 0.33 |
+| Second summer, peak 1 May | 0.06 to 0.22 | 0.21 to 0.31 | 0.33 to 0.36 |
+| Third summer, peak 1 June | 0 to 0.04 | 0.08 to 0.16 | 0.29 to 0.47 |
+| Third summer, peak 1 May | 0.01 to 0.02 | 0.18 to 0.22 | 0.29 to 0.46 |
+
+Foraging now rises through May and still peaks in June. April in the third summer is still about
+zero, which remains a mismatch. Colonies also grew faster through their second summer, 3.5 to 4.7
+times over between May and October against 2.5 to 4.0 before, the measured figure being 4.64.
+
+## D45. The store and the brood are carried to the new nest
+
+**Date.** 2026-09-17.
+
+**What D35 and D36 left out.** The walk. The seed store was set down in the new nest as room was
+dug, the brood was placed there at once, and the map showed nobody carrying anything.
+
+**What the literature says.** A minority of workers carry anything during a move; seeds are by far
+the commonest burden, then charcoal, then brood; the share carrying rises through the move; the
+whole store is moved (Tschinkel 2014) **[A]**. The parameter file had recorded the order of burdens
+and the rising share since the first version and nothing read them.
+
+**What was built.** From the move's first morning the store and the brood stay at the old site
+until carried. Foragers at home with empty mandibles set out along the trail until the share of the
+colony carrying matches how far through the move it is, rising in a straight line to
+`relocation.carrierShareAtEnd` (**[C]**, 0.1) and rounded up so that a small colony has a carrier.
+Each walks to the old nest, spends `relocation.loadHandlingTicks` (**[C]**) picking up one seed,
+chosen in proportion to what is left of each size, or once the seeds are gone one piece of brood,
+and walks back. At the new entrance she goes in, and the interior's ordinary rules put the seed or
+the brood away. Carriers stop at night, in rain and on sand too hot to cross, like foragers. Brood
+at the old nest or on the trail is left out of the new nest's chambers until it arrives. Whatever
+is still at the old nest when the move ends is set down without a carrier and counted
+(`totalSeedsUncarried`, `totalBroodUncarried`), so how much of a move was walked can be read off.
+
+**What is ours, besides the two values.** That only foragers carry: they are the workers already on
+the surface, and letting others do it would have put their age schedule and the carrying in
+conflict. Charcoal is not modelled, so it is not carried. The queen still moves at the start.
+
+**What it gives.** In the test colony of 200 foragers, 150 seeds and 40 brood, a move of 3 m over five
+days: at most a tenth of the workers are on the trail at once, the seeds are all walked in during
+the first day, the brood is taken only once they are gone, and nothing is left at the old nest at the
+end. The effect on growth is nil where no move falls in the period: the same colony grew to the same
+80 workers with carrying on and off.
+
+## D46. Alarm on the foraging ground
+
+**Date.** 2026-09-17.
+
+**Why.** The scent key had listed alarm as not simulated since the first version, because nothing in
+the model threatened the colony. Adrian chose disturbances on the foraging ground as the trigger,
+from three options (a visitor poking the nest, disturbances on the ground, cave-ins).
+
+**What is measured.** A disturbed worker of this species releases an alarm scent from her mandibular
+glands, 4-methyl-3-heptanone. Workers that smell it are drawn towards the source; close to it they
+run in tight circles, open their mandibles, and appear to release the scent themselves, so the alarm
+is relayed. From one crushed worker's head the scent draws others from up to about 6 cm, 13 seconds
+after release, and is gone by about 35 seconds; the circling happens within about 3 cm (Wilson 1958;
+Bossert & Wilson 1963; McGurk et al. 1966) **[A]**. The measured response is to approach, not to flee.
+The option as first offered said foragers would run home; that was changed to the measured response.
+
+**The problem of scale.** A step of this model is a minute, and a forager walks metres in one. The real
+scent lives for less than one step and reaches a fiftieth of the ground a step covers, so foragers are
+almost never within 6 cm of each other when it is released. A grid layer for the scent, which the
+parameter file had decay and diffusion values for, would have been a picture of nothing. Those values
+remain unread.
+
+**What was built.** `systems/alarm.ts`, with its own random stream. About `alarm.intrudersPerDay` times
+a day (**[C]**, 0.5) a disturbance turns up where a forager is searching, and stays 5 to 30 minutes
+(**[C]**). Foragers within `alarm.responseRadiusM` of it (**[C]**, 30 cm, standing in for the relay)
+are alarmed: they go to it and circle within the measured 3 cm, pick nothing up, and stay alarmed for
+one step after the last thing that alarmed them, which is how many steps 35 seconds rounds up to.
+Rain ends it. Nothing is killed and nothing reaches the nest. Carriers during a move are left alone.
+
+**What is not built.** What the disturbance is. Alarm inside the nest, and the digging Wilson found the
+same scent releases in the nest. Any defence that drives a disturbance off.
 
