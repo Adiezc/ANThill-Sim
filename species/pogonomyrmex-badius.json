@@ -269,9 +269,9 @@
       "note": "Scattered seeds away from any patch. Not zero, so that a wandering ant is occasionally rewarded and the colony is not wholly dependent on the patches it happens to have found."
     },
     "standingSeedsPerSquareMetre": {
-      "value": 40,
+      "value": 120,
       "tag": "C",
-      "note": "Standing crop of harvestable seeds. No seed rain is published for these sandhills. Tuned against the observation that a range is used almost exclusively by one colony and is not exhausted by it."
+      "note": "INVENTED, and fitted. Standing crop of harvestable seeds in a patch. No seed rain or density is published for these sandhills (D39). Fitted so that colonies reach the size at which they rear queens and males, about 700 workers, by their fourth summer: at 40, colonies levelled off at 150 to 280 workers; at 80, at 470 to 600; at 120 two of three passed 700 in year four, reaching 882 and 890; at 160 none did. Past 700 they then fell back in year five, to 67, 264 and 270, which is the model's main limit now. See docs/DECISIONS.md D43."
     },
     "seedReplenishmentPerDay": {
       "value": 0.02,

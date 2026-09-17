@@ -13,6 +13,7 @@
  */
 
 import { Simulation } from './simulation.js'
+import { MONTH_START } from './calendar.js'
 import { Caste, Domain, Task } from '../state/ants.js'
 import { NestGrid } from '../state/nest.js'
 import { SoilModel } from '../systems/soil.js'
@@ -39,6 +40,9 @@ export interface NestHarness {
   run(ticks: number): void
 }
 
+/** Index of May in the calendar's month tables. */
+const MAY = 4
+
 export function createNestHarness(options: HarnessOptions): NestHarness {
   const { params, workers } = options
 
@@ -46,7 +50,8 @@ export function createNestHarness(options: HarnessOptions): NestHarness {
     seed: options.seed,
     params,
     capacity: workers + 1,
-    startDayOfYear: options.startDayOfYear ?? 120,
+    // 1 May unless told otherwise.
+    startDayOfYear: options.startDayOfYear ?? MONTH_START[MAY]!,
   })
 
   const nest = new NestGrid(params)
