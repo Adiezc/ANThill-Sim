@@ -9,6 +9,7 @@ url: 'https://adiezc.github.io/ANThill-Sim/'
 authors:
   - given-names: Adrian
     family-names: Diez Cuadrado
+    orcid: 'https://orcid.org/0009-0003-7051-3055'
 abstract: >-
   A browser-based, agent-based simulation of a colony of the Florida harvester ant,
   Pogonomyrmex badius, covering claustral founding, self-organised nest excavation,
