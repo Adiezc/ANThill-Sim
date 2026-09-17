@@ -584,12 +584,18 @@ function progressTasks(sim: Simulation, state: DemographyState, dayOfYear: numbe
  *
  * Foragers die fast: 3 to 4 percent a day, and within 27 days of their first trip. That is
  * applied as a hazard rather than a hard cap, so 27 days is an emergent mean rather than a
- * cliff. Inside workers die slowly.
+ * cliff. The overwintered cohort, which forages from March to July, lives longer at it: 38
+ * days on average against 27 for the foragers after July (Kwapich & Tschinkel 2013). They are
+ * told apart by age: nobody forages before 210 days old on the slow schedule, and a summer-born
+ * forager, out at about 43, is dead long before it. (Not by the scheduled age in `timer`,
+ * which the foraging system reuses to count a trip.) Inside workers die slowly.
  */
 function applyMortality(sim: Simulation, state: DemographyState, dayOfYear: number): void {
   const { ants, params, prng, clock } = sim
   const mortality = params.labour.foragerMortalityPerDay
   const rate = (mortality.min + mortality.max) / 2
+  const overwinteredRate = 1 / params.labour.overwinteredForagerLifespanDays.value
+  const slowScheduleMinDays = params.labour.ageAtFirstForagingDaysAutumnBornRange.min
   const inSeason = params.labour.foragingSeasonMonths.value.includes(monthOfDayOfYear(dayOfYear))
 
   for (let i = 0; i < ants.count; i += 1) {
@@ -597,7 +603,8 @@ function applyMortality(sim: Simulation, state: DemographyState, dayOfYear: numb
     if (i === state.queenSlot) continue
 
     if (ants.task[i] === Task.Forager) {
-      if (prng.chance(rate)) {
+      const overwintered = ants.ageTicks[i]! / clock.ticksPerDay >= slowScheduleMinDays
+      if (prng.chance(overwintered ? overwinteredRate : rate)) {
         ants.kill(i)
         state.totalForagersLost += 1
       }

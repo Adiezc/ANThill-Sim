@@ -174,6 +174,7 @@
     "midcolouredFractionEarlySpring": { "value": 0.64, "tag": "A", "note": "March. No workers remain in the callow phase." },
     "foragerLifespanDays": { "value": 27, "tag": "A", "note": "From first foraging trip, under natural conditions." },
     "foragerMortalityPerDay": { "min": 0.03, "max": 0.04, "tag": "A" },
+    "overwinteredForagerLifespanDays": { "value": 38, "tag": "A", "note": "Mean days a forager that was born the autumn before survives once it has started foraging. Kwapich and Tschinkel 2013: marked foragers sampled between March and July, all born the previous autumn, survived an average of 38 days (SD 10.1); those sampled after July, a mix of summer-born and autumn-born workers, 26.9 days (SD 7.93). Applied as a constant daily hazard of one over this, to foragers on the overwintering schedule only; the year's own workers keep foragerMortalityPerDay." },
     "foragerPopulationCollapseMortality": { "value": 0.04, "tag": "A", "note": "Above this, forager population declines." },
     "taskReversionAllowed": { "value": false, "tag": "A", "note": "HARD RULE. Foragers never revert to inside work." },
     "backfillFromOtherCastes": { "value": false, "tag": "A", "note": "HARD RULE. Removing foragers draws no replacements. Larvae starve instead." },

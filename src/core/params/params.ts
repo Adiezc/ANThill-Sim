@@ -234,6 +234,7 @@ export interface Params {
     readonly midcolouredFractionEarlySpring: Param<number>
     readonly foragerLifespanDays: Param<number>
     readonly foragerMortalityPerDay: RangeParam
+    readonly overwinteredForagerLifespanDays: Param<number>
     readonly foragerPopulationCollapseMortality: Param<number>
     /** HARD RULE, false. Foragers never revert to inside work. */
     readonly taskReversionAllowed: Param<boolean>
@@ -696,6 +697,7 @@ export function buildParams(root: Raw): Params {
       midcolouredFractionEarlySpring: readScalar(root, 'labour.midcolouredFractionEarlySpring'),
       foragerLifespanDays: readScalar(root, 'labour.foragerLifespanDays'),
       foragerMortalityPerDay: readRange(root, 'labour.foragerMortalityPerDay'),
+      overwinteredForagerLifespanDays: readScalar(root, 'labour.overwinteredForagerLifespanDays'),
       foragerPopulationCollapseMortality: readScalar(
         root,
         'labour.foragerPopulationCollapseMortality',
