@@ -470,7 +470,7 @@ function report(
   L()
   L('## 6. Citing this software')
   L()
-  L('> Diez Cuadrado, A. *Anthill Simulator: an agent-based model of Pogonomyrmex badius.*')
+  L('> Diez Cuadrado, A. *Anthill: A harvester ant colony built from the published science.*')
   L()
   L('A `CITATION.cff` accompanies the source. Code is MIT; `docs/` and `species/` are')
   L('CC BY 4.0.')

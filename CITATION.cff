@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-title: 'Anthill Simulator: an agent-based model of Pogonomyrmex badius'
+title: 'Anthill: A harvester ant colony built from the published science'
 message: 'If you use this software or its parameter data, please cite it as below.'
 type: software
 version: 1.0.0

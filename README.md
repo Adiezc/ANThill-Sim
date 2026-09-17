@@ -1,5 +1,7 @@
 # Anthill
 
+A harvester ant colony built from the published science.
+
 **[Try it live](https://adiezc.github.io/ANThill-Sim/)**, or **[go straight to a colony](https://adiezc.github.io/ANThill-Sim/?watch)**.
 It runs in the browser, with nothing to install.
 
@@ -135,7 +137,7 @@ committed.
 If you use this software or its parameter data, please cite it. GitHub shows a "Cite this
 repository" button, generated from [`CITATION.cff`](CITATION.cff).
 
-> Diez Cuadrado, A. _Anthill Simulator: an agent-based model of Pogonomyrmex badius._
+> Diez Cuadrado, A. _Anthill: A harvester ant colony built from the published science._
 > GitHub. https://github.com/Adiezc/ANThill-Sim
 
 The biology is not ours. It comes overwhelmingly from the field work of Walter R. Tschinkel and

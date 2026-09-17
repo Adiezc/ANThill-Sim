@@ -62,7 +62,8 @@ export function mountThreshold(root: HTMLElement, options: ThresholdOptions): ()
     <main class="threshold">
       <section class="threshold-body">
         <header>
-          <h1>A nest with no architect</h1>
+          <h1>Anthill</h1>
+          <p class="tagline">A harvester ant colony built from the published science</p>
           <p class="binomial"><i>Pogonomyrmex badius</i>, the Florida harvester ant</p>
         </header>
         <p class="lede">${OPENING}<span class="lede-tail">${OPENING_TAIL}</span></p>
