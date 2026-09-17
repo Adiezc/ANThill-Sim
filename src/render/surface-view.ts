@@ -89,6 +89,12 @@ export class SurfaceView {
       sizes: BodySizes
       /** Whether to draw the recruitment pheromone. */
       showTrails: boolean
+      /**
+       * While the colony is moving house, where the nest it left is, in metres from the new
+       * entrance. The walk between the two is not simulated, so only the two sites and the
+       * straight line along the trail between them are drawn.
+       */
+      movedFromM: { readonly x: number; readonly y: number } | undefined
     },
   ): void {
     const { ctx, theme } = this
@@ -155,6 +161,37 @@ export class SurfaceView {
         }
       }
       ctx.globalAlpha = 1
+    }
+
+    // The nest the colony is leaving, and the way it went: the old entrance as a faint ring
+    // struck through, and a dotted line to the new one.
+    const from = options.movedFromM
+    if (from !== undefined) {
+      const fx = toPxX(from.x)
+      const fy = toPxY(from.y)
+      const r = Math.max(3, 0.12 * pxPerM)
+      ctx.save()
+      ctx.strokeStyle = theme.entrance
+      ctx.globalAlpha = 0.55
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([2, 4])
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      const length = Math.hypot(cx - fx, cy - fy)
+      if (length > 2 * r) {
+        const ux = (cx - fx) / length
+        const uy = (cy - fy) / length
+        ctx.moveTo(fx + ux * r * 1.6, fy + uy * r * 1.6)
+        ctx.lineTo(cx - ux * r * 1.6, cy - uy * r * 1.6)
+      }
+      ctx.stroke()
+      ctx.setLineDash([])
+      ctx.beginPath()
+      ctx.arc(fx, fy, r, 0, Math.PI * 2)
+      ctx.moveTo(fx - r * 0.7, fy - r * 0.7)
+      ctx.lineTo(fx + r * 0.7, fy + r * 0.7)
+      ctx.stroke()
+      ctx.restore()
     }
 
     // Ants, drawn far larger than life.

@@ -867,7 +867,19 @@ function startSimulator(): void {
         groundSize.width,
         groundSize.height,
         params.foraging.foragingRangeMetres.value * 2.2,
-        { motion, timeSeconds, sizes, showTrails },
+        {
+          motion,
+          timeSeconds,
+          sizes,
+          showTrails,
+          movedFromM:
+            colony.relocation.moveStartDay >= 0
+              ? {
+                  x: -colony.relocation.moveDxCells * colony.surface.cellSizeM,
+                  y: -colony.relocation.moveDyCells * colony.surface.cellSizeM,
+                }
+              : undefined,
+        },
       )
     }
 
@@ -1147,7 +1159,7 @@ function buildLegend(container: HTMLElement): void {
 
   const caveat = document.createElement('p')
   caveat.className = 'legend-caveat'
-  caveat.textContent = `In the nest, everything is drawn at its real size, so a worker fills most of a tunnel, as a real one does. Zoom in to see them. Several things are drawing conventions, not model output. The tunnels are traced as one smooth outline round the ${discretisation.nestCellSizeCm.value * 10} mm squares the model digs, so their corners are rounded, and the sand is darkened where the model says it is damp. The model puts each ant in the middle of a square and gives her no posture, so the picture draws each ant from the side, standing on the nearest floor or holding on to the nearest shaft wall, spreads out ants that share a square, and lets ants going up and ants going down pass on opposite walls of a shaft. The name tags on the queen, her brood and the seed store point at what the model has there. Brood is counted per chamber rather than one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Above the nest the ground is seen from the side, showing the ants and seeds within a metre either side of the slice at their true size; the bare disc of sand, its charcoal and the grass round it are drawn, not modelled. When the camera is deep, a band across the top shows the ground at a smaller scale and says how much. In the map of the foraging range, ants are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use its scale bar for distance. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.`
+  caveat.textContent = `In the nest, everything is drawn at its real size, so a worker fills most of a tunnel, as a real one does. Zoom in to see them. Several things are drawing conventions, not model output. The tunnels are traced as one smooth outline round the ${discretisation.nestCellSizeCm.value * 10} mm squares the model digs, so their corners are rounded, and the sand is darkened where the model says it is damp. The model puts each ant in the middle of a square and gives her no posture, so the picture draws each ant from the side, standing on the nearest floor or holding on to the nearest shaft wall, spreads out ants that share a square, and lets ants going up and ants going down pass on opposite walls of a shaft. The name tags on the queen, her brood and the seed store point at what the model has there. Brood is counted per chamber rather than one by one, so which dot is an egg and which a larva follows the colony’s overall mix. Above the nest the ground is seen from the side, showing the ants and seeds within a metre either side of the slice at their true size; the bare disc of sand, its charcoal and the grass round it are drawn, not modelled. When the camera is deep, a band across the top shows the ground at a smaller scale and says how much. In the map of the foraging range, ants are drawn far larger than life, because at true scale a worker would be a fiftieth of a pixel, so use its scale bar for distance. While the colony moves house, the map marks the nest it left and a dotted line along the trail to the new one; the walk between them is not simulated. Where each ant is, what it carries and how many seeds a chamber holds all come straight from the model.`
 
   container.replaceChildren(list, slice, caveat)
 }
