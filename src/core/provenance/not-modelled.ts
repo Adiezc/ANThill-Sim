@@ -64,7 +64,7 @@ export const NOT_MODELLED: readonly NotModelled[] = [
   {
     assumption: 'A colony picks a better site when it moves.',
     reason:
-      'The new nest is statistically indistinguishable from the old one in size and shape, and nest architecture, forest canopy and the density of neighbours all failed to explain why colonies move. Nobody knows why they do. Relocation is not built yet. When it is, candidate sites will differ, at the project author’s request, so that the one yearly decision a person makes has consequences. That departure from the evidence is recorded in docs/DECISIONS.md D3 and will be labelled wherever it appears.',
+      'The new nest is statistically indistinguishable from the old one in size and shape, and nest architecture, forest canopy and the density of neighbours all failed to explain why colonies move. Nobody knows why they do. In this model a colony moves along a trail by the measured distance, and no site is better than another. Candidate sites that differ, proposed at the project author’s request in docs/DECISIONS.md D3, were never built.',
     citation: 'Tschinkel 2013, 2014',
     experimentallyRejected: true,
   },
