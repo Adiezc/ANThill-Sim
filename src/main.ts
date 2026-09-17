@@ -195,11 +195,30 @@ function startThreshold(): void {
 /** Camera modes for the slice. "Free" is wherever the reader has zoomed or dragged to. */
 type Camera = 'work' | 'nest' | 'free'
 
+/** Largest seed the colony's random streams take. */
+const MAX_SEED = 2 ** 31 - 1
+
+/**
+ * The seed asked for in the address, as in `?watch&seed=123`, or null. Only a whole number from
+ * 1 to MAX_SEED counts; anything else is ignored and a fresh colony is drawn.
+ */
+function seedFromAddress(): number | null {
+  const raw = new URLSearchParams(window.location.search).get('seed')
+  if (raw === null || !/^\d+$/.test(raw)) return null
+  const seed = Number(raw)
+  return seed >= 1 && seed <= MAX_SEED ? seed : null
+}
+
+/** The address that opens this colony again, from its first day. */
+function colonyLink(seed: number): string {
+  return `${window.location.origin}${window.location.pathname}?watch&seed=${seed}`
+}
+
 function startSimulator(): void {
   // A colony seed drawn once per visit, so two people who open the page do not watch the
-  // same nest. It is printed in the panel, so any run a person likes can be repeated here or
-  // handed to the headless runner and reproduced exactly.
-  const seed = Math.floor(Math.random() * 2 ** 31) || 1
+  // same nest, unless the address names one. It is printed in the panel with a link that opens
+  // the same colony again, and the headless runner reproduces it exactly.
+  const seed = seedFromAddress() ?? (Math.floor(Math.random() * MAX_SEED) || 1)
   const colony = new Colony({ seed, params })
   const motion = new AntMotion(colony.sim.ants.capacity)
   const totalValues = counts.A + counts.B + counts.C
@@ -305,7 +324,9 @@ function startSimulator(): void {
               <div id="hud"></div>
             </div>
             <p class="provenance">
-              This run uses seed <code>${seed}</code>, so it can be repeated exactly. Of the
+              This run uses seed <code>${seed}</code>, so it can be repeated exactly:
+              <a href="${colonyLink(seed)}">this link</a> opens the same colony from its first
+              day, and it runs the same step for step unless the eggs lever is changed. Of the
               model's ${totalValues} values, ${counts.A} are measured in this species,
               ${counts.B} are borrowed from other ants and ${counts.C} are invented.
             </p>
@@ -317,6 +338,7 @@ function startSimulator(): void {
         </details>
         <footer class="panel-foot">
           <div class="foot-links">
+            <button class="linkish" id="copy-link" type="button">Copy a link to this colony</button>
             <button class="linkish" id="theme-toggle" type="button"></button>
           </div>
         </footer>
@@ -356,6 +378,25 @@ function startSimulator(): void {
   const themeButton = app!.querySelector<HTMLButtonElement>('#theme-toggle')!
   themeButton.textContent = themeToggleLabel()
   themeButton.addEventListener('click', () => toggleTheme())
+
+  // A link that opens this same colony, for sharing one worth watching.
+  const copyButton = app!.querySelector<HTMLButtonElement>('#copy-link')!
+  copyButton.addEventListener('click', () => {
+    const link = colonyLink(seed)
+    const say = (text: string): void => {
+      copyButton.textContent = text
+      window.setTimeout(() => (copyButton.textContent = 'Copy a link to this colony'), 2500)
+    }
+    // The clipboard is refused on some pages and in some browsers; the link is shown instead.
+    if (navigator.clipboard === undefined) {
+      say(link)
+      return
+    }
+    navigator.clipboard
+      .writeText(link)
+      .then(() => say('Link copied'))
+      .catch(() => say(link))
+  })
   onThemeChange((theme) => {
     nestView.setTheme(nestThemeFor(theme))
     themeButton.textContent = themeToggleLabel()
