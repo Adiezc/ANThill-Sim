@@ -53,21 +53,23 @@ in four measured sizes, which are carried down to the seed chambers, germinate w
 temperature and feed the larvae. Each worker's path to foraging is set by the season she was
 born in, and never reverses. Weather changes from day to day: foragers stay in during rain and
 on the hottest afternoons. Colonies move about once a year along a trunk trail and dig a new
-nest. Winged queens and males fly on the morning after heavy rain in early summer. Workers carry
-the dead out of the nest.
+nest, carrying the seed store and then the brood along the trail. Winged queens and males fly on
+the morning after heavy rain in early summer. Workers carry the dead out of the nest. About one
+year in ten is a drought, and colonies stop growing through it, as they did in 2011. Foragers that
+meet a disturbance on the ground raise the alarm and circle it.
 
-**The main shortfall is colony size.** Colonies level off at about 250 to 330 workers in their
-fourth and fifth years. Real colonies start rearing queens and males at about 700 workers and
-average about 4300 once mature. Larvae eat only what foragers bring home, and how much seed lies
-on the ground in these sandhills has never been measured, so that value is invented. It was
-left alone rather than tuned until colonies grow, so a colony in the simulator does not yet
-reach the size at which it would rear queens and males for a mating flight. See
-[`docs/DECISIONS.md`](docs/DECISIONS.md) D39.
+**The main shortfall is colony size.** Real colonies start rearing queens and males at about 700
+workers and average about 4300 once mature. How much seed lies on the ground in these sandhills
+has never been measured, so the model's value is fitted: at it, two colonies in three pass 700
+workers in their fourth year. They then fall back to 70 to 270 workers the year after, starving
+their larvae with a store of seeds too large to open, where real colonies hold their size. See
+[`docs/DECISIONS.md`](docs/DECISIONS.md) D43.
 
-**Smaller gaps.** Foraging peaks in June as measured, but starts too late in spring. Workers do
-not sort themselves by depth as cleanly as in real nests. Recruitment trails bring a
-colony only 3 to 7 percent more seed. A moving colony does not
-visibly carry its store between sites. [`docs/VALIDATION.md`](docs/VALIDATION.md) lists every
+**Smaller gaps.** Foraging rises through May and peaks in June as measured, but April is still
+about zero in older colonies. Workers do not sort themselves by depth as cleanly as in real nests.
+Recruitment trails bring a colony only 3 to 7 percent more seed. The alarm scent is shorter-lived
+and shorter-ranged than one step of the model, so how near a forager must be to respond is a
+labelled guess. [`docs/VALIDATION.md`](docs/VALIDATION.md) lists every
 acceptance test the model meets and fails, with the numbers.
 
 ## Running it

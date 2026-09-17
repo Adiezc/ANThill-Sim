@@ -10,11 +10,11 @@ proceed until the nest signature matches.
 |---|---|
 | G1 Nest architecture | Substantially met. Depth follows the worker-number law within about a third, and moving colonies dig new nests so older nests no longer run twice too deep. Deep chamber spacing, branch depth and the surface-to-bottom width ratio are not met |
 | G2 Determinism | Met |
-| G3 Demography | Partly met. Forager share peaks in June at about the measured height, but spring starts too late. **Colonies level off at 250 to 330 workers against about 700 at maturity and 4300 mature** (DECISIONS.md D39) |
+| G3 Demography | Partly met. Forager share rises through May and peaks in June at about the measured height; April is still near zero. Summer growth and drought-year growth match the measured rates. **With the seed on the ground fitted, two colonies in three pass 700 workers in their fourth year, then fall back to 70 to 270 in their fifth**, against about 4300 in mature colonies (DECISIONS.md D43) |
 | G4 Vertical stratification | Partly met. Nurses settle below foragers, but the measured fractions are not reproduced across the whole workforce |
 | G4b Foraging | Mostly met. Recruitment trails bring a small, consistent gain of 3 to 7 percent |
 | G5 Seeds and germination | Mostly met in the mechanism; the store holds more unopenable seed than measured, and growth on it fails as in G3 |
-| G6 Relocation | Met for frequency, season, distance, trail and duration. The new nest is dug, but starts smaller than the one left behind |
+| G6 Relocation | Met for frequency, season, distance, trail and duration. The store and brood are carried, seeds first. The new nest is dug, but starts smaller than the one left behind |
 
 ## A note on 2D versus 3D statistics
 
@@ -166,10 +166,30 @@ wider out of plane than in it.
 | Forager lifespan | Emergent mean near 27 days from first foraging, from a 3–4%/day hazard rather than a hard cap   | **[A]**           |
 | No reversion     | Removing 50% of foragers draws no replacements from other castes; larval survival falls instead | **[A]** HARD RULE |
 
-**Forager fraction, measured on colonies grown from a queen.** After D38 the annual maximum comes
-in June, 0.39 to 0.53 on three colonies in their third year, against a measured 35 to 41 percent
-in mature colonies and 60 in immature ones. March and April are still close to zero where the
-measured share is already rising. DECISIONS.md D32 and D38.
+**Forager fraction, measured on colonies grown from a queen.** After D44 the share rises through
+May, 0.18 to 0.31, and peaks in June at 0.29 to 0.46, against a measured 35 to 41 percent in mature
+colonies and 60 in immature ones. April is 0.06 to 0.22 in a colony's second summer and still about
+zero in its third, where the measured share is already rising. DECISIONS.md D32, D38 and D44.
+
+**Growth.** Between May and October colonies grew 4.64 times over in a normal year (SD 1.93) and
+0.996 times in the 2011 drought (SD 0.73) **[A]**. The model grows 3.3 to 4.4 times over in its second
+and third summers, and 0.84 times on average in a drought year, which is fitted (D42).
+
+**Colony size.** Workers each October, three colonies, no drought, with the seed on the ground at
+its fitted 120 a square metre (D43):
+
+| Year | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Seed 2 | 15 | 43 | 181 | 882 | 67 |
+| Seed 3 | 7 | 45 | 229 | 890 | 264 |
+| Seed 4 | 12 | 63 | 281 | 439 | 270 |
+
+**Not met.** Colonies that pass 700 fall back the year after, starving thousands of larvae with
+thousands of seeds in store, most of them too large to open. Real colonies hold about 4300.
+
+| Property | Status |
+|---|---|
+| Forager lifespan | **Met.** 38 days for the overwintered cohort, 27 for the rest (D40) |
 
 ## G4. Vertical stratification
 
@@ -255,5 +275,6 @@ from the vacated one. Successive moves describe a random walk around the origina
 | Distance | Mean about 4 m, rarely over 10 m | **Met.** About 3.4 m per move across those runs, none over 10 m |
 | Along a trail | Main trunk trail 78 percent of the time | **Met**, by construction |
 | Duration | 4 to 6 days | **Met**, by construction |
+| What is carried | A minority carry; seeds, then brood; the share rises through the move | **Met.** At most a tenth of workers on the trail, rising through the move; the brood is taken only once the seeds are gone. Charcoal is not modelled. The share is invented. DECISIONS.md D45 |
 | The new nest | Indistinguishable from the old | **Partly met.** The new nest is dug by the colony, from an incipient shaft, so its size follows the colony as it is. After five years on seeds 2 and 3 nests were 84 and 95 cm deep, 1.2 and 1.3 times Tschinkel's depth law, where copying the old nest gave 130 and 152 cm, about twice. Forty days after a forced move a colony of about 80 workers had dug 151 cells against 385 in the nest it left, so the new nest is smaller than the old for weeks. DECISIONS.md D36 |
 | Random walk around the origin | Successive moves wander around the first site | **Not measured.** The run does not track the entrance's position across moves |

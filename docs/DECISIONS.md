@@ -52,6 +52,7 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D40. Overwintered foragers live longer at it than summer ones](#d40-overwintered-foragers-live-longer-at-it-than-summer-ones)
 - [D41. A forager with nowhere to go takes the strongest trail](#d41-a-forager-with-nowhere-to-go-takes-the-strongest-trail)
 - [D42. Drought years](#d42-drought-years)
+- [D43. Colony size: the seed on the ground is fitted after all](#d43-colony-size-the-seed-on-the-ground-is-fitted-after-all)
 - [D44. The overwintered cohort's foraging dates peak on 1 May](#d44-the-overwintered-cohorts-foraging-dates-peak-on-1-may)
 - [D45. The store and the brood are carried to the new nest](#d45-the-store-and-the-brood-are-carried-to-the-new-nest)
 - [D46. Alarm on the foraging ground](#d46-alarm-on-the-foraging-ground)
@@ -1503,4 +1504,43 @@ year, three colonies:
 
 10 percent comes within the measured spread of 0.996 and is the value used. How often droughts come,
 and how much less rain falls, are not fitted to anything.
+
+## D43. Colony size: the seed on the ground is fitted after all
+
+**Date.** 2026-09-17. Overturns D39's decision to leave the seed on the ground untuned.
+
+**Why it was reopened.** Adrian asked for colony size to be worked on: first a search for a published
+cause, and failing one, a fit of the invented seed crop until colonies reach the size at which they
+rear queens and males, said plainly to be fitted.
+
+**What the search found.** No published seed density or seed rain for these sandhills, as in D39. It did
+find three things the model had wrong, which were fixed first and are recorded separately: the
+overwintered foragers' measured 38-day lifespan (D40), the overwintered cohort's foraging peak, which
+left almost no foragers until June (D44), and foragers that never followed a trail out of the entrance
+(D41). It also found the measured growth rate, 4.64 times over between May and October in a normal
+year (Kwapich & Tschinkel 2013), which the model already came close to at its old value in a colony's
+second and third summers. So the rate of growth is not what was wrong; the level colonies stop at is.
+Larvae starving above a full store is measured (D24) and was not touched.
+
+**The fit.** Workers each October, three colonies, D40, D41 and D44 in place, no drought:
+
+| Seed a square metre | Year 3 | Year 4 | Year 5 |
+|---|---|---|---|
+| 40 (before) | 231, 170, 216 | 190, 188, 187 | 182, 277, 147 |
+| 80 | 282, 94, 350 | 607, 441, dying | 520, 470, dead |
+| 120 | 181, 229, 281 | 882, 890, 439 | 67, 264, 270 |
+| 160 | 218, 166, 407 | 671, 642, 264 | 444, 449, 531 |
+
+The level colonies reach rises with the seed on the ground, but no value holds a colony above 700: at
+80 and more, those that grow large fall back the next year, starving thousands of larvae with thousands
+of seeds in store, most too large to open. Adrian chose 120 (`foraging.standingSeedsPerSquareMetre`,
+**[C]**, fitted), at which two colonies in three pass 700 in their fourth year, so a colony in the
+simulator can reach the size at which it rears queens and males and a mating flight can happen.
+
+**What this leaves.** The year-five fall is now the model's main limit, in place of the plateau. Real
+colonies hold about 4300 workers. Its likely cause is that a colony's food is capped by a fixed range of
+ground while its larvae keep being laid in proportion to its workers, so a colony that outgrows its
+ground in a good year starves its brood the next; nothing in the model lets a colony lay fewer eggs
+when food is short, and nothing published says how a real one does. That is a candidate for the next
+step, not a finding.
 
