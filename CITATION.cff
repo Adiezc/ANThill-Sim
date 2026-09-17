@@ -4,6 +4,14 @@ message: 'If you use this software or its parameter data, please cite it as belo
 type: software
 version: 1.0.0
 date-released: '2026-09-17'
+doi: 10.5281/zenodo.22819793
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.22819793
+    description: All versions of this software
+  - type: doi
+    value: 10.5281/zenodo.22819794
+    description: Version 1.0.0
 repository-code: 'https://github.com/Adiezc/ANThill-Sim'
 url: 'https://adiezc.github.io/ANThill-Sim/'
 authors:

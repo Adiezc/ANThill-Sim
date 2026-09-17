@@ -470,7 +470,10 @@ function report(
   L()
   L('## 6. Citing this software')
   L()
-  L('> Diez Cuadrado, A. *Anthill: A harvester ant colony built from the published science.*')
+  L(
+    '> Diez Cuadrado, A. (2026) *Anthill: A harvester ant colony built from the published science.*',
+  )
+  L('> Version 1.0.0. Zenodo. https://doi.org/10.5281/zenodo.22819793')
   L()
   L('A `CITATION.cff` accompanies the source. Code is MIT; `docs/` and `species/` are')
   L('CC BY 4.0.')
