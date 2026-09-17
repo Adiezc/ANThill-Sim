@@ -49,6 +49,7 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D37. The dead are carried out](#d37-the-dead-are-carried-out)
 - [D38. The overwintered cohort comes due together, and foraging peaks in June](#d38-the-overwintered-cohort-comes-due-together-and-foraging-peaks-in-june)
 - [D39. Colony size: the model's main limit, and why it is left there](#d39-colony-size-the-models-main-limit-and-why-it-is-left-there)
+- [D40. Overwintered foragers live longer at it than summer ones](#d40-overwintered-foragers-live-longer-at-it-than-summer-ones)
 
 ---
 
@@ -1317,3 +1318,24 @@ larval conversion efficiency (0.4) and the laying rate (D31), have no measuremen
 either. Colony size is recorded as the model's main limit in the README, VALIDATION and the study
 report, and a reader who changes the seed density can see the effect for themselves with
 `npm run study`.
+
+## D40. Overwintered foragers live longer at it than summer ones
+
+**Date.** 2026-09-17.
+
+**What was missed.** Kwapich & Tschinkel 2013 marked foragers through four seasons and give two
+lifespans, not one. Foragers sampled between March and July, all of them born the autumn before,
+survived an average of 38 days (SD 10.1) once marked. Those sampled after July, a mix of that
+cohort and the year's own workers, survived 26.9 days (SD 7.93) **[A]**. The model gave every
+forager the second rate, 3 to 4 percent a day.
+
+**What was changed.** A forager at least 210 days old, which only the overwintered cohort can be,
+now dies at one over 38 a day (`labour.overwinteredForagerLifespanDays`, **[A]**). Everyone else
+keeps `labour.foragerMortalityPerDay`. The age test is used rather than the worker's scheduled
+foraging age, because the foraging system reuses that field to count the length of a trip.
+
+**Why it matters.** Spring and early summer foraging rests on that cohort alone: no new worker
+forages before July. A forager that lasts a third longer keeps more of them out at once in April
+and May, which is where D38 left the model short, and brings in more seed while the year's first
+large brood is being raised.
+
