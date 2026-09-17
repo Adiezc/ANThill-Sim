@@ -389,6 +389,8 @@ export interface Params {
     readonly peakMonth: Param<number>
     readonly peakDailyMoveProbability: Param<number>
     readonly durationDays: RangeParam
+    readonly carrierShareAtEnd: Param<number>
+    readonly loadHandlingTicks: Param<number>
     readonly meanDistanceMetres: Param<number>
     readonly maxDistanceMetres: Param<number>
     readonly mainTrailShare: Param<number>
@@ -854,6 +856,8 @@ export function buildParams(root: Raw): Params {
       peakMonth: readScalar(root, 'relocation.peakMonth'),
       peakDailyMoveProbability: readScalar(root, 'relocation.peakDailyMoveProbability'),
       durationDays: readRange(root, 'relocation.durationDays'),
+      carrierShareAtEnd: readScalar(root, 'relocation.carrierShareAtEnd'),
+      loadHandlingTicks: readScalar(root, 'relocation.loadHandlingTicks'),
       meanDistanceMetres: readScalar(root, 'relocation.meanDistanceMetres'),
       maxDistanceMetres: readScalar(root, 'relocation.maxDistanceMetres'),
       destinationConstrainedToTrunkTrail: readFlag(

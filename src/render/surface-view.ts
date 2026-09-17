@@ -91,8 +91,7 @@ export class SurfaceView {
       showTrails: boolean
       /**
        * While the colony is moving house, where the nest it left is, in metres from the new
-       * entrance. The walk between the two is not simulated, so only the two sites and the
-       * straight line along the trail between them are drawn.
+       * entrance. The carriers walking between the two are ants like any other on this map.
        */
       movedFromM: { readonly x: number; readonly y: number } | undefined
     },

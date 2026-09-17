@@ -47,6 +47,11 @@ export interface ForagingState {
   readonly surface: SurfaceGrid
   readonly soil: SoilModel
   readonly climate: ClimateModel
+  /**
+   * Ant id plus one for each slot carrying the store between nests during a move, else 0.
+   * Shared with relocation, which owns those ants while they are out.
+   */
+  readonly carrierIds: Uint32Array
 
   /** Running totals, for the end-of-run summary and the validation gates. */
   totalTripsStarted: number
@@ -63,11 +68,13 @@ export function createForagingState(
   surface: SurfaceGrid,
   soil: SoilModel,
   climate: ClimateModel,
+  carrierIds: Uint32Array,
 ): ForagingState {
   return {
     surface,
     soil,
     climate,
+    carrierIds,
     totalTripsStarted: 0,
     totalTripsSuccessful: 0,
     totalSeedsCollected: 0,
@@ -90,7 +97,10 @@ export function createForagingState(
  * demography, which no shortage or surplus can hurry. These decide only whether a worker
  * that already forages goes out right now.
  */
-export function surfaceIsForageable(sim: Simulation, state: ForagingState): boolean {
+export function surfaceIsForageable(
+  sim: Simulation,
+  state: { readonly climate: ClimateModel; readonly soil: SoilModel },
+): boolean {
   const { params } = sim
   const date = sim.clock.date()
   const dayFraction = date.dayFraction
@@ -136,6 +146,8 @@ export function makeForagingSystem(state: ForagingState) {
       if (ants.caste[i] === Caste.Alate || ants.caste[i] === Caste.Male) continue
 
       if (ants.domain[i] === Domain.Surface) {
+        // Carrying the store to a new nest, which is relocation's business.
+        if (state.carrierIds[i] === ants.id[i]! + 1) continue
         // Caught out by rain, a forager gives up the search and heads home, still carrying
         // any seed she has found.
         if (raining && ants.burden[i] !== Burden.Seed) {

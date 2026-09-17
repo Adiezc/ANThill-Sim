@@ -230,6 +230,14 @@ export const RULE = {
     '5',
     'That a colony forages along a few short trunk trails is measured [A], and so is the finding that neighbouring colonies shape their directions. The model has no neighbours, so it draws the directions once from the colony’s seed and keeps them. That matches the randomness seen across colonies without pretending to model its cause.',
   ),
+  relocationCarry: rule(
+    'relocation.carry',
+    'Carrying the seed store, or brood, along the trail to the new nest.',
+    'A',
+    'Tschinkel 2014',
+    '7',
+    'That colonies carry their whole seed store and their brood along a trail to the new nest, that seeds are the commonest burden and brood comes after them, and that the share of workers carrying rises through the move are measured [A]. How high that share goes, that only foragers carry, and the pause to pick a load up are ours. Charcoal, which real colonies also carry, is not modelled.',
+  ),
   corpseRemoval: rule(
     'interior.corpseRemoval',
     'Carrying a dead nestmate out of the nest.',

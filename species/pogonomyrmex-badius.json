@@ -393,6 +393,8 @@
     "peakMonth": { "value": 7, "tag": "A" },
     "peakDailyMoveProbability": { "value": 0.01, "tag": "A" },
     "durationDays": { "min": 4, "max": 6, "tag": "A" },
+    "carrierShareAtEnd": { "value": 0.1, "tag": "C", "note": "INVENTED. Share of the colony's workers out on the trail carrying at the end of a move; the share rises in a straight line from none on the first morning. That a minority of workers carry anything and that the share rises through the move is [A] (Tschinkel 2014); the height and the straight line are ours. Only foragers carry in this model." },
+    "loadHandlingTicks": { "value": 5, "tag": "C", "note": "INVENTED. Ticks a carrier spends at the old nest finding and picking up a seed or a piece of brood before she sets off back." },
     "meanDistanceMetres": { "value": 4, "tag": "A" },
     "maxDistanceMetres": { "value": 10, "tag": "A" },
     "mainTrailShare": { "value": 0.78, "tag": "A", "note": "Share of moves along the main trunk trail. Of 23 natural moves in 1976, 78 percent followed the main trail and 22 percent a secondary one (Harrison and Gentry 1981)." },

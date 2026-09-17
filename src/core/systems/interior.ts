@@ -709,7 +709,9 @@ function reconcileBrood(sim: Simulation, state: InteriorState): void {
   const { ants, params } = sim
   const { nest, demography } = state
   const target = demography.brood.total
-  const wantedInCells = Math.max(0, target - state.broodCarried)
+  // Brood still at the old nest, or in a carrier's mandibles on the trail, is not in these
+  // chambers yet.
+  const wantedInCells = Math.max(0, target - state.broodCarried - demography.broodOutsideNest)
 
   if (wantedInCells > state.broodInCells) {
     // Eggs, laid where she is. If she is dead, at the bottom of the nest, where the last

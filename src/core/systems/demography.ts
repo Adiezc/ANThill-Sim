@@ -57,6 +57,11 @@ export interface DemographyState {
    * boundary by the seed store, which runs just before this system. See systems/seeds.ts.
    */
   larvalFoodShortfall: number
+  /**
+   * Brood still at the old nest or on the trail during a move, carried there by workers
+   * (systems/relocation.ts). The interior leaves this much out of the nest's chambers.
+   */
+  broodOutsideNest: number
   phase: ColonyPhase
   /** Slot of the queen in the ant store, or -1 once she is dead. */
   queenSlot: number
@@ -100,6 +105,7 @@ export function createDemographyState(
     nest,
     soilTemperatureAtForagerDepthC: 0,
     larvalFoodShortfall: 0,
+    broodOutsideNest: 0,
     foundingEggsLaid: 0,
     nanaticTarget,
     eclosionCarry: [0, 0, 0],

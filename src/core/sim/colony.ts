@@ -167,14 +167,19 @@ export class Colony {
     // The ground above. Trunk trail directions are drawn from the colony's own seed here,
     // before anything walks on them, so a colony's trails are a property of its seed.
     this.surface = new SurfaceGrid(params, this.sim.prng)
-    this.foraging = createForagingState(this.surface, this.soil, this.climate)
+    // Which ants are out carrying the store during a move: relocation owns them, and foraging
+    // leaves them alone.
+    const carrierIds = new Uint32Array(capacity)
+    this.foraging = createForagingState(this.surface, this.soil, this.climate, carrierIds)
     this.flights = createFlightState(this.climate)
     this.relocation = createRelocationState(
       this.surface,
       this.nest,
       this.soil,
+      this.climate,
       this.demography,
       options.seed,
+      carrierIds,
     )
 
     // Movement, brood tending and the seed store, inside the nest. It borrows excavation's
@@ -222,7 +227,11 @@ export class Colony {
     this.sim.registerState('brood', () => this.demography.brood.buffers())
     this.sim.registerState('surface', () => this.surface.buffers())
     this.sim.registerState('weather', () => this.climate.buffers())
-    this.sim.registerState('relocation', () => [this.relocation.prng.snapshot()])
+    this.sim.registerState('relocation', () => [
+      this.relocation.prng.snapshot(),
+      this.relocation.carrierIds,
+      this.relocation.carrierLeg,
+    ])
 
     this.sim.register('climate', () => this.rollWeather())
     this.sim.register('excavation', makeExcavationSystem(this.excavation))

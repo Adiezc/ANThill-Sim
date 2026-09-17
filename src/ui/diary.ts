@@ -10,6 +10,7 @@
 import { Burden } from '../core/state/ants.js'
 import { RULE } from '../core/provenance/rules.js'
 import { countForagers, countWorkers } from '../core/systems/demography.js'
+import { seedsInTransit } from '../core/systems/relocation.js'
 import { formatDate } from './hud.js'
 import type { Colony } from '../core/sim/colony.js'
 import type { NestGrid } from '../core/state/nest.js'
@@ -166,7 +167,7 @@ export class ColonyDiary {
           metres.toFixed(1) +
           ' m away, along ' +
           (reloc.moveAlongMainTrail ? 'its main trunk trail' : 'one of its foraging trails') +
-          '. The workers start digging a new nest and carry the seed store in as they make room. Nobody knows why harvester ant colonies move.',
+          '. The workers start digging a new nest, and over the next days foragers carry the seed store along the trail, then the brood. Nobody knows why harvester ant colonies move.',
       )
     }
     reloc.moves.forEach((m, n) => {
@@ -298,11 +299,21 @@ export class ColonyDiary {
     const doing: string[] = []
     if (colony.relocation.moveStartDay >= 0) {
       const r = colony.relocation
+      const left: string[] = []
+      const seedsLeft = Math.floor(seedsInTransit(r))
+      const broodLeft = Math.floor(r.broodAtOldNest)
+      if (seedsLeft > 0) left.push(seedsLeft + (seedsLeft === 1 ? ' seed' : ' seeds'))
+      if (broodLeft > 0) left.push(broodLeft + ' brood')
+      const extra: string[] = []
+      if (r.carriersOut > 0) extra.push(r.carriersOut + ' carrying along the trail')
+      if (left.length > 0) extra.push(sentence(left) + ' still at the old nest')
       doing.push(
-        'moving house, day ' +
+        'moving house (day ' +
           Math.min(r.moveDays, sim.clock.daysElapsed - r.moveStartDay + 1) +
           ' of ' +
-          r.moveDays,
+          r.moveDays +
+          (extra.length > 0 ? ', ' + extra.join(', ') : '') +
+          ')',
       )
     }
     if (colony.flights.aloft > 0) {

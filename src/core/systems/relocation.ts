@@ -14,16 +14,26 @@
  * with no forager out: the ground slides under the entrance, the old nest is left behind and
  * the grid is filled back in, and every ant in the nest starts at the new entrance with a fresh
  * digging tally. The new nest starts as the shaft and chamber a founding queen digs, and the
- * ordinary excavation rules enlarge it, so its size follows the colony as it is now. The seed store is set down in the top of the new nest as the colony
- * digs room for it, and the brood is put where the queen is by the daily reconciliation. The
- * walk between the two sites is not simulated.
+ * ordinary excavation rules enlarge it, so its size follows the colony as it is now.
+ *
+ * The seed store and the brood stay at the old site until they are carried. From the first
+ * morning, foragers walk the trail to the old nest, pick up one seed each, or once the seeds
+ * are gone one piece of brood, and carry it in at the new entrance, where the interior's rules
+ * put it away. Seeds before brood is the measured order of burdens (charcoal, between them, is
+ * not modelled), and the share of workers carrying rises through the move, as measured; how
+ * high it goes is ours. Carriers stop at night, in rain and on sand too hot to cross, as
+ * foragers do. Whatever is still at the old nest when the move ends is set down in the new one
+ * without a carrier, and counted, so a reader can see how much of the move was walked.
  *
  * Nothing here reads soil, neighbours or colony state beyond whether the colony has workers.
  * No cause of moving is modelled, because none is known.
  */
 
-import { Burden, Domain } from '../state/ants.js'
-import { cosTurns, sinTurns } from '../math/trig.js'
+import { Burden, Caste, Domain, Task } from '../state/ants.js'
+import { cosTurns, headingFromTurns, headingOf, sinTurns, turnsFromHeading } from '../math/trig.js'
+import { RULE } from '../provenance/rules.js'
+import { countWorkers } from './demography.js'
+import { surfaceIsForageable } from './foraging.js'
 import { ln } from '../math/approx.js'
 import { Prng } from '../math/prng.js'
 import { DAYS_IN_MONTH, HOURS_IN_DAY } from '../sim/calendar.js'
@@ -32,6 +42,7 @@ import type { NestGrid } from '../state/nest.js'
 import type { SurfaceGrid } from '../state/surface.js'
 import type { DemographyState } from './demography.js'
 import type { SoilModel } from './soil.js'
+import type { ClimateModel } from './climate.js'
 
 export interface MoveRecord {
   readonly colonyYear: number
@@ -51,7 +62,21 @@ export interface RelocationState {
   readonly surface: SurfaceGrid
   readonly nest: NestGrid
   readonly soil: SoilModel
+  readonly climate: ClimateModel
   readonly demography: DemographyState
+  /** Shared with foraging: ant id plus one for each slot out carrying the store, else 0. */
+  readonly carrierIds: Uint32Array
+  /** Each carrier's leg of the trip: walking to the old nest, loading there, or walking back. */
+  readonly carrierLeg: Uint8Array
+  /** Brood still at the old nest, waiting to be carried. */
+  broodAtOldNest: number
+  /** Carriers on the trail right now. */
+  carriersOut: number
+  totalSeedsCarried: number
+  totalBroodCarried: number
+  /** What was still at the old nest when a move ended, set down in the new nest without a carrier. */
+  totalSeedsUncarried: number
+  totalBroodUncarried: number
   /** A move has been decided on and waits for a midnight with nobody out. */
   movePending: boolean
   /** Day the colony changed site, or -1 when it is not moving. */
@@ -72,15 +97,26 @@ export function createRelocationState(
   surface: SurfaceGrid,
   nest: NestGrid,
   soil: SoilModel,
+  climate: ClimateModel,
   demography: DemographyState,
   seed: number,
+  carrierIds: Uint32Array,
 ): RelocationState {
   return {
     prng: new Prng((seed ^ 0x2e10ca7e) >>> 0),
     surface,
     nest,
     soil,
+    climate,
     demography,
+    carrierIds,
+    carrierLeg: new Uint8Array(carrierIds.length),
+    broodAtOldNest: 0,
+    carriersOut: 0,
+    totalSeedsCarried: 0,
+    totalBroodCarried: 0,
+    totalSeedsUncarried: 0,
+    totalBroodUncarried: 0,
     movePending: false,
     moveStartDay: -1,
     moveDays: 0,
@@ -128,9 +164,14 @@ export function makeRelocationSystem(state: RelocationState) {
     const { clock, params, ants } = sim
     const { prng } = state
 
-    // The old store goes into the new nest as the colony makes room for it, hour by hour.
-    const ticksPerHour = Math.max(1, Math.round(clock.ticksPerDay / HOURS_IN_DAY))
-    if (clock.tick % ticksPerHour === 0 && seedsInTransit(state) > 0) setDownStore(sim, state)
+    // During a move the store is carried. After it, whatever the carriers did not bring is set
+    // down in the new nest as the colony makes room for it, hour by hour.
+    if (state.moveStartDay >= 0) {
+      carry(sim, state)
+    } else {
+      const ticksPerHour = Math.max(1, Math.round(clock.ticksPerDay / HOURS_IN_DAY))
+      if (clock.tick % ticksPerHour === 0 && seedsInTransit(state) > 0) setDownStore(sim, state)
+    }
 
     if (!clock.isDayBoundary) return
     const date = clock.date()
@@ -209,6 +250,10 @@ function changeSite(sim: Simulation, state: RelocationState): void {
     state.storeInTransit[k]! += held
   }
 
+  // The brood stays at the old nest until it is carried, after the seeds.
+  state.broodAtOldNest = state.demography.brood.total
+  state.demography.broodOutsideNest = state.broodAtOldNest
+
   nest.clearToSoil()
   soil.resetStress()
 
@@ -276,7 +321,19 @@ function setDownStore(sim: Simulation, state: RelocationState): void {
 }
 
 function finishMove(sim: Simulation, state: RelocationState): void {
-  const { clock } = sim
+  const { clock, ants } = sim
+  // Anyone still on the trail comes in with what she holds, and what is left at the old nest
+  // is set down in the new one without a carrier, and counted.
+  for (let i = 0; i < ants.count; i += 1) {
+    if (state.carrierIds[i] === 0) continue
+    if (ants.isAlive(i) && state.carrierIds[i] === ants.id[i]! + 1) arriveAtNewNest(sim, state, i)
+    state.carrierIds[i] = 0
+  }
+  state.carriersOut = 0
+  state.totalSeedsUncarried += seedsInTransit(state)
+  state.totalBroodUncarried += state.broodAtOldNest
+  state.broodAtOldNest = 0
+  state.demography.broodOutsideNest = 0
   const cell = state.surface.cellSizeM
   const shiftX = state.moveDxCells * cell
   const shiftY = state.moveDyCells * cell
@@ -293,4 +350,163 @@ function finishMove(sim: Simulation, state: RelocationState): void {
   state.totalMoves += 1
   state.totalDistanceM += distanceM
   state.moveStartDay = -1
+}
+
+/**
+ * One tick of carrying the store: every carrier out takes a step, and while there is anything
+ * left at the old nest and the ground can be crossed, foragers at home set out until the share
+ * of the colony on the trail matches how far through the move it is.
+ */
+function carry(sim: Simulation, state: RelocationState): void {
+  const { ants, params, clock } = sim
+  const cell = state.surface.cellSizeM
+  const oldX = -state.moveDxCells * cell
+  const oldY = -state.moveDyCells * cell
+
+  let out = 0
+  let broodOnTrail = 0
+  for (let i = 0; i < ants.count; i += 1) {
+    if (state.carrierIds[i] === 0) continue
+    // Died on the trail, or the slot has since gone to a new ant.
+    if (
+      !ants.isAlive(i) ||
+      state.carrierIds[i] !== ants.id[i]! + 1 ||
+      ants.domain[i] !== Domain.Surface
+    ) {
+      state.carrierIds[i] = 0
+      continue
+    }
+    stepCarrier(sim, state, i, oldX, oldY)
+    if (state.carrierIds[i] === 0) continue
+    out += 1
+    if (ants.burden[i] === Burden.Brood) broodOnTrail += 1
+  }
+  state.carriersOut = out
+  state.broodAtOldNest = Math.max(
+    0,
+    Math.min(state.broodAtOldNest, state.demography.brood.total - broodOnTrail),
+  )
+  state.demography.broodOutsideNest = state.broodAtOldNest + broodOnTrail
+
+  if (seedsInTransit(state) < 1 && state.broodAtOldNest < 1) return
+  if (!surfaceIsForageable(sim, state)) return
+
+  const progress = Math.min(
+    1,
+    Math.max(
+      0,
+      (clock.daysElapsed + clock.date().dayFraction - state.moveStartDay) /
+        Math.max(1, state.moveDays),
+    ),
+  )
+  // Rounded up, so that a small colony has a carrier from the first morning rather than none
+  // for the whole move.
+  const wanted = Math.ceil(countWorkers(sim) * params.relocation.carrierShareAtEnd.value * progress)
+  if (out >= wanted || ants.count === 0) return
+
+  // Foragers at home with nothing in their mandibles take it up, looked for from a random
+  // place in the store so that it is not always the same few.
+  const start = state.prng.nextInt(ants.count)
+  for (let k = 0; k < ants.count && out < wanted; k += 1) {
+    const i = (start + k) % ants.count
+    if (!ants.isAlive(i) || ants.domain[i] !== Domain.Nest) continue
+    if (ants.task[i] !== Task.Forager || ants.burden[i] !== Burden.Nothing) continue
+    const caste = ants.caste[i]
+    if (caste !== Caste.MinorWorker && caste !== Caste.MajorWorker) continue
+    ants.domain[i] = Domain.Surface
+    ants.x[i] = 0
+    ants.y[i] = 0
+    ants.timer[i] = 0
+    state.carrierIds[i] = ants.id[i]! + 1
+    state.carrierLeg[i] = LEG_OUT
+    ants.ruleId[i] = RULE.relocationCarry
+    out += 1
+  }
+  state.carriersOut = out
+}
+
+const LEG_OUT = 0
+const LEG_LOADING = 1
+const LEG_BACK = 2
+
+/** A carrier's step: along the trail, a pause to load at the old nest, and back. */
+function stepCarrier(
+  sim: Simulation,
+  state: RelocationState,
+  slot: number,
+  oldX: number,
+  oldY: number,
+): void {
+  const { ants, params } = sim
+  const leg = state.carrierLeg[slot]
+
+  if (leg === LEG_LOADING) {
+    ants.timer[slot] = ants.timer[slot]! + 1
+    if (ants.timer[slot]! < params.relocation.loadHandlingTicks.value) return
+    pickUp(sim, state, slot)
+    state.carrierLeg[slot] = LEG_BACK
+    return
+  }
+
+  const goalX = leg === LEG_OUT ? oldX : 0
+  const goalY = leg === LEG_OUT ? oldY : 0
+  const dx = goalX - ants.x[slot]!
+  const dy = goalY - ants.y[slot]!
+  const speed = params.foraging.speedMetresPerTick.value
+  if (dx * dx + dy * dy <= speed * speed) {
+    ants.x[slot] = goalX
+    ants.y[slot] = goalY
+    if (leg === LEG_OUT) {
+      state.carrierLeg[slot] = LEG_LOADING
+      ants.timer[slot] = 0
+    } else {
+      arriveAtNewNest(sim, state, slot)
+    }
+    return
+  }
+
+  // Along the trail, a little unsteadily.
+  const turns =
+    turnsFromHeading(headingOf(dx, dy)) +
+    state.prng.nextNormal() * params.foraging.searchTurnSdTurns.value
+  ants.heading[slot] = headingFromTurns(turns)
+  ants.x[slot] = ants.x[slot]! + cosTurns(turns) * speed
+  ants.y[slot] = ants.y[slot]! + sinTurns(turns) * speed
+}
+
+/** Seeds first, one at a time, in proportion to what is left of each size; then brood. */
+function pickUp(sim: Simulation, state: RelocationState, slot: number): void {
+  const { ants } = sim
+  const store = state.storeInTransit
+  let whole = 0
+  for (const n of store) whole += Math.floor(n)
+  if (whole >= 1) {
+    let pick = state.prng.nextFloat() * whole
+    let k = 0
+    while (k < store.length - 1 && pick >= Math.floor(store[k]!)) {
+      pick -= Math.floor(store[k]!)
+      k += 1
+    }
+    store[k] = store[k]! - 1
+    ants.seedClass[slot] = k
+    ants.burden[slot] = Burden.Seed
+    return
+  }
+  if (state.broodAtOldNest >= 1) {
+    state.broodAtOldNest -= 1
+    ants.burden[slot] = Burden.Brood
+  }
+}
+
+/** In at the new entrance. The interior's rules put the seed or the brood away from here. */
+function arriveAtNewNest(sim: Simulation, state: RelocationState, slot: number): void {
+  const { ants } = sim
+  const { nest } = state
+  ants.domain[slot] = Domain.Nest
+  ants.x[slot] = nest.offsetOf(nest.entranceCol)
+  ants.y[slot] = nest.depthOf(0)
+  ants.timer[slot] = 0
+  if (ants.burden[slot] === Burden.Seed) state.totalSeedsCarried += 1
+  else if (ants.burden[slot] === Burden.Brood) state.totalBroodCarried += 1
+  state.carrierIds[slot] = 0
 }

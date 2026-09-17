@@ -6,6 +6,8 @@ import { Colony } from '../src/core/sim/colony.js'
 import { SurfaceGrid } from '../src/core/state/surface.js'
 import { Prng } from '../src/core/math/prng.js'
 import { moveChanceForMonth, seedsInTransit } from '../src/core/systems/relocation.js'
+import { Burden, Caste, Domain, Task } from '../src/core/state/ants.js'
+import { BroodFate } from '../src/core/state/brood.js'
 
 const PARAMS = loadSpecies(
   JSON.parse(
@@ -77,6 +79,70 @@ describe('nest relocation', () => {
     // A seed or two may germinate in a day; none is lost in the move.
     expect(inCells + seedsInTransit(r)).toBeGreaterThanOrEqual(before - 1)
   }, 120000)
+
+  it('carries the store along the trail, seeds first and brood after, as the move goes on', () => {
+    // A colony of foragers with a store and a brood to move, in July. The age structure is
+    // artificial, as in the foraging tests: this is about what the carriers do.
+    const c = new Colony({ seed: 11, params: PARAMS, capacity: 400, flightDayOfYear: 190 })
+    const tpd = c.sim.clock.ticksPerDay
+    c.run(tpd)
+    const { ants } = c.sim
+    for (let n = 0; n < 200; n += 1) {
+      const slot = ants.spawn(Caste.MinorWorker, Domain.Nest)
+      ants.ageTicks[slot] = tpd * 100
+      ants.task[slot] = Task.Forager
+      ants.lengthMm[slot] = PARAMS.colony.minorWorkerLengthMm.value
+    }
+    const where = c.nest.deepestVoid()
+    c.nest.addSeed(3, where.col, where.row, 150)
+    c.demography.brood.lay(BroodFate.Worker, 40)
+
+    const r = c.relocation
+    r.moveDxCells = 12
+    r.moveDyCells = 0
+    r.moveDays = 5
+    r.movePending = true
+    // It is midnight, with nobody out, so the colony changes site on the next tick.
+    c.run(1)
+    expect(r.moveStartDay).toBeGreaterThanOrEqual(0)
+    expect(seedsInTransit(r)).toBeGreaterThan(100)
+    expect(r.broodAtOldNest).toBeGreaterThan(0)
+
+    // Through the move, an hour at a time: who is out, what they hold, and what is left.
+    let mostOut = 0
+    let seedCarriersSeen = 0
+    let broodTakenWhileSeedsLeft = false
+    let lastBroodAtOld = r.broodAtOldNest
+    for (let hour = 0; hour < 24 * 5 - 2; hour += 1) {
+      c.run(tpd / 24)
+      mostOut = Math.max(mostOut, r.carriersOut)
+      for (let i = 0; i < ants.count; i += 1) {
+        if (!ants.isAlive(i) || ants.domain[i] !== Domain.Surface) continue
+        if (r.carrierIds[i] === ants.id[i]! + 1 && ants.burden[i] === Burden.Seed) {
+          seedCarriersSeen += 1
+        }
+      }
+      if (r.broodAtOldNest < lastBroodAtOld && seedsInTransit(r) >= 1)
+        broodTakenWhileSeedsLeft = true
+      lastBroodAtOld = r.broodAtOldNest
+    }
+
+    // A minority carries, and more of them later in the move.
+    expect(mostOut).toBeGreaterThan(0)
+    expect(mostOut).toBeLessThanOrEqual(Math.ceil(200 * PARAMS.relocation.carrierShareAtEnd.value))
+    expect(seedCarriersSeen).toBeGreaterThan(0)
+    // The seeds were walked in, and the brood only once they were gone.
+    expect(r.totalSeedsCarried).toBeGreaterThan(100)
+    expect(broodTakenWhileSeedsLeft).toBe(false)
+    expect(r.totalBroodCarried).toBeGreaterThan(0)
+
+    // At the end nobody is left on the trail and nothing is left at the old nest.
+    c.run(tpd * 2)
+    expect(r.moveStartDay).toBe(-1)
+    expect(r.carriersOut).toBe(0)
+    expect(r.broodAtOldNest).toBe(0)
+    expect(c.demography.broodOutsideNest).toBe(0)
+  }, 180000)
 
   it('moves along a trail, within the season, up to the yearly limit and the measured distance', () => {
     // Tschinkel 2014; Harrison & Gentry 1981.
