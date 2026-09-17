@@ -48,6 +48,7 @@ import { mountThreshold } from './ui/threshold.js'
 import { Timelapse, WATCH_SECONDS_PER_DAY } from './ui/pace.js'
 import { ColonyDiary } from './ui/diary.js'
 import { Moments } from './ui/moments.js'
+import { ColonyHistory } from './ui/history.js'
 import type { Moment, MomentTarget } from './ui/moments.js'
 import type { DiaryEntry } from './ui/diary.js'
 import type { ColonySummary } from './core/sim/colony.js'
@@ -270,6 +271,10 @@ function startSimulator(): void {
           <h2 class="panel-label">At a glance</h2>
           <div class="hud-grid glance" id="glance"></div>
         </section>
+        <section class="panel-section">
+          <h2 class="panel-label">Over time</h2>
+          <div class="history" id="history"></div>
+        </section>
         <div class="inspector" id="inspector" hidden></div>
         <section class="panel-section">
           <h2 class="panel-label">Colony diary</h2>
@@ -466,6 +471,7 @@ function startSimulator(): void {
   // ---- The time-lapse, the diary and the "Right now" card ----
 
   const timelapse = new Timelapse()
+  const history = new ColonyHistory(app!.querySelector<HTMLDivElement>('#history')!)
   const diary = new ColonyDiary(params)
 
   const diaryList = (entries: readonly DiaryEntry[], fresh: ReadonlySet<string>): HTMLElement => {
@@ -981,6 +987,7 @@ function startSimulator(): void {
         renderDiary()
       }
       updateMoments()
+      history.update(colony)
     }
 
     // The ants keep walking even while the model is paused mid-step, which is what makes a
@@ -1002,7 +1009,10 @@ function startSimulator(): void {
       colony,
       redraw,
       advanceDays: (days: number) => {
-        colony.run(colony.sim.clock.ticksPerDay * days)
+        for (let d = 0; d < days; d += 1) {
+          colony.run(colony.sim.clock.ticksPerDay)
+          history.update(colony, d === days - 1)
+        }
         redraw()
       },
       /** Centimetres of depth the ant-scale camera shows, for a screenshot at a chosen zoom. */

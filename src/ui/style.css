@@ -62,6 +62,9 @@
   --glow: rgb(224 162 58 / 0.07);
   /* A reading outside what the papers report. Never used decoratively. */
   --flag: #ef8a72;
+  /* Lines in the history charts: the accent, one step darker so it sits inside the band a
+     chart line needs on this surface. */
+  --chart-line: #c0822a;
 
   --shadow: 0 40px 100px -30px rgb(0 0 0 / 0.7), 0 12px 32px -18px rgb(0 0 0 / 0.5);
   --shadow-soft: 0 18px 40px -24px rgb(0 0 0 / 0.6);
@@ -107,6 +110,7 @@
   --accent-soft: rgb(154 93 12 / 0.08);
   --glow: rgb(154 93 12 / 0.06);
   --flag: #b23c26;
+  --chart-line: #9a5d0c;
 
   --shadow: 0 40px 100px -40px rgb(60 44 20 / 0.28), 0 12px 32px -20px rgb(60 44 20 / 0.18);
   --shadow-soft: 0 18px 40px -26px rgb(60 44 20 / 0.25);
@@ -1623,6 +1627,155 @@ button {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+/* The colony's history: three small charts on one time axis. */
+.history-charts {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  padding: 2px 5px 0;
+  border-radius: var(--radius);
+  outline: none;
+}
+
+.history-charts:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.history-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 4px;
+}
+
+.history-label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.history-value {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.history-plot {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+
+.history-base {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+
+.history-line {
+  fill: none;
+  stroke: var(--chart-line);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.history-area {
+  fill: var(--chart-line);
+  fill-opacity: 0.1;
+}
+
+.history-tick {
+  font-family: var(--mono);
+  font-size: 10px;
+  fill: var(--text-faint);
+}
+
+.history-cross {
+  stroke: var(--text-faint);
+  stroke-width: 1;
+}
+
+.history-dot {
+  fill: var(--chart-line);
+  stroke: var(--plate);
+  stroke-width: 2;
+}
+
+.history-years {
+  position: relative;
+  height: 16px;
+  margin-top: -6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.history-years span {
+  position: absolute;
+  top: 0;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.history-years span:first-child:only-child {
+  transform: none;
+}
+
+.history-tip {
+  position: absolute;
+  top: -22px;
+  padding: 2px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  white-space: nowrap;
+  color: var(--text);
+  background: var(--plate-raised);
+  border-radius: var(--pill);
+  box-shadow:
+    0 0 0 1px var(--hairline-strong),
+    var(--shadow-soft);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.history-tip[hidden] {
+  display: none;
+}
+
+.history-table {
+  margin: 12px 5px 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.history-table summary {
+  cursor: pointer;
+}
+
+.history-table table {
+  width: 100%;
+  margin-top: 8px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-table th,
+.history-table td {
+  padding: 4px 6px;
+  text-align: right;
+  font-weight: 400;
+  box-shadow: 0 1px 0 var(--hairline);
+}
+
+.history-table th:first-child {
+  text-align: left;
+}
+
+.history-table thead th {
+  color: var(--text-faint);
 }
 
 .hud-grid {
