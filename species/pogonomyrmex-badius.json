@@ -273,6 +273,11 @@
       "tag": "C",
       "note": "Fraction of the shortfall to the standing crop that returns each day. Invented."
     },
+    "droughtSeedReplenishmentFactor": {
+      "value": 0.25,
+      "tag": "C",
+      "note": "INVENTED, and fitted. In a drought year the seed on the ground comes back at this fraction of its usual rate, because dry plants set less seed. Fitted against the one measured consequence: between May and October colonies grew 4.64 times over in 2010 (SD 1.93, n = 5) and 0.996 times in the 2011 drought (SD 0.73, n = 5), holding their size rather than growing (Kwapich and Tschinkel 2013). See docs/DECISIONS.md D42."
+    },
     "surfaceTemperatureMaxC": {
       "value": 46,
       "tag": "C",
@@ -467,6 +472,8 @@
     "temperatureAnomalySdC": { "value": 2.5, "tag": "C", "note": "INVENTED. Spread of a day's temperature about the monthly normal. The normals are measured; how far single days stray from them is not in the table." },
     "temperatureAnomalyPersistence": { "value": 0.7, "tag": "C", "note": "INVENTED. Share of yesterday's departure from normal that carries into today, which gives warm and cool spells of a few days rather than a new draw every morning." },
     "cloudyDayChance": { "value": 0.35, "tag": "C", "note": "INVENTED. Chance that a day without rain is overcast. Cloud cools the afternoon and shades the sand." },
+    "droughtYearChance": { "value": 0.1, "tag": "C", "note": "INVENTED. Chance, drawn on 1 January, that the year is a drought year. That drought years happen in these sandhills and stop colonies growing is [A]: 2011, an extreme drought, was one of the four years Kwapich and Tschinkel 2013 followed. How often they come is not in the bibliography." },
+    "droughtRainFraction": { "value": 0.5, "tag": "C", "note": "INVENTED. In a drought year, the daily chance of rain is this fraction of the normal one, so the year gets about this fraction of its usual rain." },
     "cloudDaytimeCoolingC": { "value": 3, "tag": "C", "note": "INVENTED. How much cloud or rain lowers the day's high. Half of it is added to the night's low." },
     "rainRateMmPerHour": { "value": 10, "tag": "C", "note": "INVENTED. Converts a day's rain into how long it falls, between 1 hour and rainMaxHours." },
     "rainMaxHours": { "value": 10, "tag": "C", "note": "INVENTED. The longest a day's rain lasts." },

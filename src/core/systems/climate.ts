@@ -122,9 +122,20 @@ export class ClimateModel {
 
   private readonly weatherPrng: WeatherPrng
 
-  /** The weather stream's state, for the digest. */
+  /**
+   * 1 while the current year is a drought year, drawn on 1 January. A colony's first year starts
+   * in June and is never one. Kept in a buffer so the digest covers it.
+   */
+  private readonly droughtFlag = new Uint32Array(1)
+
+  /** True in a drought year: less rain, and less seed on the ground (see foraging). */
+  get drought(): boolean {
+    return this.droughtFlag[0] === 1
+  }
+
+  /** The weather stream's state and the drought flag, for the digest. */
   buffers(): Uint32Array[] {
-    return [this.weatherPrng.snapshot()]
+    return [this.weatherPrng.snapshot(), this.droughtFlag]
   }
 
   /** Mean of the twelve monthly means. The soil model oscillates about this. */
@@ -178,9 +189,16 @@ export class ClimateModel {
     // Rain as discrete events. The daily probability is set so that the expected monthly
     // total matches the normals, and event size is exponential about the mean event, which
     // is what puts the occasional heavy storm in the record.
+    // A drought year is decided on its first day, from the weather's own stream.
+    if (dayOfYear === 0) {
+      this.droughtFlag[0] = this.weatherPrng.chance(this.params.climate.droughtYearChance.value)
+        ? 1
+        : 0
+    }
     const meanEvent = this.params.climate.meanRainEventMm.value
     const daysInMonth = DAYS_IN_MONTH[month - 1]!
-    const rainProbability = Math.min(1, monthlyTotal / (daysInMonth * meanEvent))
+    const dryness = this.drought ? this.params.climate.droughtRainFraction.value : 1
+    const rainProbability = Math.min(1, (dryness * monthlyTotal) / (daysInMonth * meanEvent))
     let rainfall = 0
     if (prng.chance(rainProbability)) {
       // Exponential draw. `1 - u` keeps the argument of the logarithm off zero.

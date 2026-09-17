@@ -137,6 +137,12 @@ export class ColonyDiary {
     }
     if (date.month === 3 && date.colonyYear > 0) {
       add('spring-' + date.colonyYear, 'Spring. The queen starts laying again.')
+      if (colony.climate.drought) {
+        add(
+          'drought-' + date.colonyYear,
+          'A drought year. About half the usual rain will fall, the plants will set less seed and the foragers will find less of it. In a real drought colonies of this species stopped growing for the year.',
+        )
+      }
     }
     if (d.phase === 'mature') {
       add(
@@ -210,11 +216,13 @@ export class ColonyDiary {
         : `Raining, ${airC} °C.`
     }
     const sky = climate.day.sky
+    const dry = climate.drought ? ' A drought year.' : ''
     if (!daytime) {
       const rainedToday = climate.day.rainfallMm > 0 && f > climate.day.rainEndFraction
       return (
         (rainedToday ? 'After rain, ' : sky === 'clear' ? 'Clear night, ' : 'Cloudy night, ') +
         `${airC} °C.` +
+        dry +
         (foragers ? ' The foragers are inside until morning.' : '')
       )
     }
@@ -225,7 +233,7 @@ export class ColonyDiary {
     }
     const later =
       climate.day.rainfallMm > 0 && f < climate.day.rainStartFraction ? ' Rain is on the way.' : ''
-    return `${skyWord}, ${airC} °C.${later}`
+    return `${skyWord}, ${airC} °C.${dry}${later}`
   }
 
   /** What is going on at this moment, and what the colony is living on. */

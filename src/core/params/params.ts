@@ -279,6 +279,7 @@ export interface Params {
     readonly backgroundSeedsPerSquareMetre: Param<number>
     readonly standingSeedsPerSquareMetre: Param<number>
     readonly seedReplenishmentPerDay: Param<number>
+    readonly droughtSeedReplenishmentFactor: Param<number>
     readonly surfaceTemperatureMaxC: Param<number>
     readonly activeDayFractionStart: Param<number>
     readonly activeDayFractionEnd: Param<number>
@@ -446,6 +447,8 @@ export interface Params {
     readonly temperatureAnomalySdC: Param<number>
     readonly temperatureAnomalyPersistence: Param<number>
     readonly cloudyDayChance: Param<number>
+    readonly droughtYearChance: Param<number>
+    readonly droughtRainFraction: Param<number>
     readonly cloudDaytimeCoolingC: Param<number>
     readonly rainRateMmPerHour: Param<number>
     readonly rainMaxHours: Param<number>
@@ -739,6 +742,7 @@ export function buildParams(root: Raw): Params {
       backgroundSeedsPerSquareMetre: readScalar(root, 'foraging.backgroundSeedsPerSquareMetre'),
       standingSeedsPerSquareMetre: readScalar(root, 'foraging.standingSeedsPerSquareMetre'),
       seedReplenishmentPerDay: readScalar(root, 'foraging.seedReplenishmentPerDay'),
+      droughtSeedReplenishmentFactor: readScalar(root, 'foraging.droughtSeedReplenishmentFactor'),
       surfaceTemperatureMaxC: readScalar(root, 'foraging.surfaceTemperatureMaxC'),
       activeDayFractionStart: readScalar(root, 'foraging.activeDayFractionStart'),
       activeDayFractionEnd: readScalar(root, 'foraging.activeDayFractionEnd'),
@@ -918,6 +922,8 @@ export function buildParams(root: Raw): Params {
       temperatureAnomalySdC: readScalar(root, 'climate.temperatureAnomalySdC'),
       temperatureAnomalyPersistence: readScalar(root, 'climate.temperatureAnomalyPersistence'),
       cloudyDayChance: readScalar(root, 'climate.cloudyDayChance'),
+      droughtYearChance: readScalar(root, 'climate.droughtYearChance'),
+      droughtRainFraction: readScalar(root, 'climate.droughtRainFraction'),
       cloudDaytimeCoolingC: readScalar(root, 'climate.cloudDaytimeCoolingC'),
       rainRateMmPerHour: readScalar(root, 'climate.rainRateMmPerHour'),
       rainMaxHours: readScalar(root, 'climate.rainMaxHours'),
