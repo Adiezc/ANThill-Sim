@@ -1,0 +1,106 @@
+<!doctype html>
+<!--
+  The link-preview card, rendered to an image with headless Chrome at the size wanted:
+
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new \
+      --hide-scrollbars --window-size=1200,630 \
+      --screenshot=public/social-card.png tools/social-card.html
+
+  1200 x 630 for the Open Graph image in index.html, and 1280 x 640 for GitHub's social
+  preview (docs/images/github-social-preview.png). The picture of the nest is the README
+  screenshot, docs/images/watch.jpg, so the card shows the simulator as it is.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Anthill link preview card</title>
+    <style>
+      @font-face {
+        font-family: 'Geist';
+        src: url('../src/ui/fonts/Geist-Variable.woff2') format('woff2');
+        font-weight: 100 900;
+      }
+
+      :root {
+        --bg: #0d0d0b;
+        --plate: #12110f;
+        --text: #ece8df;
+        --text-dim: #a8a295;
+        --hairline: rgb(255 244 225 / 0.1);
+        --glow: rgb(224 162 58 / 0.09);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      body {
+        display: grid;
+        grid-template-columns: 1.08fr 0.92fr;
+        font-family: 'Geist', system-ui, sans-serif;
+        color: var(--text);
+        background: radial-gradient(70vw 60vh at 0% 100%, var(--glow), transparent 70%), var(--bg);
+      }
+
+      .words {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 2.6vh;
+        padding: 0 3vw 0 6.5vw;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 12.4vh;
+        font-weight: 600;
+        line-height: 0.95;
+        letter-spacing: -0.05em;
+      }
+
+      .tagline {
+        margin: 0;
+        max-width: 17ch;
+        font-size: 6.3vh;
+        font-weight: 500;
+        line-height: 1.12;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+      }
+
+      .species {
+        margin: 1.2vh 0 0;
+        font-size: 3.2vh;
+        color: var(--text-dim);
+      }
+
+      .nest {
+        position: relative;
+        margin: 7vh 6vw -3vh 0;
+        overflow: hidden;
+        border-radius: 3.2vh 3.2vh 0 0;
+        background: url('../docs/images/watch.jpg') -21vw -37vh / 120vw auto no-repeat var(--plate);
+        box-shadow:
+          0 0 0 1px var(--hairline),
+          0 0 0 1.4vh rgb(255 246 230 / 0.035),
+          0 4vh 10vh rgb(0 0 0 / 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <section class="words">
+      <h1>Anthill</h1>
+      <p class="tagline">A harvester ant colony built from the published science</p>
+      <p class="species"><i>Pogonomyrmex badius</i>, running in your browser</p>
+    </section>
+    <div class="nest" role="img" aria-label="A slice through a harvester ant nest"></div>
+  </body>
+</html>
