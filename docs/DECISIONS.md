@@ -50,6 +50,7 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D38. The overwintered cohort comes due together, and foraging peaks in June](#d38-the-overwintered-cohort-comes-due-together-and-foraging-peaks-in-june)
 - [D39. Colony size: the model's main limit, and why it is left there](#d39-colony-size-the-models-main-limit-and-why-it-is-left-there)
 - [D40. Overwintered foragers live longer at it than summer ones](#d40-overwintered-foragers-live-longer-at-it-than-summer-ones)
+- [D41. A forager with nowhere to go takes the strongest trail](#d41-a-forager-with-nowhere-to-go-takes-the-strongest-trail)
 
 ---
 
@@ -1338,4 +1339,37 @@ foraging age, because the foraging system reuses that field to count the length 
 forages before July. A forager that lasts a third longer keeps more of them out at once in April
 and May, which is where D38 left the model short, and brings in more seed while the year's first
 large brood is being raised.
+
+## D41. A forager with nowhere to go takes the strongest trail
+
+**Date.** 2026-09-17.
+
+**What was wrong.** VALIDATION G4b has recorded since 2026-09-10 that recruitment trails are laid
+and followed and make no measurable difference to what a colony finds, cause unknown. Part of the
+cause was in the code. The comment on a forager's departure reads: a remembered site first, then
+the strongest trail smelled at the entrance, and a trunk trail direction if it has neither. The
+middle step was never written. A forager with no site went down a trunk trail at random, and a
+trail recruited only the ants that happened to cross it while searching.
+
+**What was changed.** A forager with no remembered site smells a ring a metre out from the
+entrance (`foraging.entranceTrailSniffRadiusM`, **[C]**), where trails are strong enough to tell
+apart, since they are laid most heavily near the food. She picks a direction with the same
+non-linear response the searching ants use. Whether she follows a trail at all saturates with
+its strength: half the time for a trail as strong as one step's deposit, nearly always for a
+well-used one, never for the remnant decay leaves everywhere. With trail following switched
+off she takes a trunk trail as before, so the comparison below is like for like.
+
+**What it gives.** Seeds found by four colonies of 60 foragers each over six days, on three sets
+of seeds:
+
+| Seeds | With trails | Without | Gain |
+|---|---|---|---|
+| 21 to 24 | 3188 | 3096 | 3 % |
+| 25 to 28 | 2602 | 2433 | 7 % |
+| 29 to 32 | 2603 | 2537 | 3 % |
+
+Before the change the same comparison gave 1, 6 and 2 percent. The gain is now positive on every
+set, and still small. Site fidelity carries most of the work: a forager that found seed goes back
+to the same spot and needs no trail. The test that asks trails to earn their place stays skipped,
+because a margin of a few percent is the kind a change to the random stream elsewhere can erase.
 
