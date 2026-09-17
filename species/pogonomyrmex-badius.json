@@ -386,6 +386,16 @@
     "germinationOutsideActiveSeasonIsLost": { "value": true, "tag": "C", "note": "INVENTED rule for an [A] observation. Wheeler 1910, as reported by Tschinkel and Kwapich 2016, found deep chambers in winter full of seeds sprouted too far to be eaten, which the ants carried out. Here every seed that germinates outside colony.activeMonths, and every germinating seed still in the store when the season ends, is lost rather than eaten. That all of them are lost is invented." }
   },
 
+  "alarm": {
+    "$comment": "Alarm on the foraging ground. What the scent does and how far and how long it reaches are measured in this species; what sets it off, how often, and how far a forager can be from a disturbance and still respond are ours. See systems/alarm.ts and docs/DECISIONS.md D46.",
+    "activeSpaceCm": { "value": 6, "tag": "A", "note": "Furthest from a crushed worker's head that other workers are drawn towards it, reached after 13 seconds. Bossert and Wilson 1963, from Wilson's 1958 experiments on this species. The scent comes from the mandibular glands and was later identified as 4-methyl-3-heptanone (McGurk et al. 1966)." },
+    "fadeOutSeconds": { "value": 35, "tag": "A", "note": "Seconds after which a crushed worker's alarm scent no longer draws anyone. Bossert and Wilson 1963. Shorter than one step of this model, so an ant stays alarmed for only one step after the last thing that alarmed her." },
+    "extremeAlarmRadiusCm": { "value": 3, "tag": "A", "note": "Within this distance workers stop approaching and run in tight circles, and appear to release the scent themselves, so the alarm is relayed from ant to ant. Bossert and Wilson 1963." },
+    "intrudersPerDay": { "value": 0.5, "tag": "C", "note": "INVENTED. Expected number of times a day that something disturbs a forager out on the ground: another insect, a predator, a foreign object. The model does not say what. Only while foragers are out; rolled per step across the active part of the day." },
+    "intruderStayMinutes": { "min": 5, "max": 30, "tag": "C", "note": "INVENTED. How long a disturbance stays where foragers can meet it." },
+    "responseRadiusM": { "value": 0.3, "tag": "C", "note": "INVENTED, and far larger than the scent reaches. A step of this model is a minute and a forager walks metres in it, so foragers are almost never within the scent's 6 cm of each other at the moment it is released. This stands in for the relay from ant to ant that carries a real alarm further than one puff: foragers within this distance of a disturbance respond to it in the step it happens." }
+  },
+
   "relocation": {
     "movesPerYearMean": { "value": 1.0, "tag": "A" },
     "movesPerYearMax": { "value": 4, "tag": "A" },

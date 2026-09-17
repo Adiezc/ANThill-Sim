@@ -48,6 +48,7 @@ import { mountThreshold } from './ui/threshold.js'
 import { Timelapse, WATCH_SECONDS_PER_DAY } from './ui/pace.js'
 import { ColonyDiary } from './ui/diary.js'
 import { Moments } from './ui/moments.js'
+import { intruderPresent } from './core/systems/alarm.js'
 import { ColonyHistory } from './ui/history.js'
 import type { Moment, MomentTarget } from './ui/moments.js'
 import type { DiaryEntry } from './ui/diary.js'
@@ -363,6 +364,7 @@ function startSimulator(): void {
   // Which scents are drawn. Both start on, because they are half of what the colony is doing.
   let showDiggingScent = true
   let showTrails = true
+  let showAlarm = true
 
   let speedIndex = DEFAULT_SPEED
   let paused = false
@@ -465,6 +467,7 @@ function startSimulator(): void {
   buildScentKey(app!.querySelector<HTMLUListElement>('#scents')!, (id, on) => {
     if (id === 'building') showDiggingScent = on
     if (id === 'recruitment') showTrails = on
+    if (id === 'alarm') showAlarm = on
   })
   buildLegend(app!.querySelector<HTMLDivElement>('#legend-body')!)
 
@@ -592,6 +595,7 @@ function startSimulator(): void {
   }
 
   function lookAt(target: MomentTarget): void {
+    if (target.kind === 'map') return
     if (target.kind === 'ant') {
       selected = target.slot
       spanCm = WORK_SPAN_CM
@@ -872,6 +876,15 @@ function startSimulator(): void {
           timeSeconds,
           sizes,
           showTrails,
+          alarm: showAlarm
+            ? {
+                intruder: intruderPresent(colony.sim, colony.alarm)
+                  ? { x: colony.alarm.intruder[0]!, y: colony.alarm.intruder[1]! }
+                  : undefined,
+                responseRadiusM: params.alarm.responseRadiusM.value,
+                alarmedIds: colony.alarm.alarmedIds,
+              }
+            : undefined,
           movedFromM:
             colony.relocation.moveStartDay >= 0
               ? {

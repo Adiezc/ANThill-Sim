@@ -151,6 +151,12 @@ export class ColonyDiary {
         'The colony is now big enough to start raising winged queens and males, the founders of new colonies.',
       )
     }
+    if (colony.alarm.totalAlarmed > 0) {
+      add(
+        'first-alarm',
+        'Something disturbs a forager out on the ground. She runs in tight circles and releases alarm scent from glands in her head, and the foragers nearby run to her and join in. In this species the scent reaches only a few centimetres and is gone within a minute.',
+      )
+    }
     if (colony.interior.totalCorpsesCarriedOut > 0) {
       add(
         'first-corpse',
@@ -324,6 +330,9 @@ export class ColonyDiary {
       )
     }
     if (foraging.antsOnSurface > 0) doing.push(foraging.antsOnSurface + ' out foraging')
+    if (colony.alarm.alarmedNow > 0) {
+      doing.push(colony.alarm.alarmedNow + ' raising the alarm at a disturbance on the ground')
+    }
     if (sand > 0) doing.push(sand + ' carrying sand')
     if (seeds > 0) doing.push(seeds + ' carrying seeds')
     if (moving > 0) doing.push(moving + ' moving brood')

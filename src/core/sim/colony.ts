@@ -26,6 +26,8 @@ import {
   makeRelocationSystem,
   seedsInTransit,
 } from '../systems/relocation.js'
+import { createAlarmState, makeAlarmSystem } from '../systems/alarm.js'
+import type { AlarmState } from '../systems/alarm.js'
 import { createInteriorState, makeInteriorSystem } from '../systems/interior.js'
 import {
   createSeedStoreState,
@@ -119,6 +121,7 @@ export class Colony {
   readonly foraging: ForagingState
   readonly flights: FlightState
   readonly relocation: RelocationState
+  readonly alarm: AlarmState
   readonly interior: InteriorState
   readonly seedStore: SeedStoreState
 
@@ -170,7 +173,16 @@ export class Colony {
     // Which ants are out carrying the store during a move: relocation owns them, and foraging
     // leaves them alone.
     const carrierIds = new Uint32Array(capacity)
-    this.foraging = createForagingState(this.surface, this.soil, this.climate, carrierIds)
+    // And which foragers are answering an alarm on the ground: alarm owns those.
+    const alarmedIds = new Uint32Array(capacity)
+    this.foraging = createForagingState(
+      this.surface,
+      this.soil,
+      this.climate,
+      carrierIds,
+      alarmedIds,
+    )
+    this.alarm = createAlarmState(this.climate, this.soil, carrierIds, alarmedIds, options.seed)
     this.flights = createFlightState(this.climate)
     this.relocation = createRelocationState(
       this.surface,
@@ -232,6 +244,12 @@ export class Colony {
       this.relocation.carrierIds,
       this.relocation.carrierLeg,
     ])
+    this.sim.registerState('alarm', () => [
+      this.alarm.prng.snapshot(),
+      this.alarm.alarmedIds,
+      this.alarm.alarmedUntil,
+      this.alarm.intruder,
+    ])
 
     this.sim.register('climate', () => this.rollWeather())
     this.sim.register('excavation', makeExcavationSystem(this.excavation))
@@ -239,6 +257,7 @@ export class Colony {
     this.sim.register('seeds', makeSeedStoreSystem(this.seedStore))
     this.sim.register('demography', makeDemographySystem(this.demography))
     this.sim.register('foraging', makeForagingSystem(this.foraging))
+    this.sim.register('alarm', makeAlarmSystem(this.alarm))
     this.sim.register('flights', makeFlightSystem(this.flights))
     this.sim.register('relocation', makeRelocationSystem(this.relocation))
     this.sim.register('newAdults', () => this.settleNewAdults())

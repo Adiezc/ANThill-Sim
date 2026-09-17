@@ -20,6 +20,8 @@ export const DAYS_IN_YEAR = 365
  */
 export const HOURS_IN_DAY = 24
 
+export const MINUTES_IN_HOUR = 60
+
 /** First day-of-year, zero-based, for each month. Derived, not authored. */
 export const MONTH_START: readonly number[] = (() => {
   const starts: number[] = []

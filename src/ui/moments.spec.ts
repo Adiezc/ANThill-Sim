@@ -17,6 +17,7 @@ interface FakeColony {
   demography: { totalEclosed: number }
   flights: { aloft: number; totalFlights: number }
   relocation: { moveStartDay: number; totalMoves: number }
+  alarm: { alarmedNow: number; totalIntruders: number; intruder: Float64Array }
 }
 
 function fake(): FakeColony {
@@ -28,6 +29,7 @@ function fake(): FakeColony {
     demography: { totalEclosed: 0 },
     flights: { aloft: 0, totalFlights: 0 },
     relocation: { moveStartDay: -1, totalMoves: 0 },
+    alarm: { alarmedNow: 0, totalIntruders: 0, intruder: Float64Array.of(0, 0, -1) },
   }
 }
 
@@ -107,6 +109,20 @@ describe('moments worth watching', () => {
     expect(moments.next(asColony(c))).toBeNull()
     advanceDays(c, 60)
     expect(moments.next(asColony(c))).not.toBeNull()
+  })
+
+  it('offers an alarm on the ground while foragers answer it, and keeps the camera still', () => {
+    const c = fake()
+    const moments = new Moments()
+    moments.next(asColony(c))
+    c.alarm.intruder[2] = c.sim.clock.tick + 10
+    c.alarm.totalIntruders = 1
+    c.alarm.alarmedNow = 3
+    const moment = moments.next(asColony(c))
+    expect(moment?.target).toEqual({ kind: 'map' })
+    expect(moment?.slow).toBe(true)
+    c.alarm.alarmedNow = 0
+    expect(moment?.live(asColony(c))).toBe(false)
   })
 })
 

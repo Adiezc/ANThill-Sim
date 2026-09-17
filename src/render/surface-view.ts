@@ -32,6 +32,7 @@ export interface SurfaceViewTheme {
   readonly antLaden: string
   readonly rule: string
   readonly ruleText: string
+  readonly alarm: string
 }
 
 export const DEFAULT_SURFACE_THEME: SurfaceViewTheme = {
@@ -48,6 +49,7 @@ export const DEFAULT_SURFACE_THEME: SurfaceViewTheme = {
   antLaden: '#7a4a18',
   rule: 'rgba(32,18,10,0.45)',
   ruleText: 'rgba(32,18,10,0.75)',
+  alarm: pheromoneColour('alarm'),
 }
 
 /**
@@ -94,6 +96,17 @@ export class SurfaceView {
        * entrance. The carriers walking between the two are ants like any other on this map.
        */
       movedFromM: { readonly x: number; readonly y: number } | undefined
+      /**
+       * A disturbance on the ground and the reach within which foragers answer it, in metres,
+       * and which ants are answering it (ant id plus one per slot). Undefined draws no alarm.
+       */
+      alarm:
+        | {
+            readonly intruder: { readonly x: number; readonly y: number } | undefined
+            readonly responseRadiusM: number
+            readonly alarmedIds: Uint32Array
+          }
+        | undefined
     },
   ): void {
     const { ctx, theme } = this
@@ -193,6 +206,31 @@ export class SurfaceView {
       ctx.restore()
     }
 
+    // A disturbance, and the reach of the alarm round it: a red ring, filled faintly.
+    const alarm = options.alarm
+    if (alarm?.intruder !== undefined) {
+      const ax = toPxX(alarm.intruder.x)
+      const ay = toPxY(alarm.intruder.y)
+      const reach = Math.max(10, alarm.responseRadiusM * pxPerM)
+      const pulse = 0.5 + 0.5 * Math.sin(options.timeSeconds * 4)
+      ctx.save()
+      ctx.fillStyle = theme.alarm
+      ctx.globalAlpha = 0.12 + 0.08 * pulse
+      ctx.beginPath()
+      ctx.arc(ax, ay, reach, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.globalAlpha = 0.85
+      ctx.strokeStyle = theme.alarm
+      ctx.lineWidth = 1.5
+      ctx.stroke()
+      ctx.fillStyle = theme.entrance
+      ctx.globalAlpha = 1
+      ctx.beginPath()
+      ctx.arc(ax, ay, Math.max(2, reach * 0.18), 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+    }
+
     // Ants, drawn far larger than life.
     //
     // This is the one deliberate exaggeration in either view and it should be said plainly.
@@ -226,6 +264,22 @@ export class SurfaceView {
         options.timeSeconds * 9 + i * 1.7,
         (burden === Burden.Seed ? sizes.seedLengthMm : sizes.minorLengthMm * 0.2) * pxPerMm,
       )
+      // An ant answering the alarm wears a small red ring.
+      if (alarm !== undefined && alarm.alarmedIds[i] === ants.id[i]! + 1) {
+        ctx.save()
+        ctx.strokeStyle = theme.alarm
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.arc(
+          toPxX(options.motion.drawnX(i)),
+          toPxY(options.motion.drawnY(i)),
+          antPx * 0.8,
+          0,
+          Math.PI * 2,
+        )
+        ctx.stroke()
+        ctx.restore()
+      }
     }
 
     // The entrance: the one point the two domains share.

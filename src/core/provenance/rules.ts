@@ -246,6 +246,14 @@ export const RULE = {
     '8',
     'Workers of other ant species carry corpses out of the nest, further than inert refuse, and removing them measurably raises the survival of the rest [B]. No study of badius was found. The chance of picking a body up is ours, and where the body is left outside is not modelled.',
   ),
+  alarm: rule(
+    'alarm.respond',
+    'Alarmed: running at a disturbance on the ground and circling it.',
+    'A',
+    'Wilson 1958; Bossert & Wilson 1963',
+    '8',
+    'That this species releases an alarm scent from its mandibular glands, that workers are drawn to it and then run in tight circles and release it themselves, that it reaches about 6 cm and is gone in 35 seconds, are measured [A]. What disturbs the foragers, how often, and the 30 cm within which a forager responds in this model are ours: at a minute a step, the real scent is below what the model can resolve.',
+  ),
   nuptialFlight: rule(
     'demography.nuptialFlight',
     'Leaving on the mating flight, the morning after heavy rain.',

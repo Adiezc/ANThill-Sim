@@ -2,7 +2,7 @@
  * The scents, as the picture draws them and the key names them.
  *
  * One colour per channel, used everywhere that channel is drawn and never for anything else.
- * Two of the four channels in SCIENCE.md section 8 are simulated. The other two have
+ * Three of the four channels in SCIENCE.md section 8 are simulated. The other two have
  * parameters in the species file and nothing behind them yet. The key lists them anyway and
  * says so, because a reader who knows ants will look for them, and leaving them out would
  * suggest the model had no such thing when it simply has not got there.
@@ -42,9 +42,9 @@ export const PHEROMONES: readonly Pheromone[] = [
     id: 'alarm',
     name: 'Alarm',
     colour: '#e5484d',
-    where: 'Not simulated yet',
-    what: 'Released at a threat and spreads fast, calling workers to defend. Nothing in the model threatens the colony yet, so nothing releases it.',
-    simulated: false,
+    where: 'On the ground, round a disturbance',
+    what: 'Released from the head of a forager that meets something on the ground. Nearby foragers run to it and circle it, and release it too. The real scent reaches about 6 cm and is gone in 35 seconds, far less than one step of this model, so the ring on the map shows how close a forager must be to respond here.',
+    simulated: true,
   },
   {
     id: 'necrophoric',

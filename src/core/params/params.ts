@@ -382,6 +382,14 @@ export interface Params {
     readonly germinationOutsideActiveSeasonIsLost: Param<boolean>
   }
 
+  readonly alarm: {
+    readonly activeSpaceCm: Param<number>
+    readonly fadeOutSeconds: Param<number>
+    readonly extremeAlarmRadiusCm: Param<number>
+    readonly intrudersPerDay: Param<number>
+    readonly intruderStayMinutes: RangeParam
+    readonly responseRadiusM: Param<number>
+  }
   readonly relocation: {
     readonly movesPerYearMean: Param<number>
     readonly movesPerYearMax: Param<number>
@@ -848,6 +856,14 @@ export function buildParams(root: Raw): Params {
       ),
     },
 
+    alarm: {
+      activeSpaceCm: readScalar(root, 'alarm.activeSpaceCm'),
+      fadeOutSeconds: readScalar(root, 'alarm.fadeOutSeconds'),
+      extremeAlarmRadiusCm: readScalar(root, 'alarm.extremeAlarmRadiusCm'),
+      intrudersPerDay: readScalar(root, 'alarm.intrudersPerDay'),
+      intruderStayMinutes: readRange(root, 'alarm.intruderStayMinutes'),
+      responseRadiusM: readScalar(root, 'alarm.responseRadiusM'),
+    },
     relocation: {
       movesPerYearMean: readScalar(root, 'relocation.movesPerYearMean'),
       mainTrailShare: readScalar(root, 'relocation.mainTrailShare'),

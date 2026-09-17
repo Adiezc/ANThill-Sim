@@ -10,12 +10,15 @@
  */
 
 import { Burden, Caste, Domain } from '../core/state/ants.js'
+import { intruderPresent } from '../core/systems/alarm.js'
 import type { Colony } from '../core/sim/colony.js'
 
 export type MomentTarget =
   | { readonly kind: 'ant'; readonly slot: number }
   | { readonly kind: 'entrance' }
   | { readonly kind: 'nest' }
+  /** Out on the foraging ground, which the map in the corner shows; the camera stays put. */
+  | { readonly kind: 'map' }
 
 export interface Moment {
   readonly key: string
@@ -42,6 +45,7 @@ export class Moments {
   private aloftBefore = false
   private movingBefore = false
   private lastCorpseDay = -Infinity
+  private alarmBefore = false
 
   /** The moment that has just begun, if any. Call once per frame, after the colony steps. */
   next(colony: Colony): Moment | null {
@@ -58,6 +62,19 @@ export class Moments {
         title: 'A mating flight is starting',
         target: { kind: 'entrance' },
         live: (c) => c.flights.aloft > 0,
+        slow: true,
+      }
+    }
+
+    const alarm = colony.alarm.alarmedNow > 0 && intruderPresent(sim, colony.alarm)
+    const alarmStarted = alarm && !this.alarmBefore
+    this.alarmBefore = alarm
+    if (alarmStarted) {
+      return {
+        key: 'alarm-' + colony.alarm.totalIntruders,
+        title: 'Foragers are raising the alarm',
+        target: { kind: 'map' },
+        live: (c) => c.alarm.alarmedNow > 0,
         slow: true,
       }
     }

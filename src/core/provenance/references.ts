@@ -222,6 +222,13 @@ export const REFERENCES: readonly Reference[] = [
     journal: 'Insectes Sociaux 52:350-356',
   },
   {
+    key: 'bossert-wilson-1963',
+    authors: 'Bossert, W. H. & Wilson, E. O.',
+    year: '1963',
+    title: 'The analysis of olfactory communication among animals',
+    journal: 'Journal of Theoretical Biology 5:443-469',
+  },
+  {
     key: 'holldobler-wilson-1970',
     authors: 'Hölldobler, B. & Wilson, E. O.',
     year: '1970',
@@ -401,6 +408,22 @@ export const REFERENCES: readonly Reference[] = [
     year: '2015',
     title: 'Sequential subterranean transport of excavated sand and foraged seeds',
     journal: 'PLoS ONE',
+  },
+  {
+    key: 'mcgurk-1966',
+    authors: 'McGurk, D. J. et al.',
+    year: '1966',
+    title:
+      'Volatile compounds in ants: identification of 4-methyl-3-heptanone from Pogonomyrmex ants',
+    journal: 'Journal of Insect Physiology',
+  },
+  {
+    key: 'wilson-1958',
+    authors: 'Wilson, E. O.',
+    year: '1958',
+    title:
+      'A chemical releaser of alarm and digging behavior in the ant Pogonomyrmex badius (Latreille)',
+    journal: 'Psyche 65:41-51',
   },
 ]
 
