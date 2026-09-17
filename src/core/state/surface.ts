@@ -13,6 +13,7 @@
  */
 
 import { Grid2D } from './grid.js'
+import { scatter } from '../math/bits.js'
 import type { GridBounds } from './grid.js'
 import type { Prng } from '../math/prng.js'
 import type { Params } from '../params/params.js'
@@ -212,25 +213,24 @@ export class SurfaceGrid {
    */
   /**
    * Grows the seed on the ground back towards its crop, by `fraction` of the shortfall. In a
-   * drought year the crop is `cropScale` of the usual one.
+   * drought year only `cropScale` of the ground bears a crop (see `bears`).
    */
   replenishSeeds(fraction: number, cropScale = 1): void {
     const data = this.seeds.data
     const ceiling = this.seedCeiling.data
     for (let i = 0; i < data.length; i += 1) {
+      if (cropScale < 1 && !bears(i, cropScale)) continue
       const s = data[i]!
-      const c = ceiling[i]! * cropScale
+      const c = ceiling[i]!
       if (s < c) data[i] = s + (c - s) * fraction
     }
   }
 
-  /** Cuts the seed on the ground to `cropScale` of the usual crop, where there is more. */
+  /** Clears the seed from the ground that bears no crop this year. */
   capSeeds(cropScale: number): void {
     const data = this.seeds.data
-    const ceiling = this.seedCeiling.data
     for (let i = 0; i < data.length; i += 1) {
-      const c = ceiling[i]! * cropScale
-      if (data[i]! > c) data[i] = c
+      if (!bears(i, cropScale)) data[i] = 0
     }
   }
 
@@ -247,4 +247,15 @@ export class SurfaceGrid {
     // The ceiling changes when the colony moves, so it is state as well.
     return [this.recruitment.data, this.seeds.data, this.seedCeiling.data, this.trunkTrailTurns]
   }
+}
+
+/**
+ * Whether a cell of ground bears a crop in a year when only `share` of it does.
+ *
+ * A fixed scatter of cells, the same every drought, rather than every cell thinned. Thinning
+ * every cell to a fraction of its crop left no cell holding a whole seed, and a forager can only
+ * pick up a whole one, so a drought of any severity left nothing to find at all.
+ */
+function bears(cell: number, share: number): boolean {
+  return scatter(cell) < share
 }

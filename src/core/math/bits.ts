@@ -58,3 +58,12 @@ export function scaleByPowerOfTwo(x: number, n: number): number {
   u32[LO] = 0
   return x * f64[0]!
 }
+
+/**
+ * A fixed, evenly spread value in [0, 1) for an integer, for choosing a scatter of cells that is
+ * the same on every run and every engine. Knuth's multiplicative hash, in 32-bit integer
+ * arithmetic, which is exact everywhere.
+ */
+export function scatter(n: number): number {
+  return (Math.imul(n, 0x9e3779b1) >>> 0) / 0x100000000
+}
