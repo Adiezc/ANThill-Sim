@@ -201,17 +201,22 @@ function startSimulator(): void {
               aria-label="The nest, as a vertical slice through the sand, with the ground above it"
             ></canvas>
             <p class="view-label">The nest, with the ground above</p>
-            <div class="view-tools" id="cameras"></div>
             <figure class="map-inset">
               <canvas id="ground" aria-label="The foraging range, from above"></canvas>
               <figcaption class="map-inset-label">The foraging range, from above</figcaption>
             </figure>
           </div>
         </div>
-        <p class="stage-note">
-          Scroll to zoom and drag to move. Click an ant to see what it is doing and which
-          study says so.
-        </p>
+        <div class="stage-bar">
+          <div class="view-tools" id="cameras"></div>
+          <p class="stage-note">
+            <span class="note-pointer">
+              Scroll to zoom and drag to move. Click an ant to follow her and see what she is
+              doing and which study says so.
+            </span>
+            <span class="note-touch">Pinch to zoom, drag to move, tap an ant to follow her.</span>
+          </p>
+        </div>
         </div>
       </section>
       <aside class="panel">
@@ -374,7 +379,11 @@ function startSimulator(): void {
   // Camera. The default is ant scale, around the queen. One click shows the whole nest.
   const cameraButtons: HTMLButtonElement[] = []
   const CAMERAS: readonly { label: string; value: Camera; title: string }[] = [
-    { label: 'Follow the ants', value: 'work', title: 'Close up, around the queen and her brood' },
+    {
+      label: 'Follow the ants',
+      value: 'work',
+      title: 'Close up, around the queen and her brood, or the ant you picked',
+    },
     { label: 'Whole nest', value: 'nest', title: 'Everything dug so far, to scale' },
   ]
   CAMERAS.forEach((option) => {
@@ -536,60 +545,87 @@ function startSimulator(): void {
   let lastViewport: NestViewport = { topCm: 0, spanCm, centreCm: 0 }
   let lastSliceSize = { width: 1, height: 1 }
 
+  /** Zoom about a point on the screen, so the thing under it stays put. */
+  function zoomAbout(clientX: number, clientY: number, factor: number): void {
+    const rect = sliceCanvas.getBoundingClientRect()
+    const at = NestView.unproject(
+      lastViewport,
+      rect.width,
+      rect.height,
+      clientX - rect.left,
+      clientY - rect.top,
+    )
+    const next = Math.min(400, Math.max(3, spanCm * factor))
+    const fraction = (at.depthCm - lastViewport.topCm) / lastViewport.spanCm
+    freeTopCm = at.depthCm - fraction * next
+    freeCentreCm = lastViewport.centreCm
+    spanCm = next
+    // The drag and the next pinch step read the viewport, so it is updated now rather than
+    // on the next frame.
+    lastViewport = { topCm: freeTopCm, spanCm, centreCm: freeCentreCm }
+    camera = 'free'
+    syncCameraButtons()
+  }
+
   sliceCanvas.addEventListener(
     'wheel',
     (event) => {
       event.preventDefault()
-      // Zoom about the pointer, so the thing being looked at stays under the cursor.
-      const rect = sliceCanvas.getBoundingClientRect()
-      const at = NestView.unproject(
-        lastViewport,
-        rect.width,
-        rect.height,
-        event.clientX - rect.left,
-        event.clientY - rect.top,
-      )
-      const factor = Math.exp(event.deltaY * 0.0015)
-      const next = Math.min(400, Math.max(3, spanCm * factor))
-      const fraction = (at.depthCm - lastViewport.topCm) / lastViewport.spanCm
-      freeTopCm = at.depthCm - fraction * next
-      freeCentreCm = lastViewport.centreCm
-      spanCm = next
-      camera = 'free'
-      syncCameraButtons()
+      zoomAbout(event.clientX, event.clientY, Math.exp(event.deltaY * 0.0015))
     },
     { passive: false },
   )
 
-  let dragging = false
-  let dragX = 0
-  let dragY = 0
+  // Every finger or mouse on the slice, by pointer. One pans; two pinch to zoom.
+  const pointers = new Map<number, { x: number; y: number }>()
+  let pinchDistance = 0
   let dragged = false
+  const fingerSpread = (): number => {
+    const [a, b] = [...pointers.values()]
+    return Math.hypot(a!.x - b!.x, a!.y - b!.y)
+  }
   sliceCanvas.addEventListener('pointerdown', (event) => {
-    dragging = true
-    dragged = false
-    dragX = event.clientX
-    dragY = event.clientY
+    if (pointers.size === 0) dragged = false
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointers.size === 2) {
+      pinchDistance = fingerSpread()
+      // A pinch is never a tap, whichever finger lifts first.
+      dragged = true
+    }
     sliceCanvas.setPointerCapture(event.pointerId)
   })
   sliceCanvas.addEventListener('pointermove', (event) => {
-    if (!dragging) return
-    const dx = event.clientX - dragX
-    const dy = event.clientY - dragY
+    const last = pointers.get(event.pointerId)
+    if (last === undefined) return
+    const dx = event.clientX - last.x
+    const dy = event.clientY - last.y
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (pointers.size >= 2) {
+      const distance = fingerSpread()
+      if (pinchDistance > 0 && distance > 0) {
+        const [a, b] = [...pointers.values()]
+        zoomAbout((a!.x + b!.x) / 2, (a!.y + b!.y) / 2, pinchDistance / distance)
+      }
+      pinchDistance = distance
+      return
+    }
     if (Math.abs(dx) + Math.abs(dy) > 3) dragged = true
-    dragX = event.clientX
-    dragY = event.clientY
+    if (!dragged) return
     const pxPerCm = lastSliceSize.height / lastViewport.spanCm
     freeTopCm = lastViewport.topCm - dy / pxPerCm
     freeCentreCm = lastViewport.centreCm - dx / pxPerCm
+    spanCm = lastViewport.spanCm
+    lastViewport = { topCm: freeTopCm, spanCm, centreCm: freeCentreCm }
     camera = 'free'
     syncCameraButtons()
   })
-  sliceCanvas.addEventListener('pointerup', (event) => {
-    dragging = false
-    sliceCanvas.releasePointerCapture(event.pointerId)
-    if (dragged) return
-    // A click, not a drag: pick the nearest ant to the pointer.
+  const release = (event: PointerEvent): void => {
+    if (!pointers.delete(event.pointerId)) return
+    if (sliceCanvas.hasPointerCapture(event.pointerId)) {
+      sliceCanvas.releasePointerCapture(event.pointerId)
+    }
+    if (pointers.size > 0 || dragged || event.type === 'pointercancel') return
+    // A click, not a drag: pick the nearest ant to the pointer, and follow her.
     const rect = sliceCanvas.getBoundingClientRect()
     const at = NestView.unproject(
       lastViewport,
@@ -598,14 +634,24 @@ function startSimulator(): void {
       event.clientX - rect.left,
       event.clientY - rect.top,
     )
-    selected = nearestAnt(at.offsetCm, at.depthCm)
-  })
+    // A fingertip covers far more of the picture than a mouse pointer does.
+    const reachPx = event.pointerType === 'touch' ? 24 : 0
+    selected = nearestAnt(at.offsetCm, at.depthCm, reachPx)
+    if (selected < 0) return
+    camera = 'work'
+    syncCameraButtons()
+    redraw()
+    inspector.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }
+  sliceCanvas.addEventListener('pointerup', release)
+  sliceCanvas.addEventListener('pointercancel', release)
 
-  function nearestAnt(offsetCm: number, depthCm: number): number {
+  function nearestAnt(offsetCm: number, depthCm: number, reachPx: number): number {
     const { ants } = colony.sim
     // Within a centimetre or so of the click, scaled with the zoom so a wide view is not
     // impossible to hit and a close one is not sloppy.
-    const reach = Math.max(0.4, lastViewport.spanCm * 0.03)
+    const pxPerCm = lastSliceSize.height / lastViewport.spanCm
+    const reach = Math.max(0.4, lastViewport.spanCm * 0.03, reachPx / pxPerCm)
     let best = -1
     let bestDistance = reach * reach
     for (let i = 0; i < ants.count; i += 1) {
@@ -638,7 +684,13 @@ function startSimulator(): void {
   function viewportFor(): NestViewport {
     if (camera === 'nest') return NestView.frameNest(colony.nest)
     if (camera === 'work') {
-      return NestView.frameWork(colony.sim.ants, motion, spanCm, colony.demography.queenSlot)
+      // The ant a reader picked, while she is underground, and otherwise the queen.
+      const { ants } = colony.sim
+      const followed =
+        selected >= 0 && ants.isAlive(selected) && ants.domain[selected] === Domain.Nest
+          ? selected
+          : colony.demography.queenSlot
+      return NestView.frameWork(ants, motion, spanCm, followed)
     }
     return { topCm: freeTopCm, spanCm, centreCm: freeCentreCm }
   }
