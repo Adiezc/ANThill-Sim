@@ -10,7 +10,7 @@ proceed until the nest signature matches.
 |---|---|
 | G1 Nest architecture | Substantially met. Depth follows the worker-number law within about a third, and moving colonies dig new nests so older nests no longer run twice too deep. Deep chamber spacing, branch depth and the surface-to-bottom width ratio are not met |
 | G2 Determinism | Met |
-| G3 Demography | Partly met. Forager share rises through May and peaks in June at about the measured height; April is still near zero. Summer growth and drought-year growth match the measured rates. **With the seed on the ground fitted, two colonies in three pass 700 workers in their fourth year, then fall back to 70 to 270 in their fifth**, against about 4300 in mature colonies (DECISIONS.md D43) |
+| G3 Demography | Partly met. Forager share begins in April and rises through spring, but peaks in July where the measured peak is May to June. Summer growth and drought-year growth match the measured rates. **With the seed on the ground fitted, two colonies in three pass 700 workers by their fifth year, and one that passed in its fourth fell to 81 the year after**, against about 4300 in mature colonies (DECISIONS.md D43, D47) |
 | G4 Vertical stratification | Partly met. Nurses settle below foragers, but the measured fractions are not reproduced across the whole workforce |
 | G4b Foraging | Mostly met. Recruitment trails bring a small, consistent gain of 3 to 7 percent |
 | G5 Seeds and germination | Mostly met in the mechanism; the store holds more unopenable seed than measured, and growth on it fails as in G3 |
@@ -166,23 +166,25 @@ wider out of plane than in it.
 | Forager lifespan | Emergent mean near 27 days from first foraging, from a 3–4%/day hazard rather than a hard cap   | **[A]**           |
 | No reversion     | Removing 50% of foragers draws no replacements from other castes; larval survival falls instead | **[A]** HARD RULE |
 
-**Forager fraction, measured on colonies grown from a queen.** After D44 the share rises through
-May, 0.18 to 0.31, and peaks in June at 0.29 to 0.46, against a measured 35 to 41 percent in mature
-colonies and 60 in immature ones. April is 0.06 to 0.22 in a colony's second summer and still about
-zero in its third, where the measured share is already rising. DECISIONS.md D32, D38 and D44.
+**Forager fraction, measured on colonies grown from a queen.** After D47, in colonies' third and
+fourth summers, the share is 0.05 to 0.27 in April, 0.13 to 0.29 in May and 0.20 to 0.30 in June,
+and reaches its maximum in July at 0.39 to 0.46, when the year's first summer-born workers join.
+The measured maximum is 35 to 41 percent in mature colonies and 60 in immature ones, between May
+and June. March is still about zero, where foraging has begun in the field in most years.
+DECISIONS.md D32, D38, D44 and D47.
 
 **Growth.** Between May and October colonies grew 4.64 times over in a normal year (SD 1.93) and
 0.996 times in the 2011 drought (SD 0.73) **[A]**. The model grows 3.3 to 4.4 times over in its second
 and third summers, and 0.84 times on average in a drought year, which is fitted (D42).
 
 **Colony size.** Workers each October, three colonies, no drought, with the seed on the ground at
-its fitted 120 a square metre (D43):
+its fitted 120 a square metre (D43) and the overwintered foraging peak on 1 April (D47):
 
 | Year | 1 | 2 | 3 | 4 | 5 |
 |---|---|---|---|---|---|
-| Seed 2 | 15 | 43 | 181 | 882 | 67 |
-| Seed 3 | 7 | 45 | 229 | 890 | 264 |
-| Seed 4 | 12 | 63 | 281 | 439 | 270 |
+| Seed 2 | 15 | 72 | 349 | 1080 | 81 |
+| Seed 3 | 6 | 9 | 52 | 317 | 933 |
+| Seed 4 | 13 | 70 | 204 | 532 | 260 |
 
 **Not met.** Colonies that pass 700 fall back the year after, starving thousands of larvae with
 thousands of seeds in store, most of them too large to open. Real colonies hold about 4300.
@@ -259,7 +261,7 @@ preferentially to larvae. **[A]**
 | Size classes | Large seeds reach 70 % of stores | **Met, perhaps too well.** Four classes at their measured masses. After four years on seeds 2 to 5, 97 to 99.8 % of the stored mass is in sizes the ants cannot open, against the measured 70 % or more. Small and medium seeds are opened at their measured daily rates whatever the larvae need, so almost none stay in store |
 | Germination | Tracks soil temperature and depth | **Met in the mechanism.** Each class follows its laboratory temperature response at the soil temperature of its depth, scaled to the germinating seeds counted in natural chambers (DECISIONS.md D22), and asserted in `test/seeds.spec.ts`. Whether the seasonal peaks fall in the measured April and December depends on the soil temperature model, which is itself only roughly right |
 | Germinating seeds fed to larvae | The mechanic that unlocks large seeds | **Met in the mechanism**, and asserted in `test/seeds.spec.ts`. In practice germinating seed is 3 to 5 % of what the larvae ate over four years on seeds 2 to 5; nearly all their food is small and medium seed the workers opened |
-| A colony grows on what it collects | Maturity at 4 to 5 years and about 4300 workers **[A]** | **Not met, badly.** At the end of the fourth year, on seeds 2 to 5, colonies had 84, 59, 61 and 49 workers, where the same seeds under the old forager-to-larva proxy had 1349, 1133, 1736 and 508. The larvae ate almost everything openable the foragers brought home, 1.9 to 5.7 g in four years, which builds 250 to 730 workers. After D29 gave the spring its foragers back, seeds 2 to 4 had 118, 111 and 150 workers at the end of the fourth year, with no collapse in the third. That is still a tenth of a real colony. Seed collected tracks the invented seed density on the ground, not the size of the range (D30), so the shortfall now sits in a value no paper supplies. D31 then cut the queen's invented laying rate from 0.09 to 0.035 eggs a day per worker, because the model held 0.07 to 0.34 foragers per larva against a measured 1.64: seeds 2 to 4 reached 272 to 315 workers in year four and 252 to 296 in year five, and starved about two larvae per worker raised instead of seven. They level off there. DECISIONS.md D24 and D29 to D31 |
+| A colony grows on what it collects | Maturity at 4 to 5 years and about 4300 workers **[A]** | **Not met, badly.** At the end of the fourth year, on seeds 2 to 5, colonies had 84, 59, 61 and 49 workers, where the same seeds under the old forager-to-larva proxy had 1349, 1133, 1736 and 508. The larvae ate almost everything openable the foragers brought home, 1.9 to 5.7 g in four years, which builds 250 to 730 workers. After D29 gave the spring its foragers back, seeds 2 to 4 had 118, 111 and 150 workers at the end of the fourth year, with no collapse in the third. That is still a tenth of a real colony. Seed collected tracks the invented seed density on the ground, not the size of the range (D30), so the shortfall now sits in a value no paper supplies. D31 then cut the queen's invented laying rate from 0.09 to 0.035 eggs a day per worker, because the model held 0.07 to 0.34 foragers per larva against a measured 1.64: seeds 2 to 4 reached 272 to 315 workers in year four and 252 to 296 in year five, and starved about two larvae per worker raised instead of seven. They levelled off there, until D43 fitted the seed on the ground (see G3). DECISIONS.md D24, D29 to D31 and D43 |
 
 ## G6. Relocation
 

@@ -69,12 +69,12 @@ meet a disturbance on the ground raise the alarm and circle it.
 **The main shortfall is colony size.** Real colonies start rearing queens and males at about 700
 workers and average about 4300 once mature. How much seed lies on the ground in these sandhills
 has never been measured, so the model's value is fitted: at it, two colonies in three pass 700
-workers in their fourth year. They then fall back to 70 to 270 workers the year after, starving
-their larvae with a store of seeds too large to open, where real colonies hold their size. See
-[`docs/DECISIONS.md`](docs/DECISIONS.md) D43.
+workers by their fifth year. A colony that passes it falls back the year after, one from 1080
+workers to 81, starving its larvae with a store of seeds too large to open, where real colonies hold
+their size. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D43 and D47.
 
-**Smaller gaps.** Foraging rises through May and peaks in June as measured, but April is still
-about zero in older colonies. Workers do not sort themselves by depth as cleanly as in real nests.
+**Smaller gaps.** Foraging begins in April and rises through spring, but it peaks in July where
+real colonies peak in May and June, and March is still about zero. Workers do not sort themselves by depth as cleanly as in real nests.
 Recruitment trails bring a colony only 3 to 7 percent more seed. The alarm scent is shorter-lived
 and shorter-ranged than one step of the model, so how near a forager must be to respond is a
 labelled guess. [`docs/VALIDATION.md`](docs/VALIDATION.md) lists every

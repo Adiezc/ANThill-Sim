@@ -56,6 +56,7 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D44. The overwintered cohort's foraging dates peak on 1 May](#d44-the-overwintered-cohorts-foraging-dates-peak-on-1-may)
 - [D45. The store and the brood are carried to the new nest](#d45-the-store-and-the-brood-are-carried-to-the-new-nest)
 - [D46. Alarm on the foraging ground](#d46-alarm-on-the-foraging-ground)
+- [D47. The overwintered cohort's foraging dates peak on 1 April](#d47-the-overwintered-cohorts-foraging-dates-peak-on-1-april)
 
 ---
 
@@ -1543,4 +1544,39 @@ ground while its larvae keep being laid in proportion to its workers, so a colon
 ground in a good year starves its brood the next; nothing in the model lets a colony lay fewer eggs
 when food is short, and nothing published says how a real one does. That is a candidate for the next
 step, not a finding.
+
+## D47. The overwintered cohort's foraging dates peak on 1 April
+
+**Date.** 2026-09-17.
+
+**The gap.** After D44 foraging still hardly began in April in older colonies: 0.01 to 0.07 of
+workers in their third and fourth summers. Kwapich & Tschinkel 2013 have foraging beginning in March
+or April, and the darkest and oldest of the overwintered workers foraging first **[A]**.
+
+**Why.** Three colonies on 1 January of their third year held workers born from August to November.
+About 13 percent were due to forage in April, none in March, and most in May and June. Each worker's
+date is drawn from a triangle between the earliest date her 210 days allow and 15 July, most likely
+on the peak day, so even a worker born in August was most likely to start on 1 May.
+
+**What was changed.** `labour.autumnBornOnsetPeakDayOfYear` from 121 to 90, 1 April (**[C]** as
+before).
+
+**What it gives.** Share of workers foraging, three colonies, no drought:
+
+| | April | May | June | July |
+|---|---|---|---|---|
+| Third summer, peak 1 May | 0.01 to 0.07 | 0.15 to 0.20 | 0.22 to 0.25 | 0.34 to 0.43 |
+| Third summer, peak 1 April | 0.05 to 0.27 | 0.14 to 0.29 | 0.23 to 0.30 | 0.39 to 0.46 |
+| Fourth summer, peak 1 May | 0.02 to 0.05 | 0.17 to 0.23 | 0.24 to 0.32 | |
+| Fourth summer, peak 1 April | 0.07 to 0.10 | 0.13 to 0.18 | 0.20 to 0.28 | |
+
+April now has foragers. March is still about zero. Under either date the year's maximum comes in July,
+when the first summer-born workers join, where the field maximum is in May and June; that is a
+mismatch left open.
+
+**Colony size at the new date.** Workers each October over five years, three colonies, no drought:
+seed 2 reached 72, 349 and 1080 in years two to four, then fell to 81; seed 3 grew more slowly, to 317
+in year four and 933 in year five; seed 4 reached 532 in year four and fell to 260. Two colonies in
+three still pass 700, one a year later than at the old date, and the one that passed early still
+fell back the year after.
 
