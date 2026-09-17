@@ -3,6 +3,12 @@
 **[Try it live](https://adiezc.github.io/ANThill-Sim/)**, or **[go straight to a colony](https://adiezc.github.io/ANThill-Sim/?watch)**.
 It runs in the browser, with nothing to install.
 
+**Status: finished.** Version 1.0.0, September 2026. The project is complete and no longer
+maintained, and the repository is archived. It was built by Adrian Diez Cuadrado with Claude Code
+as an AI pair programmer, starting from a written build brief that is kept in the git history.
+Every design choice, including the ones that were tried and undone, is recorded in
+[`docs/DECISIONS.md`](docs/DECISIONS.md).
+
 ![The opening screen, with a colony digging its nest in a slice of sand](docs/images/opening.jpg)
 
 Anthill simulates one colony of the Florida harvester ant, _Pogonomyrmex badius_, from the day
@@ -114,6 +120,8 @@ A large study splits across machines by giving each a separate range of seeds wi
   including the ones that were tried and undone.
 - **Headless.** The model in `src/core` uses no browser and no Node built-ins, and runs unchanged
   in both.
+- **Described in ODD.** [`docs/ODD.md`](docs/ODD.md) describes the model in the ODD protocol for
+  agent-based models, with pointers to the rules and values behind each part.
 
 ## The papers
 
