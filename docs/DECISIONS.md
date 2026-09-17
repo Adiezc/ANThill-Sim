@@ -51,6 +51,7 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D39. Colony size: the model's main limit, and why it is left there](#d39-colony-size-the-models-main-limit-and-why-it-is-left-there)
 - [D40. Overwintered foragers live longer at it than summer ones](#d40-overwintered-foragers-live-longer-at-it-than-summer-ones)
 - [D41. A forager with nowhere to go takes the strongest trail](#d41-a-forager-with-nowhere-to-go-takes-the-strongest-trail)
+- [D42. Drought years](#d42-drought-years)
 - [D44. The overwintered cohort's foraging dates peak on 1 May](#d44-the-overwintered-cohorts-foraging-dates-peak-on-1-may)
 - [D45. The store and the brood are carried to the new nest](#d45-the-store-and-the-brood-are-carried-to-the-new-nest)
 - [D46. Alarm on the foraging ground](#d46-alarm-on-the-foraging-ground)
@@ -1467,4 +1468,39 @@ Rain ends it. Nothing is killed and nothing reaches the nest. Carriers during a 
 
 **What is not built.** What the disturbance is. Alarm inside the nest, and the digging Wilson found the
 same scent releases in the nest. Any defence that drives a disturbance off.
+
+## D42. Drought years
+
+**Date.** 2026-09-17.
+
+**What is measured.** Kwapich & Tschinkel 2013 followed colonies through four seasons, one of them,
+2011, an extreme drought. Between May and October colonies grew 4.64 times over in 2010 (SD 1.93,
+n = 5) and 0.996 times in 2011 (SD 0.73, n = 5): in the drought they held their size **[A]**. Foraging
+also reached a lower maximum that year.
+
+**What was built.** About one year in ten, drawn on 1 January from the weather's own stream, is a
+drought year (`climate.droughtYearChance`, **[C]**). Rain comes half as often
+(`climate.droughtRainFraction`, **[C]**). Only a share of the ground bears a seed crop
+(`foraging.droughtSeedCropFactor`, **[C]**, fitted): on 1 January the seed is cleared from the rest of
+the ground, a fixed scatter of cells the same in every drought, and only the bearing ground grows seed
+back. The diary and the weather line say when a year is a drought year.
+
+**Two versions that failed.** Slowing only the regrowth of seed was not enough: with no regrowth at all
+colonies lived on the crop already on the ground and still grew two to three times over. Cutting every
+cell of ground to a fraction of its crop then killed every colony at any severity, because no cell was
+left holding a whole seed and a forager picks up only whole ones; colonies at 10 and 30 percent died
+identically, which is how the error showed.
+
+**The fit.** Growth between May and October in a colony's second summer, with every year a drought
+year, three colonies:
+
+| Ground bearing seed | Growth | Mean |
+|---|---|---|
+| 10 % | 0.31, 1.22, 1.00 | 0.84 |
+| 25 % | 2.21, 1.30, 2.73 | 2.08 |
+| 50 % | 4.00, 3.15, 3.63 | 3.59 |
+| No drought | 4.71, 3.54, 4.11 | 4.12 |
+
+10 percent comes within the measured spread of 0.996 and is the value used. How often droughts come,
+and how much less rain falls, are not fitted to anything.
 
