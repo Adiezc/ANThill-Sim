@@ -20,7 +20,7 @@ No ant holds a map, a plan or any knowledge of the nest as a whole. Every tunnel
 screen is what individual ants left behind while following local rules, and nobody is in charge
 of them, including you.
 
-![A colony in its second summer, with the queen, brood and seed store labelled](docs/images/watch.jpg)
+![A colony in its third summer, with the queen, brood and seed store labelled](docs/images/watch.jpg)
 
 ## Every number says where it came from
 
