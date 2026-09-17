@@ -35,7 +35,11 @@ when foragers are lost, and big workers do not fetch big seeds from far away. Se
 ## Two ways to use it
 
 **Watch a colony.** One colony in a browser tab. A simulated day takes 30 seconds while
-something is happening and skips ahead while nothing is.
+something is happening and skips ahead while nothing is. Click or tap an ant to follow her
+and see which study her current rule comes from. When something worth seeing starts, such as
+the first worker hatching, a body being carried out, a mating flight or a move of house, a
+banner offers to take you there and slows short moments down. A chart in the panel follows
+workers, brood and stored seed over the colony's life. On a phone, pinch to zoom.
 
 **Run a study.** Many colonies on your own machine, written out with a methods report. A
 browser tab can run one colony well but not thirty, so studies run headless in Node.
