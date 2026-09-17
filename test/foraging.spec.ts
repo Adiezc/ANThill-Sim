@@ -281,6 +281,13 @@ describe('recruitment earns its place', () => {
    * up, and that alone was enough to turn 682 against 681 into 822 against 824. Trails are
    * laid and followed, and they do not measurably change what a colony finds. See
    * docs/VALIDATION.md G4b.
+   *
+   * 2026-09-17: a forager with no remembered site now takes the strongest trail she smells a
+   * metre out from the entrance, which the code had promised in a comment and never done.
+   * With trails against without, on the same three sets of four colonies for six days: 3188
+   * against 3096, 2602 against 2433 and 2603 against 2537, so 3 to 7 percent more seed on every
+   * set. That is consistent but small enough that one change to the random stream could erase
+   * it, which is how the one-seed margin above was lost, so the test stays skipped.
    */
   function seedsIn(days: number, params: Params, seeds: readonly number[]): number {
     let total = 0

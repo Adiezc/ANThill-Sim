@@ -65,8 +65,8 @@ reach the size at which it would rear queens and males for a mating flight. See
 [`docs/DECISIONS.md`](docs/DECISIONS.md) D39.
 
 **Smaller gaps.** Foraging peaks in June as measured, but starts too late in spring. Workers do
-not sort themselves by depth as cleanly as in real nests. Recruitment trails are laid and
-followed but make no measurable difference to what a colony finds. A moving colony does not
+not sort themselves by depth as cleanly as in real nests. Recruitment trails bring a
+colony only 3 to 7 percent more seed. A moving colony does not
 visibly carry its store between sites. [`docs/VALIDATION.md`](docs/VALIDATION.md) lists every
 acceptance test the model meets and fails, with the numbers.
 

@@ -201,11 +201,64 @@ function depart(sim: Simulation, state: ForagingState, slot: number): void {
     return
   }
 
+  const spread = (prng.nextFloat() - 0.5) * params.foraging.trunkTrailAngularSpreadTurns.value
+  const recruited = entranceTrailTurns(sim, state)
+  if (recruited !== null) {
+    ants.heading[slot] = headingFromTurns(recruited + spread)
+    ants.ruleId[slot] = RULE.forageRecruitmentTrail
+    return
+  }
+
   const trailTurns = surface.trunkTrailTurns
   const pick = trailTurns[prng.nextInt(trailTurns.length)]!
-  const spread = (prng.nextFloat() - 0.5) * params.foraging.trunkTrailAngularSpreadTurns.value
   ants.heading[slot] = headingFromTurns(pick + spread)
   ants.ruleId[slot] = RULE.forageTrunkTrail
+}
+
+/** Directions smelled round the entrance by a forager choosing a trail. */
+const ENTRANCE_TRAIL_DIRECTIONS = 12
+
+/**
+ * The direction of a recruitment trail a forager with no remembered site takes from the
+ * entrance, or null if she takes none.
+ *
+ * She smells a ring a short walk out and picks among the directions with the same non-linear
+ * response the searching ants use, so a strong trail wins most of the new foragers and a
+ * faint one few. Whether she follows a trail at all saturates with its strength: half the
+ * time for a trail as strong as one step's deposit, nearly always for a well-used one, and
+ * never for the remnant that decay leaves everywhere. Before this, the comment above promised
+ * it and the code sent every such forager down a trunk trail at random, so trails were laid
+ * and followed only by ants that happened across them, and they made no measurable difference
+ * to what a colony found (VALIDATION.md G4b).
+ */
+function entranceTrailTurns(sim: Simulation, state: ForagingState): number | null {
+  const { params, prng } = sim
+  const { surface } = state
+  if (params.foraging.trailFollowingStrength.value <= 0) return null
+  const radius = params.foraging.entranceTrailSniffRadiusM.value
+  const exponent = params.pheromones.recruitment.responseNonLinearity.value
+
+  let strongest = 0
+  let total = 0
+  const weights = new Array<number>(ENTRANCE_TRAIL_DIRECTIONS)
+  for (let k = 0; k < ENTRANCE_TRAIL_DIRECTIONS; k += 1) {
+    const turns = k / ENTRANCE_TRAIL_DIRECTIONS
+    const col = surface.recruitment.colOf(cosTurns(turns) * radius)
+    const row = surface.recruitment.rowOf(sinTurns(turns) * radius)
+    const strength = surface.inBounds(col, row) ? surface.recruitment.get(col, row) : 0
+    if (strength > strongest) strongest = strength
+    weights[k] = pow(strength, exponent)
+    total += weights[k]!
+  }
+  const deposit = params.foraging.recruitmentDepositPerStep.value
+  if (total <= 0 || !prng.chance(strongest / (strongest + deposit))) return null
+
+  let pick = prng.nextFloat() * total
+  for (let k = 0; k < ENTRANCE_TRAIL_DIRECTIONS; k += 1) {
+    pick -= weights[k]!
+    if (pick <= 0) return k / ENTRANCE_TRAIL_DIRECTIONS
+  }
+  return (ENTRANCE_TRAIL_DIRECTIONS - 1) / ENTRANCE_TRAIL_DIRECTIONS
 }
 
 /** One tick of an ant that is above ground. */

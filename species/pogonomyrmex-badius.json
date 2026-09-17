@@ -233,6 +233,11 @@
       "tag": "C",
       "note": "How far ahead the ant samples trail strength to either side. A nose length, not a survey: an ant with two antennae can compare left with right and nothing more."
     },
+    "entranceTrailSniffRadiusM": {
+      "value": 1.0,
+      "tag": "C",
+      "note": "INVENTED. How far out from the entrance a forager with no remembered site smells for a recruitment trail before choosing which way to go. Trails are laid most heavily near the food and fade towards the nest, so right at the entrance they are faint; a metre out they can be told apart. That a naive forager is recruited along a trail is the point of laying one; the distance is ours."
+    },
     "trailSensingTurns": {
       "value": 0.08,
       "tag": "C",

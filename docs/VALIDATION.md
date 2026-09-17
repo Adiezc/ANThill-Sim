@@ -12,7 +12,7 @@ proceed until the nest signature matches.
 | G2 Determinism | Met |
 | G3 Demography | Partly met. Forager share peaks in June at about the measured height, but spring starts too late. **Colonies level off at 250 to 330 workers against about 700 at maturity and 4300 mature** (DECISIONS.md D39) |
 | G4 Vertical stratification | Partly met. Nurses settle below foragers, but the measured fractions are not reproduced across the whole workforce |
-| G4b Foraging | Mostly met. Recruitment trails make no measurable difference |
+| G4b Foraging | Mostly met. Recruitment trails bring a small, consistent gain of 3 to 7 percent |
 | G5 Seeds and germination | Mostly met in the mechanism; the store holds more unopenable seed than measured, and growth on it fails as in G3 |
 | G6 Relocation | Met for frequency, season, distance, trail and duration. The new nest is dug, but starts smaller than the one left behind |
 
@@ -209,7 +209,7 @@ read off them; they are about what a forager *does*.
 | Trip duration is search time | Trip length dominated by searching, not by walking | **Met.** Mean trip is well above the walk across the range |
 | **Worker size predicts nothing** | Majors and minors range equally far | **Met.** Mean distances within 15 % across castes. HARD RULE |
 | Range not defended | No territorial behaviour anywhere | **Met**, by absence |
-| Non-linear recruitment | Trails should earn their keep | **Not met.** Measured 2026-09-10 on the code before seeds had sizes, four colonies each for six days: 682 seeds with trail following against 681 without, 681 against 682, and 1129 against 1124, on three sets of seeds. This row used to say *met*, on the strength of a test that was passing by one seed; a change to the random stream elsewhere flipped it. Trails are laid and followed and do not measurably change what a colony finds. The test is now skipped and carries these numbers. The range was suspected (DECISIONS.md D21), but D30 shows trips last as long on 11 m of ground as on 25 m, so the ground's size is not what makes trails idle. The cause is still unknown |
+| Non-linear recruitment | Trails should earn their keep | **Partly met.** Since 2026-09-17 a forager with no remembered site takes the strongest trail she smells a metre out from the entrance. Trails now bring 3 to 7 percent more seed on each of three sets of four colonies over six days (3188 against 3096, 2602 against 2433, 2603 against 2537): consistent, and small. Before that change, measured 2026-09-10 on the code before seeds had sizes, four colonies each for six days: 682 seeds with trail following against 681 without, 681 against 682, and 1129 against 1124, on three sets of seeds. This row used to say *met*, on the strength of a test that was passing by one seed; a change to the random stream elsewhere flipped it. Trails are laid and followed and do not measurably change what a colony finds. The test is now skipped and carries these numbers. The range was suspected (DECISIONS.md D21), but D30 shows trips last as long on 11 m of ground as on 25 m, so the ground's size is not what makes trails idle. The cause is still unknown |
 | Heat curfew | Foraging stops when the surface is too hot | **Met.** The threshold is invented; that there is one is [B] |
 | Diurnal | No foraging at night | **Met** |
 | **Seeds feed the colony** | Larval survival should depend on what foragers deliver | **Met in the mechanism, and it fails the colony.** Larvae eat only what the store yields (G5), and what the foragers deliver is not enough to raise a growing brood. See G5 |

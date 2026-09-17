@@ -271,6 +271,7 @@ export interface Params {
     readonly trunkTrailAngularSpreadTurns: Param<number>
     readonly trunkTrailJitter: Param<number>
     readonly trailSensingDistanceM: Param<number>
+    readonly entranceTrailSniffRadiusM: Param<number>
     readonly trailSensingTurns: Param<number>
     readonly trailFollowingStrength: Param<number>
     readonly recruitmentDepositPerStep: Param<number>
@@ -734,6 +735,7 @@ export function buildParams(root: Raw): Params {
       trunkTrailAngularSpreadTurns: readScalar(root, 'foraging.trunkTrailAngularSpreadTurns'),
       trunkTrailJitter: readScalar(root, 'foraging.trunkTrailJitter'),
       trailSensingDistanceM: readScalar(root, 'foraging.trailSensingDistanceM'),
+      entranceTrailSniffRadiusM: readScalar(root, 'foraging.entranceTrailSniffRadiusM'),
       trailSensingTurns: readScalar(root, 'foraging.trailSensingTurns'),
       trailFollowingStrength: readScalar(root, 'foraging.trailFollowingStrength'),
       recruitmentDepositPerStep: readScalar(root, 'foraging.recruitmentDepositPerStep'),
