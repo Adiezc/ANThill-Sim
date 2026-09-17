@@ -416,6 +416,8 @@ function carry(sim: Simulation, state: RelocationState): void {
     ants.domain[i] = Domain.Surface
     ants.x[i] = 0
     ants.y[i] = 0
+    ants.homeVecX[i] = 0
+    ants.homeVecY[i] = 0
     ants.timer[i] = 0
     state.carrierIds[i] = ants.id[i]! + 1
     state.carrierLeg[i] = LEG_OUT
@@ -454,6 +456,8 @@ function stepCarrier(
   const dy = goalY - ants.y[slot]!
   const speed = params.foraging.speedMetresPerTick.value
   if (dx * dx + dy * dy <= speed * speed) {
+    ants.homeVecX[slot] = ants.homeVecX[slot]! - dx
+    ants.homeVecY[slot] = ants.homeVecY[slot]! - dy
     ants.x[slot] = goalX
     ants.y[slot] = goalY
     if (leg === LEG_OUT) {
@@ -470,8 +474,13 @@ function stepCarrier(
     turnsFromHeading(headingOf(dx, dy)) +
     state.prng.nextNormal() * params.foraging.searchTurnSdTurns.value
   ants.heading[slot] = headingFromTurns(turns)
-  ants.x[slot] = ants.x[slot]! + cosTurns(turns) * speed
-  ants.y[slot] = ants.y[slot]! + sinTurns(turns) * speed
+  const stepX = cosTurns(turns) * speed
+  const stepY = sinTurns(turns) * speed
+  ants.x[slot] = ants.x[slot]! + stepX
+  ants.y[slot] = ants.y[slot]! + stepY
+  // Her homing vector is kept as a forager's is, step by step.
+  ants.homeVecX[slot] = ants.homeVecX[slot]! - stepX
+  ants.homeVecY[slot] = ants.homeVecY[slot]! - stepY
 }
 
 /** Seeds first, one at a time, in proportion to what is left of each size; then brood. */

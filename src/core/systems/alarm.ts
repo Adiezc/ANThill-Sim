@@ -201,8 +201,12 @@ function respond(sim: Simulation, state: AlarmState, slot: number, present: bool
       const step = Math.min(speed, distance - circle * 0.5)
       const turns = turnsFromHeading(headingOf(dx, dy))
       ants.heading[slot] = headingFromTurns(turns)
-      ants.x[slot] = ants.x[slot]! + cosTurns(turns) * step
-      ants.y[slot] = ants.y[slot]! + sinTurns(turns) * step
+      moveTo(
+        sim,
+        slot,
+        ants.x[slot]! + cosTurns(turns) * step,
+        ants.y[slot]! + sinTurns(turns) * step,
+      )
       return
     }
   }
@@ -210,6 +214,17 @@ function respond(sim: Simulation, state: AlarmState, slot: number, present: bool
   ants.heading[slot] = headingFromTurns(turns + 0.25)
   const cx = present ? state.intruder[0]! : ants.x[slot]!
   const cy = present ? state.intruder[1]! : ants.y[slot]!
-  ants.x[slot] = cx + cosTurns(turns) * circle
-  ants.y[slot] = cy + sinTurns(turns) * circle
+  moveTo(sim, slot, cx + cosTurns(turns) * circle, cy + sinTurns(turns) * circle)
+}
+
+/**
+ * Moves an ant on the ground and keeps her homing vector true, as every step on the ground must:
+ * she finds her way home on the vector she has kept, not on a reading of where she is.
+ */
+function moveTo(sim: Simulation, slot: number, x: number, y: number): void {
+  const { ants } = sim
+  ants.homeVecX[slot] = ants.homeVecX[slot]! - (x - ants.x[slot]!)
+  ants.homeVecY[slot] = ants.homeVecY[slot]! - (y - ants.y[slot]!)
+  ants.x[slot] = x
+  ants.y[slot] = y
 }
