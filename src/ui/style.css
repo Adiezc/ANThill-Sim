@@ -789,6 +789,128 @@ button {
   }
 }
 
+/* A moment worth watching: offered in the corner of the picture, clear of the ruler on the left
+   and the map on the right, so it never covers what it offers to show. */
+.moment {
+  position: absolute;
+  left: 68px;
+  bottom: 20px;
+  right: calc(clamp(160px, 25%, 290px) + 40px);
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  gap: 10px;
+  width: fit-content;
+  max-width: 440px;
+  padding: 5px 5px 5px 14px;
+  background: var(--glass);
+  border-radius: var(--pill);
+  box-shadow:
+    var(--highlight),
+    0 0 0 1px var(--hairline),
+    var(--shadow-soft);
+  backdrop-filter: blur(16px) saturate(1.2);
+}
+
+.moment[hidden] {
+  display: none;
+}
+
+.moment-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.moment-title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--text);
+}
+
+.moment-watch,
+.moment-close {
+  flex: none;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--pill);
+  transition:
+    color 0.3s var(--ease),
+    background-color 0.3s var(--ease),
+    transform 0.4s var(--ease);
+}
+
+.moment-watch {
+  padding: 5px 12px;
+  color: var(--accent-text);
+  background: var(--accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
+}
+
+.moment-close {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: var(--text-dim);
+  background: transparent;
+}
+
+.moment-close[hidden] {
+  display: none;
+}
+
+.moment-close:hover {
+  color: var(--text);
+}
+
+.moment-watch:active,
+.moment-close:active {
+  transform: scale(0.97);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .moment:not([hidden]) {
+    animation: case-in 0.5s var(--ease) both;
+  }
+
+  .moment-dot {
+    animation: moment-pulse 1.6s var(--ease) infinite;
+  }
+}
+
+@keyframes moment-pulse {
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+@media (max-width: 600px) {
+  .moment {
+    left: 60px;
+    right: 118px;
+    bottom: 10px;
+    gap: 6px;
+    padding-left: 10px;
+    flex-wrap: wrap;
+    border-radius: var(--radius-card);
+  }
+
+  .moment-dot {
+    display: none;
+  }
+
+  .moment-title {
+    font-size: 12px;
+    flex-basis: 100%;
+  }
+}
+
 .stage-note {
   margin: 0;
   padding: 10px 18px;

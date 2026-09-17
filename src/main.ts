@@ -47,6 +47,8 @@ import { createInstrumentSheet } from './ui/instrument.js'
 import { mountThreshold } from './ui/threshold.js'
 import { Timelapse, WATCH_SECONDS_PER_DAY } from './ui/pace.js'
 import { ColonyDiary } from './ui/diary.js'
+import { Moments } from './ui/moments.js'
+import type { Moment, MomentTarget } from './ui/moments.js'
 import type { DiaryEntry } from './ui/diary.js'
 import type { ColonySummary } from './core/sim/colony.js'
 import {
@@ -130,6 +132,16 @@ const CAMERA_EASE_PER_SECOND = 5
  */
 const WORK_SPAN_CM = 16
 
+/** Centimetres of depth shown when watching the ground round the entrance, as for a flight. */
+const ENTRANCE_SPAN_CM = 20
+
+/**
+ * Simulated days per real second while a short moment is watched: a simulated hour in about
+ * twelve seconds. A mating flight is over within the hour, which the time-lapse's day in thirty
+ * seconds would show for about a second.
+ */
+const WATCH_SLOW_DAYS_PER_SECOND = 1 / 300
+
 const INVESTMENTS: readonly {
   label: string
   value: BroodInvestmentValue
@@ -201,6 +213,14 @@ function startSimulator(): void {
               aria-label="The nest, as a vertical slice through the sand, with the ground above it"
             ></canvas>
             <p class="view-label">The nest, with the ground above</p>
+            <div class="moment" id="moment" role="status" hidden>
+              <span class="moment-dot" aria-hidden="true"></span>
+              <p class="moment-title" id="moment-title"></p>
+              <button class="moment-watch" id="moment-watch" type="button">Watch</button>
+              <button class="moment-close" id="moment-close" type="button" aria-label="Dismiss">
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
             <figure class="map-inset">
               <canvas id="ground" aria-label="The foraging range, from above"></canvas>
               <figcaption class="map-inset-label">The foraging range, from above</figcaption>
@@ -317,6 +337,10 @@ function startSimulator(): void {
   const glanceEl = app!.querySelector<HTMLDivElement>('#glance')!
   const diaryEl = app!.querySelector<HTMLDivElement>('#diary')!
   const behind = app!.querySelector<HTMLDetailsElement>('#behind')!
+  const momentEl = app!.querySelector<HTMLDivElement>('#moment')!
+  const momentTitle = app!.querySelector<HTMLParagraphElement>('#moment-title')!
+  const momentWatch = app!.querySelector<HTMLButtonElement>('#moment-watch')!
+  const momentClose = app!.querySelector<HTMLButtonElement>('#moment-close')!
 
   const nestView = new NestView(sliceCanvas, nestThemeFor(currentTheme()))
   const surfaceView = new SurfaceView(groundCanvas)
@@ -485,6 +509,9 @@ function startSimulator(): void {
     if (paused) return 'Paused.'
     const chosen = SPEEDS[speedIndex]!
     if (chosen.daysPerSecond !== null) return chosen.title + '.'
+    if (watching?.slow === true) {
+      return 'Slowed right down while you watch. It speeds up again when this is over.'
+    }
     return timelapse.skipping
       ? 'Skipping ahead, because nothing new is happening. It slows down again as soon as something does.'
       : 'A day takes ' +
@@ -539,6 +566,65 @@ function startSimulator(): void {
 
   app!.querySelector('#show-sources')!.addEventListener('click', () => openSources('sources'))
   app!.querySelector('#show-instrument')!.addEventListener('click', () => openInstrument())
+
+  // ---- Moments worth watching ----
+
+  const moments = new Moments()
+  /** The moment the banner is offering, or being watched. */
+  let offered: Moment | null = null
+  /** The moment the reader chose to watch, while it lasts. */
+  let watching: Moment | null = null
+
+  function syncMoment(): void {
+    const shown = watching ?? offered
+    momentEl.hidden = shown === null
+    if (shown === null) return
+    if (momentTitle.textContent !== shown.title) momentTitle.textContent = shown.title
+    const label = watching === null ? 'Watch' : 'Stop watching'
+    if (momentWatch.textContent !== label) momentWatch.textContent = label
+    momentClose.hidden = watching !== null
+  }
+
+  function lookAt(target: MomentTarget): void {
+    if (target.kind === 'ant') {
+      selected = target.slot
+      spanCm = WORK_SPAN_CM
+      camera = 'work'
+    } else if (target.kind === 'nest') {
+      camera = 'nest'
+    } else {
+      selected = -1
+      spanCm = ENTRANCE_SPAN_CM
+      freeTopCm = -ENTRANCE_SPAN_CM * 0.45
+      freeCentreCm = 0
+      camera = 'free'
+    }
+    syncCameraButtons()
+  }
+
+  momentWatch.addEventListener('click', () => {
+    if (watching !== null) {
+      watching = null
+    } else if (offered !== null) {
+      watching = offered
+      offered = null
+      lookAt(watching.target)
+    }
+    syncMoment()
+  })
+  momentClose.addEventListener('click', () => {
+    offered = null
+    syncMoment()
+  })
+
+  /** Offers a new moment, and lets go of any that is over. Runs after the colony steps. */
+  function updateMoments(): void {
+    const fresh = moments.next(colony)
+    if (fresh !== null && watching === null) offered = fresh
+    if (offered !== null && !offered.live(colony)) offered = null
+    if (watching !== null && !watching.live(colony)) watching = null
+    syncMoment()
+  }
 
   // ---- Zooming, dragging and picking an ant ----
 
@@ -876,7 +962,8 @@ function startSimulator(): void {
       // The time-lapse watches every frame, even at a fixed speed, so switching back to it
       // picks up from what is happening now.
       const timelapseRate = timelapse.update(colony, elapsedSeconds)
-      const daysPerSecond = SPEEDS[speedIndex]!.daysPerSecond ?? timelapseRate
+      const watchRate = watching?.slow === true ? WATCH_SLOW_DAYS_PER_SECOND : timelapseRate
+      const daysPerSecond = SPEEDS[speedIndex]!.daysPerSecond ?? watchRate
       owedTicks += daysPerSecond * elapsedSeconds * colony.sim.clock.ticksPerDay
       const deadline = now + FRAME_BUDGET_MS
       while (owedTicks >= 1 && performance.now() < deadline) {
@@ -893,6 +980,7 @@ function startSimulator(): void {
         timelapse.hold(colony)
         renderDiary()
       }
+      updateMoments()
     }
 
     // The ants keep walking even while the model is paused mid-step, which is what makes a
