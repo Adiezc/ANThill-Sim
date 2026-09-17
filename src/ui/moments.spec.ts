@@ -72,6 +72,15 @@ describe('moments worth watching', () => {
     expect(moment?.live(asColony(c))).toBe(false)
   })
 
+  it('does not announce what was already under way when watching began', () => {
+    const c = fake()
+    worker(c, 30)
+    c.demography.totalEclosed = 400
+    c.flights.aloft = 5
+    const moments = new Moments()
+    expect(moments.next(asColony(c))).toBeNull()
+  })
+
   it('offers a mating flight while winged ants are out, slowly, at the entrance', () => {
     const c = fake()
     const moments = new Moments()

@@ -46,12 +46,23 @@ export class Moments {
   private movingBefore = false
   private lastCorpseDay = -Infinity
   private alarmBefore = false
+  private primed = false
 
   /** The moment that has just begun, if any. Call once per frame, after the colony steps. */
   next(colony: Colony): Moment | null {
     const { sim, demography, flights, relocation } = colony
     const { ants, clock } = sim
     const day = clock.daysElapsed
+
+    // Whatever is already under way when watching starts has not just begun. Without this, a
+    // colony opened already grown announced that its first worker had hatched.
+    if (!this.primed) {
+      this.primed = true
+      this.eclosedBefore = demography.totalEclosed > 0
+      this.aloftBefore = flights.aloft > 0
+      this.movingBefore = relocation.moveStartDay >= 0
+      this.alarmBefore = colony.alarm.alarmedNow > 0
+    }
 
     const aloft = flights.aloft > 0
     const aloftStarted = aloft && !this.aloftBefore
