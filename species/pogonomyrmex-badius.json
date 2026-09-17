@@ -278,10 +278,10 @@
       "tag": "C",
       "note": "Fraction of the shortfall to the standing crop that returns each day. Invented."
     },
-    "droughtSeedReplenishmentFactor": {
-      "value": 0.25,
+    "droughtSeedCropFactor": {
+      "value": 0.1,
       "tag": "C",
-      "note": "INVENTED, and fitted. In a drought year the seed on the ground comes back at this fraction of its usual rate, because dry plants set less seed. Fitted against the one measured consequence: between May and October colonies grew 4.64 times over in 2010 (SD 1.93, n = 5) and 0.996 times in the 2011 drought (SD 0.73, n = 5), holding their size rather than growing (Kwapich and Tschinkel 2013). See docs/DECISIONS.md D42."
+      "note": "INVENTED, and fitted. In a drought year the plants set this fraction of their usual seed: on 1 January the seed on the ground is cut to this fraction of the usual crop, and through the year it grows back only that far. Fitted against the one measured consequence: between May and October colonies grew 4.64 times over in 2010 (SD 1.93, n = 5) and 0.996 times in the 2011 drought (SD 0.73, n = 5), holding their size rather than growing (Kwapich and Tschinkel 2013). Slowing only the regrowth was not enough: with none at all, colonies lived on the crop already on the ground and still grew two to three times over. See docs/DECISIONS.md D42."
     },
     "surfaceTemperatureMaxC": {
       "value": 46,

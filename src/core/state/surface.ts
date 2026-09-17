@@ -210,13 +210,27 @@ export class SurfaceGrid {
    * Applied once a day rather than per tick, and over the whole grid because seed fall is
    * not a local event the way digging is.
    */
-  replenishSeeds(fraction: number): void {
+  /**
+   * Grows the seed on the ground back towards its crop, by `fraction` of the shortfall. In a
+   * drought year the crop is `cropScale` of the usual one.
+   */
+  replenishSeeds(fraction: number, cropScale = 1): void {
     const data = this.seeds.data
     const ceiling = this.seedCeiling.data
     for (let i = 0; i < data.length; i += 1) {
       const s = data[i]!
-      const c = ceiling[i]!
+      const c = ceiling[i]! * cropScale
       if (s < c) data[i] = s + (c - s) * fraction
+    }
+  }
+
+  /** Cuts the seed on the ground to `cropScale` of the usual crop, where there is more. */
+  capSeeds(cropScale: number): void {
+    const data = this.seeds.data
+    const ceiling = this.seedCeiling.data
+    for (let i = 0; i < data.length; i += 1) {
+      const c = ceiling[i]! * cropScale
+      if (data[i]! > c) data[i] = c
     }
   }
 

@@ -280,7 +280,7 @@ export interface Params {
     readonly backgroundSeedsPerSquareMetre: Param<number>
     readonly standingSeedsPerSquareMetre: Param<number>
     readonly seedReplenishmentPerDay: Param<number>
-    readonly droughtSeedReplenishmentFactor: Param<number>
+    readonly droughtSeedCropFactor: Param<number>
     readonly surfaceTemperatureMaxC: Param<number>
     readonly activeDayFractionStart: Param<number>
     readonly activeDayFractionEnd: Param<number>
@@ -744,7 +744,7 @@ export function buildParams(root: Raw): Params {
       backgroundSeedsPerSquareMetre: readScalar(root, 'foraging.backgroundSeedsPerSquareMetre'),
       standingSeedsPerSquareMetre: readScalar(root, 'foraging.standingSeedsPerSquareMetre'),
       seedReplenishmentPerDay: readScalar(root, 'foraging.seedReplenishmentPerDay'),
-      droughtSeedReplenishmentFactor: readScalar(root, 'foraging.droughtSeedReplenishmentFactor'),
+      droughtSeedCropFactor: readScalar(root, 'foraging.droughtSeedCropFactor'),
       surfaceTemperatureMaxC: readScalar(root, 'foraging.surfaceTemperatureMaxC'),
       activeDayFractionStart: readScalar(root, 'foraging.activeDayFractionStart'),
       activeDayFractionEnd: readScalar(root, 'foraging.activeDayFractionEnd'),

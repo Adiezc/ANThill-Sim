@@ -119,11 +119,11 @@ export function makeForagingSystem(state: ForagingState) {
     const { surface } = state
 
     if (sim.clock.isDayBoundary) {
-      // In a drought year the plants set less seed, so the ground fills back more slowly.
-      const drought = state.climate.drought
-        ? params.foraging.droughtSeedReplenishmentFactor.value
-        : 1
-      surface.replenishSeeds(params.foraging.seedReplenishmentPerDay.value * drought)
+      // In a drought year the plants set less seed: the year starts with a small crop on the
+      // ground, and it grows back only that far.
+      const crop = state.climate.drought ? params.foraging.droughtSeedCropFactor.value : 1
+      if (state.climate.drought && sim.clock.date().dayOfYear === 0) surface.capSeeds(crop)
+      surface.replenishSeeds(params.foraging.seedReplenishmentPerDay.value, crop)
     }
 
     const forageable = surfaceIsForageable(sim, state)
