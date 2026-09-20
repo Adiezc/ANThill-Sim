@@ -142,10 +142,11 @@ If you use this software or its parameter data, please cite it. GitHub shows a "
 repository" button, generated from [`CITATION.cff`](CITATION.cff).
 
 > Diez Cuadrado, A. (2026) _Anthill: A harvester ant colony built from the published science._
-> Version 1.0.0. Zenodo. https://doi.org/10.5281/zenodo.22819793
+> Version 1.1.0. Zenodo. https://doi.org/10.5281/zenodo.22819793
 
-That DOI always points at the latest version. Version 1.0.0 alone is
-[10.5281/zenodo.22819794](https://doi.org/10.5281/zenodo.22819794).
+That DOI always points at the latest version. Each version also has its own:
+1.1.0 is [10.5281/zenodo.22861197](https://doi.org/10.5281/zenodo.22861197) and
+1.0.0 is [10.5281/zenodo.22819794](https://doi.org/10.5281/zenodo.22819794).
 
 The biology is not ours. It comes overwhelmingly from the field work of Walter R. Tschinkel and
 Christina L. Kwapich in the Apalachicola National Forest, north Florida, and from the other
