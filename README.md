@@ -167,7 +167,7 @@ pointed at what it does _not_ do: it does not build top-heavy nests, nor cleanly
 with chambers a centimetre high. He asked what was missing, and expected it to be something more
 subtle than counts, schedules, seasons, rates and rhythms.
 
-Going and measuring it properly, rather than trusting the acceptance tests, found two things.
+Going and measuring it properly, rather than trusting the acceptance tests, found three things.
 
 The nests he was shown belonged to colonies too small to have architecture at all — a founding
 shaft with the queen's chamber at the bottom, which is what an incipient nest is. Colony growth in
@@ -178,16 +178,18 @@ digging rules build a 230 cm nest with 0.55 of the chamber area in its top quart
 And the chamber-height statistic had been counting shafts. Where a chamber opens off a shaft, the
 shaft column passing through it was counted as chamber and its full height averaged into the
 chamber height. Measured the way Tschinkel distinguishes the two — a chamber is wider than it is
-tall, a shaft is taller than it is wide — the model's chambers come out at 0.94 cm against the 1 cm
+tall, a shaft is taller than it is wide — the model's chambers come out at 0.97 cm against the 1 cm
 he measured in the field, where the old statistic reported 1.58 cm. The model had been building his
 1 cm chambers and the measurement was hiding it. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D48
 for what this does and does not settle.
 
-A third thing turned up while checking the second. A colony that moves house has no founding
-queen to dig the new nest, so the model puts one there — and it was putting there a dead-straight
-vertical shaft, which is a shape nothing in the model digs and nothing in the field has. Since a
-colony moves about once a year, most of the nests anyone watches began that way. New nests now
-descend at the measured angle and spiral, like every other shaft here.
+A third thing turned up while checking the second. A colony that moves house has no founding queen
+to dig the new nest, so the model puts an incipient one there instead — and what it was putting
+there was a dead-straight vertical shaft, thirty-three centimetres of open pipe down to a single
+chamber. Nothing else here digs that: every other shaft in the model descends at the measured angle
+and spirals as it goes, as Tschinkel found them to. Since a colony moves about once a year, most of
+the nests anyone watches had begun that way. New nests now descend and spiral like the rest. See
+[`docs/DECISIONS.md`](docs/DECISIONS.md) D49.
 
 Version 1.1.0 is what came of that. Neither of them is responsible for anything in this model, and
 every error in it is the author's.
