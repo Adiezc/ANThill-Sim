@@ -9,7 +9,7 @@ It runs in the browser, with nothing to install.
 
 **Status: version 1.1.0, September 2026.** Version 1.0.0 was meant to be the end of it. The
 simulation was then sent to the two researchers whose field work almost every number in it comes
-from, both replied, and 1.1.0 is what their comments changed — see
+from, both replied, and 1.1.0 is what their comments changed, see
 [Acknowledgements](#acknowledgements). It was built by Adrian Diez Cuadrado with Claude Code
 as an AI pair programmer, starting from a written build brief that is kept in the git history.
 Every design choice, including the ones that were tried and undone, is recorded in
