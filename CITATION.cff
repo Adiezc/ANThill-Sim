@@ -2,8 +2,8 @@ cff-version: 1.2.0
 title: 'Anthill: A harvester ant colony built from the published science'
 message: 'If you use this software or its parameter data, please cite it as below.'
 type: software
-version: 1.0.0
-date-released: '2026-09-17'
+version: 1.1.0
+date-released: '2026-09-20'
 doi: 10.5281/zenodo.22819793
 identifiers:
   - type: doi
@@ -12,6 +12,8 @@ identifiers:
   - type: doi
     value: 10.5281/zenodo.22819794
     description: Version 1.0.0
+  # Version 1.1.0's own DOI is minted by Zenodo when the release is published, and is added
+  # here afterwards. The concept DOI above always resolves to the latest version.
 repository-code: 'https://github.com/Adiezc/ANThill-Sim'
 url: 'https://adiezc.github.io/ANThill-Sim/'
 authors:

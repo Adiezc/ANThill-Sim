@@ -433,6 +433,12 @@ export interface NestMeasurement {
    * [C] as a mapping. See docs/VALIDATION.md.
    */
   readonly chamberRunPerDecile: readonly number[]
+  /**
+   * Void cells wide enough to look like chamber but taller than they are wide: the shaft
+   * where it passes through a chamber. Excluded from every chamber statistic here, and
+   * reported so that the exclusion is visible. See `isChamberVoidCm`.
+   */
+  readonly shaftCellsInChamberRuns: number
   /** Fraction of total chamber run lying in the shallowest quarter of the nest. */
   readonly topQuarterShare: number
   /** Proportional decrease in chamber run from each decile to the next. */
@@ -463,12 +469,45 @@ export function chamberThresholdCm(params: Params): number {
   return params.nest.shaftBoreDiameterCm.value * 2
 }
 
+/**
+ * Whether a void cell belongs to a chamber rather than to a shaft, for measurement.
+ *
+ * Width alone is not enough, and getting this wrong cost the project its headline number.
+ * Where a chamber opens off a shaft, the shaft column passing through it is part of the
+ * chamber's wide horizontal run, so it was counted as a chamber cell — and its vertical
+ * clearance, which runs the whole height of the shaft, was then averaged into the chamber
+ * height. That is what reported 1.58 cm where the species builds 1 cm, and it flattered
+ * nothing: it made the model look worse than it is.
+ *
+ * Tschinkel's own distinction settles it. A chamber is horizontal-floored and much wider
+ * than it is tall; a shaft is an elongated void of roughly constant small diameter. So a
+ * cell counts as chamber when its horizontal run exceeds a shaft bore *and* exceeds its own
+ * vertical clearance. Found after Walter Tschinkel reported that the published build did not
+ * make 1 cm chambers. See docs/DECISIONS.md D48.
+ *
+ * This is a measurement rule, not a rule an ant follows. `NestGrid.isChamberCell` is what
+ * the digging rules use on the hot path and is deliberately left as the cheap width test.
+ */
+export function isChamberVoidCm(
+  nest: NestGrid,
+  col: number,
+  row: number,
+  thresholdCm: number,
+): { chamber: boolean; runCm: number; clearanceCm: number } {
+  if (!nest.isVoid(col, row)) return { chamber: false, runCm: 0, clearanceCm: 0 }
+  const runCm = nest.horizontalRunCm(col, row)
+  if (runCm <= thresholdCm) return { chamber: false, runCm, clearanceCm: 0 }
+  const clearanceCm = nest.verticalClearanceCm(col, row)
+  return { chamber: clearanceCm < runCm, runCm, clearanceCm }
+}
+
 export function measureNest(nest: NestGrid, params: Params): NestMeasurement {
   const threshold = chamberThresholdCm(params)
   const maxDepthCm = nest.maxDepthCm
   const decileRun = new Array<number>(10).fill(0)
 
   let chamberCells = 0
+  let shaftCellsInChamberRuns = 0
   let clearanceSum = 0
   let shallowClearance = 0
   let shallowCount = 0
@@ -486,13 +525,21 @@ export function measureNest(nest: NestGrid, params: Params): NestMeasurement {
     const decile = Math.min(9, Math.floor((depth / maxDepthCm) * 10))
 
     for (let col = 0; col < nest.cols; col += 1) {
-      if (!nest.isVoid(col, row)) continue
-      const run = nest.horizontalRunCm(col, row)
-      if (run <= threshold) continue
+      const {
+        chamber,
+        runCm: run,
+        clearanceCm: clearance,
+      } = isChamberVoidCm(nest, col, row, threshold)
+      if (!chamber) {
+        // A cell wide enough to look like chamber but taller than it is wide is the shaft
+        // passing through. Counted, so the gap between this measurement and the old one is
+        // visible rather than silent.
+        if (run > threshold) shaftCellsInChamberRuns += 1
+        continue
+      }
 
       decileRun[decile]! += nest.cellSizeCm
       chamberCells += 1
-      const clearance = nest.verticalClearanceCm(col, row)
       clearanceSum += clearance
       if (depth <= shallowLimit) {
         shallowClearance += clearance
@@ -520,6 +567,7 @@ export function measureNest(nest: NestGrid, params: Params): NestMeasurement {
     maxDepthCm,
     excavatedCells: nest.excavatedCells,
     chamberRunPerDecile: decileRun,
+    shaftCellsInChamberRuns,
     topQuarterShare: topQuarter,
     decileDecrease,
     meanChamberHeightCm: chamberCells === 0 ? 0 : clearanceSum / chamberCells,
@@ -545,7 +593,10 @@ function measureSpacing(
   for (let row = 0; row < nest.rows; row += 1) {
     let found = false
     for (let col = 0; col < nest.cols && !found; col += 1) {
-      if (nest.isChamberCell(col, row, threshold)) found = true
+      // The same rule as the rest of the measurement: a shaft running through a chamber is
+      // not itself a chamber row, or every row of a shaft counts as one and the spacing
+      // between chambers collapses towards zero.
+      if (isChamberVoidCm(nest, col, row, threshold).chamber) found = true
     }
     chamberRow.push(found)
   }

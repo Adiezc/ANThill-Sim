@@ -7,8 +7,10 @@ It runs in the browser, with nothing to install.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22819793.svg)](https://doi.org/10.5281/zenodo.22819793)
 
-**Status: finished.** Version 1.0.0, September 2026. The project is complete and no longer
-maintained, and the repository is archived. It was built by Adrian Diez Cuadrado with Claude Code
+**Status: version 1.1.0, September 2026.** Version 1.0.0 was meant to be the end of it. The
+simulation was then sent to the two researchers whose field work almost every number in it comes
+from, both replied, and 1.1.0 is what their comments changed — see
+[Acknowledgements](#acknowledgements). It was built by Adrian Diez Cuadrado with Claude Code
 as an AI pair programmer, starting from a written build brief that is kept in the git history.
 Every design choice, including the ones that were tried and undone, is recorded in
 [`docs/DECISIONS.md`](docs/DECISIONS.md).
@@ -148,6 +150,41 @@ That DOI always points at the latest version. Version 1.0.0 alone is
 The biology is not ours. It comes overwhelmingly from the field work of Walter R. Tschinkel and
 Christina L. Kwapich in the Apalachicola National Forest, north Florida, and from the other
 authors listed in `docs/SCIENCE.md`. Cite them for any claim about the ants.
+
+## Acknowledgements
+
+In September 2026, after version 1.0.0 was published, the simulation was sent to
+**Walter R. Tschinkel** (Florida State University) and **Christina L. Kwapich** (University of
+Central Florida), whose field work in the Apalachicola National Forest supplies nearly every
+measured number in this model. Both replied, and both were generous with their time.
+
+Christina Kwapich wrote that she had enjoyed watching a founding queen grow into a small colony,
+with workers ageing and changing colour and the seed and charcoal stores building up, and that she
+recognised her and Tschinkel's research on _P. badius_ in the design of it.
+
+Walter Tschinkel said the simulation was an impressive piece of work and fun to watch, and then
+pointed at what it does _not_ do: it does not build top-heavy nests, nor cleanly stratified nests
+with chambers a centimetre high. He asked what was missing, and expected it to be something more
+subtle than counts, schedules, seasons, rates and rhythms.
+
+Going and measuring it properly, rather than trusting the acceptance tests, found two things.
+
+The nests he was shown belonged to colonies too small to have architecture at all — a founding
+shaft with the queen's chamber at the bottom, which is what an incipient nest is. Colony growth in
+this model rests on the one number nobody has measured, the seed lying on the sandhill floor, and
+the colonies stall at tens to a few hundred workers. Handed 600 workers in a test harness, the same
+digging rules build a 230 cm nest with 0.55 of the chamber area in its top quarter.
+
+And the chamber-height statistic had been counting shafts. Where a chamber opens off a shaft, the
+shaft column passing through it was counted as chamber and its full height averaged into the
+chamber height. Measured the way Tschinkel distinguishes the two — a chamber is wider than it is
+tall, a shaft is taller than it is wide — the model's chambers come out at 0.94 cm against the 1 cm
+he measured in the field, where the old statistic reported 1.58 cm. The model had been building his
+1 cm chambers and the measurement was hiding it. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D48
+for what this does and does not settle.
+
+Version 1.1.0 is what came of that. Neither of them is responsible for anything in this model, and
+every error in it is the author's.
 
 ## Hosting
 

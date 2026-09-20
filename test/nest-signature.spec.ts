@@ -3,7 +3,12 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { loadSpecies } from '../src/core/params/index.js'
 import { createNestHarness } from '../src/core/sim/nest-harness.js'
-import { measureNest } from '../src/core/state/nest.js'
+import {
+  NestGrid,
+  chamberThresholdCm,
+  isChamberVoidCm,
+  measureNest,
+} from '../src/core/state/nest.js'
 import type { NestMeasurement } from '../src/core/state/nest.js'
 
 /**
@@ -55,9 +60,53 @@ describe('nest architecture: criteria the model meets', () => {
     // being placed. No rule anywhere sets a chamber height. An ant refuses to raise a
     // ceiling already about a body height above the floor, and 1 cm chambers are what that
     // produces.
+    //
+    // Tightened on 2026-09-20, from a ceiling of 1.6 cm to one of 1.3. The old bound was
+    // loose because the statistic behind it was counting the shaft where it passes through a
+    // chamber, which dragged the mean from 0.97 cm to 1.58. See D48 and the classification
+    // test below. Nothing about the digging changed; the measurement stopped including
+    // shafts, and the criterion no longer has to be met "barely".
     const m = nest(GATE_WORKERS, GATE_DAYS)
     expect(m.meanChamberHeightCm).toBeGreaterThan(0.7)
-    expect(m.meanChamberHeightCm).toBeLessThan(1.6)
+    expect(m.meanChamberHeightCm).toBeLessThan(1.3)
+  })
+
+  it('does not count the shaft passing through a chamber as chamber', () => {
+    // The regression test for D48, on a nest built by hand rather than by ants, so that it
+    // fails for one reason only.
+    //
+    // A dead-straight vertical shaft with a one-cell-high chamber opening off its foot. Every
+    // cell of the bottom row shares the chamber's wide horizontal run, including the shaft
+    // column itself — and that column's vertical clearance is the whole height of the shaft.
+    // Counting it as chamber is what reported centimetre-high chambers as several centimetres
+    // high. Walter Tschinkel reported from the published build that the nests did not have
+    // 1 cm chambers, which is what sent anyone to look at this.
+    const grid = new NestGrid(PARAMS)
+    const cell = grid.cellSizeCm
+    const threshold = chamberThresholdCm(PARAMS)
+    const shaftRows = Math.round(20 / cell)
+    const chamberCells = Math.round(8 / cell)
+    const col = grid.entranceCol
+    const floor = shaftRows - 1
+    for (let row = 0; row <= floor; row += 1) grid.excavate(col, row)
+    for (let k = 1; k <= chamberCells; k += 1) grid.excavate(col + k, floor)
+
+    // The shaft column at the chamber's floor: wide enough to look like chamber, but taller
+    // than it is wide, so it is shaft.
+    const atShaft = isChamberVoidCm(grid, col, floor, threshold)
+    expect(atShaft.runCm).toBeGreaterThan(threshold)
+    expect(atShaft.clearanceCm).toBeGreaterThan(atShaft.runCm)
+    expect(atShaft.chamber).toBe(false)
+
+    // A cell out in the chamber: wider than it is tall, so it is chamber.
+    const atChamber = isChamberVoidCm(grid, col + 2, floor, threshold)
+    expect(atChamber.chamber).toBe(true)
+    expect(atChamber.clearanceCm).toBeCloseTo(cell, 5)
+
+    // And the statistic that reads them reports the chamber's height, not the shaft's.
+    const m = measureNest(grid, PARAMS)
+    expect(m.shaftCellsInChamberRuns).toBe(1)
+    expect(m.meanChamberHeightCm).toBeCloseTo(cell, 5)
   })
 
   it('reaches the depth of a real nest', () => {
@@ -106,11 +155,14 @@ describe('nest architecture: criteria the model meets', () => {
 
   it('keeps chamber height independent of depth', () => {
     // Tschinkel: about 1 cm "no matter what the floor area". Turned on on 2026-09-12: shallow
-    // chambers were 1.71 cm against 0.99 cm deep, and are now 1.77 against 1.47. The mean is
-    // still high, which the chamber-height criterion above carries; what this one asks is that
-    // the two ends agree, and they now do.
+    // chambers were 1.71 cm against 0.99 cm deep, and then 1.77 against 1.47.
+    //
+    // Tightened on 2026-09-20 from 0.6 cm to 0.3. Once shafts are no longer counted as chamber
+    // (D48) the two ends are 1.03 cm shallow against 0.91 cm deep, a gap of 0.12. Most of the
+    // old gap was the upper nest's shafts, which are wider and were therefore likelier to pass
+    // the old width-only test.
     const m = nest(GATE_WORKERS, GATE_DAYS)
-    expect(Math.abs(m.chamberHeightShallowCm - m.chamberHeightDeepCm)).toBeLessThan(0.6)
+    expect(Math.abs(m.chamberHeightShallowCm - m.chamberHeightDeepCm)).toBeLessThan(0.3)
   })
 
   it('builds no more shaft series than the species does', () => {
@@ -172,7 +224,7 @@ describe('nest architecture: criteria not yet met', () => {
     expect(m.maxDepthCm).toBeLessThan(predicted * 2)
   })
 
-  it.skip('makes surface chambers ~2.4x wider than deep ones [measured: 1.52x]', () => {
+  it.skip('makes surface chambers ~2.4x wider than deep ones [measured: 1.56x]', () => {
     // Mean chamber area is 5 to 6 times greater near the surface than near the bottom
     // (Figure 9B), which for a roughly circular chamber is about 2.4 times the width.
     const m = nest(GATE_WORKERS, GATE_DAYS)

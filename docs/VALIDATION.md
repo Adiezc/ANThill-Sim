@@ -4,11 +4,11 @@ What the model must reproduce before a stage is considered done. These are accep
 gates, not aspirations: the order of work in the build brief says excavation does not
 proceed until the nest signature matches.
 
-## Where the model stands, 2026-09-17
+## Where the model stands, 2026-09-20
 
 | Gate | Status |
 |---|---|
-| G1 Nest architecture | Substantially met. Depth follows the worker-number law within about a third, and moving colonies dig new nests so older nests no longer run twice too deep. Deep chamber spacing, branch depth and the surface-to-bottom width ratio are not met |
+| G1 Nest architecture | Substantially met. Depth follows the worker-number law within about a third, and moving colonies dig new nests so older nests no longer run twice too deep. Chamber height is met properly rather than barely since the statistic stopped counting shafts (D48). Deep chamber spacing, branch depth and the surface-to-bottom width ratio are not met |
 | G2 Determinism | Met |
 | G3 Demography | Partly met. Forager share begins in April and rises through spring, but peaks in July where the measured peak is May to June. Summer growth and drought-year growth match the measured rates. **With the seed on the ground fitted, two colonies in three pass 700 workers by their fifth year, and one that passed in its fourth fell to 81 the year after**, against about 4300 in mature colonies (DECISIONS.md D43, D47) |
 | G4 Vertical stratification | Partly met. Nurses settle below foragers, but the measured fractions are not reproduced across the whole workforce |
@@ -33,19 +33,83 @@ value the model produces, so the gap stays visible in the suite.
 
 | Property | Target | Status |
 |---|---|---|
-| Chamber spacing | 3.5 cm decile 1 rising to ~12 cm at decile 7-8 (Fig. 10) | **Shallow met, deep not met.** 3.3 cm shallow, 7.8 cm deep against a floor of 8.75. The digging budget of D28 cost the deep end, and the criterion is now a skipped test carrying that value |
+| Chamber spacing | 3.5 cm decile 1 rising to ~12 cm at decile 7-8 (Fig. 10) | **Shallow met, deep not met.** 3.5 cm shallow, 7.8 cm deep against a floor of 8.75. The digging budget of D28 cost the deep end, and the criterion is now a skipped test carrying that value |
 | Build time | Most of a nest inside the first week | **Met.** 116 cm by day 6 at 600 workers, half of what the same nest reaches by day 70 |
-| Top-heaviness | ~0.5 of chamber area in the top quarter | **Met.** 0.57 |
+| Top-heaviness | ~0.5 of chamber area in the top quarter | **Met.** 0.56 |
 | Decile ordering | First decile holds more area than the last | **Met** |
-| Chamber height | ~1 cm | **Met, barely.** 1.58 cm |
+| Chamber height | ~1 cm | **Met.** 0.97 cm. Was reported as 1.58 and "met, barely" until D48: the statistic was counting the shaft where it passes through a chamber, and averaging the shaft's full height into the chamber's |
 | Series count | 1-4 | **Met.** 3 |
 | Reproducibility | Same seed, same nest | **Met** |
 | Depth reached | Deep, emergent, no ant knowing the shape | **Met** |
 | **Nest size tracks worker number** | `log(depth) = 0.95 + 0.37 log(workers)` | **Substantially met in colonies; this harness cannot test it.** Four colonies sit at 0.98 to 1.12 of the law after three years. The harness has no interior system, so its synthetic workers have no resting place and every one of them behaves as a descender. See below, and D28 |
 | Max depth | Within the 306 cm deepest ever measured | **Met.** 230 cm here, and 270 cm in a colony followed for five years |
-| Height independent of depth | ~1 cm whatever the area | **Met.** 1.77 cm shallow against 1.47 cm deep, where it was 1.71 against 0.99 before D28 |
+| Height independent of depth | ~1 cm whatever the area | **Met.** 1.03 cm shallow against 0.91 cm deep, a gap of 0.12. Was 1.77 against 1.47; most of that gap was the upper nest's wider shafts passing the old width-only test (D48) |
 | Branch depth | All branches above 40 cm | **Not met.** Deepest branch 59.75 cm |
-| Surface:bottom chamber width | ~2.4x | **Not met.** 1.52x |
+| Surface:bottom chamber width | ~2.4x | **Not met.** 1.56x |
+
+### What Walter Tschinkel's comments changed (2026-09-20)
+
+Version 1.0.0 was sent to Walter R. Tschinkel and Christina L. Kwapich. Tschinkel replied
+that the simulation did not build top-heavy nests, nor cleanly stratified nests with
+chambers a centimetre high, and asked what was missing. This table had top-heaviness at
+**met** and chamber height at **met, barely**, so one of the two was wrong. Both were, in
+different directions.
+
+**The gate is not what a reader watches.** These numbers come from a synthetic harness: 600
+workers, fixed ages, no births, no deaths, no interior system, no relocation, 70 days. A
+reader opening the page watches a colony grown from one queen, and those colonies hold 4 to
+about 700 workers over five simulated years — 4 to 24 of them at nine months, in seeds 1 to
+4. Their nests are 30 to 35 cm deep with a top-quarter chamber share of exactly 0, which is
+what an incipient nest is and is not architecture. The architecture here is downstream of
+worker number, as it is in the field, and worker number is the shortfall G3 declares. Nobody
+has measured the seed rain on those sandhills, so the standing crop is fitted (D43), and the
+nest Tschinkel was shown failed for a demographic reason rather than an architectural one.
+
+**The chamber statistics were counting shafts.** Any void cell wider than twice the shaft
+bore counted as chamber, including the shaft column where it passes through a chamber — and
+that column's vertical clearance, the whole height of the shaft, was averaged into chamber
+height. Applying Tschinkel's own distinction instead, that a chamber is wider than it is
+tall and a shaft taller than it is wide, moves the gate figures:
+
+| Gate, 600 workers, 70 days | Before | After |
+|---|---|---|
+| Mean chamber height | 1.58 cm | **0.97 cm** |
+| Shallow / deep chamber height | 1.77 / 1.47 cm | **1.03 / 0.91 cm** |
+| Top-quarter share | 0.570 | 0.558 |
+| Shallow / deep spacing | 3.29 / 7.80 cm | 3.46 / 7.80 cm |
+| Surface:bottom width | 1.52x | 1.56x |
+| Deepest branch | 59.8 cm | 59.8 cm |
+
+The measured value in real nests is 1 cm, independent of chamber area **[A]**. Only the
+height statistics move much, which is the point: the model was building the centimetre and
+the measurement was hiding it. Nothing an ant does changed, `NestGrid.isChamberCell` on the
+hot path is untouched, and the committed determinism digest is unaffected.
+
+**Height does not drift in a mature nest.** The harness was run five times past the gate, to
+350 days: 0.97, 0.95, 0.94, 0.94, 0.94 cm, with top-quarter share steady at 0.55.
+
+**In a colony, over the first year only.** Seed 2, at 24 workers and a 30 cm nest: 0.99 cm
+at day 180 and 1.24 cm at day 365, where the old statistic gave 1.66 and 1.97. Twelve and
+then nineteen shaft cells were removed from the chamber statistics, with mean clearances of
+3.7 and 4.2 cm.
+
+**Reproducing these numbers.** `tools/measure-nest-over-time.ts` measures both subjects with the
+same code, and reports the chamber cells it keeps beside the shaft cells it drops:
+
+```bash
+npm run measure:nest -- --harness 600 --days 70,140,210,280,350 --picture
+npm run measure:nest -- --colony --seed 2 --days 180,365
+```
+
+The colony form is slow, because a colony simulates foraging, weather and the surface as well as
+the digging. The harness form is what `test/nest-signature.spec.ts` drives.
+
+**Open.** Measured with the old statistic, mean chamber height in a colony reaches about
+25 cm by the third year. Most of that is expected to be the same shaft-counting artefact,
+amplified by the longer shafts of a bigger nest and by the dead-straight vertical shaft that
+`relocation.ts` seeds a new nest with — a geometry the digging rules never produce
+themselves. **That has not been measured.** The corrected height also drifts upward within
+the first year, from 0.99 to 1.24 cm, so something real may sit under it. Both are open.
 
 ### What changed to get here
 
@@ -143,8 +207,11 @@ others. The two values the rules need are invented and fitted, and the parameter
 
 Chamber "area" in the slice is total chamber cross-sectional length per depth decile. A void
 cell counts as chamber rather than shaft when its horizontal run exceeds twice the shaft
-bore (Tschinkel's own distinction), so the threshold is read from `nest.shaftBoreDiameterCm`
-rather than invented. Converting a slice length to a volume needs an out-of-plane thickness,
+bore **and** exceeds its own vertical clearance (Tschinkel's own distinction: a chamber is
+horizontal-floored and much wider than it is tall, a shaft is an elongated void of roughly
+constant small diameter). The width threshold is read from `nest.shaftBoreDiameterCm` rather
+than invented, and the second half of the test was added in D48 after the first half alone
+was found to be counting shafts as chambers. Converting a slice length to a volume needs an out-of-plane thickness,
 which a slice does not have; `discretisation.sliceThicknessCm` supplies one, tagged **[C]**,
 taken as the shaft bore. It is about right for shafts and understates chambers, which are
 wider out of plane than in it.
