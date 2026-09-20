@@ -80,6 +80,55 @@ describe('nest relocation', () => {
     expect(inCells + seedsInTransit(r)).toBeGreaterThanOrEqual(before - 1)
   }, 120000)
 
+  it('seeds the new nest with a helical shaft, not a straight pipe', () => {
+    // D49. A relocating colony has no founding queen, so the new nest has to be put there
+    // rather than dug. It used to be put there as a dead-straight vertical column of cells
+    // driven down from the entrance, which is a shape nothing in this model digs: every shaft
+    // here, the founding queen's included, descends at the measured angle for its depth and
+    // spirals as it goes (Tschinkel 2004). Since a colony moves about once a year, from its
+    // second year on the nest a reader watches began as a 33 cm pipe.
+    //
+    // Measured on this configuration before the fix: 66 of 76 cells in the entrance column,
+    // six columns used in all, and a vertical clearance of 33 cm — the whole shaft standing
+    // open in one line. After it: 14 of 95 in the entrance column, eleven columns, 3 cm.
+    const c = new Colony({ seed: 9, params: PARAMS, capacity: 60 })
+    c.run(c.sim.clock.ticksPerDay * 20)
+    const r = c.relocation
+    r.moveDxCells = 8
+    r.moveDyCells = 0
+    r.moveDays = 4
+    r.movePending = true
+    const tpd = c.sim.clock.ticksPerDay
+    c.run(tpd - (c.sim.clock.tick % tpd) + 1)
+
+    const { nest } = c
+    let inEntranceCol = 0
+    let voids = 0
+    let maxClearanceCm = 0
+    const columns = new Set<number>()
+    for (let row = 0; row < nest.rows; row += 1) {
+      for (let col = 0; col < nest.cols; col += 1) {
+        if (!nest.isVoid(col, row)) continue
+        voids += 1
+        columns.add(col)
+        if (col === nest.entranceCol) inEntranceCol += 1
+        const clearance = nest.verticalClearanceCm(col, row)
+        if (clearance > maxClearanceCm) maxClearanceCm = clearance
+      }
+    }
+
+    // It still reaches the incipient depth: the geometry changed, not the depth.
+    const incipient = PARAMS.nest.incipientDepthCm
+    expect(nest.maxDepthCm).toBeGreaterThanOrEqual(incipient.min - 1)
+    expect(nest.maxDepthCm).toBeLessThanOrEqual(incipient.max + 1)
+
+    // And it descends rather than dropping. A straight pipe puts almost every cell in one
+    // column and stands open for its whole length; a helix does neither.
+    expect(columns.size).toBeGreaterThan(5)
+    expect(inEntranceCol / voids).toBeLessThan(0.5)
+    expect(maxClearanceCm).toBeLessThan(incipient.min / 2)
+  })
+
   it('carries the store along the trail, seeds first and brood after, as the move goes on', () => {
     // A colony of foragers with a store and a brood to move, in July. The age structure is
     // artificial, as in the foraging tests: this is about what the carriers do.

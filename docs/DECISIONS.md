@@ -58,6 +58,7 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D46. Alarm on the foraging ground](#d46-alarm-on-the-foraging-ground)
 - [D47. The overwintered cohort's foraging dates peak on 1 April](#d47-the-overwintered-cohorts-foraging-dates-peak-on-1-april)
 - [D48. Chamber height was measuring the shaft](#d48-chamber-height-was-measuring-the-shaft)
+- [D49. A moving colony seeded a straight pipe, not a shaft](#d49-a-moving-colony-seeded-a-straight-pipe-not-a-shaft)
 
 ---
 
@@ -1597,9 +1598,11 @@ what came of checking.
 
 **One: what a reader watches is not what the gate measures.** The architecture gate drives a
 synthetic harness — 600 workers, fixed ages, no births or deaths, no interior system, no
-relocation, 70 days. A reader opening the page watches a colony grown from one queen. Over five
-simulated years those colonies held 4 to about 700 workers, and at nine months seeds 1 to 4 held
-4, 14, 4 and 16. Their nests were 30 to 35 cm deep, 101 to 169 cells, with a top-quarter chamber
+relocation, 70 days. A reader opening the page watches a colony grown from one queen, and four such colonies
+were followed for three to four simulated years — long enough to answer this, and
+stopped there rather than run to the five the model allows. They reached at most about 700 workers,
+and one of the four died in its fourth year. At nine months seeds 1 to 4 held 6, 14, 4 and 16
+workers. Their nests were 30 to 35 cm deep, 101 to 169 cells, with a top-quarter chamber
 share of exactly 0 — the queen's chamber sits at the bottom of the incipient shaft and there is no
 chamber in the top quarter at all. That is correct for an incipient nest and it is not
 architecture. The architecture in this model is downstream of worker number, as it is in the field,
@@ -1673,3 +1676,60 @@ is doing much of the work behind whatever stratification the model has. A replac
 and not built here, is traffic: the number of ants still passing a point falls with depth because
 each chamber takes some of them out of the stream, and that decay would give a top-heavy nest
 without any ant knowing anything about depth.
+
+## D49. A moving colony seeded a straight pipe, not a shaft
+
+**Date.** 2026-09-20.
+
+**Where it came from.** Found while checking D48. Walter Tschinkel's comment was that the
+simulation does not make cleanly stratified nests; this is a second thing behind that, and
+unlike the chamber-height statistic it is a real defect in the model rather than in the
+measurement of it.
+
+**The gap.** A relocating colony has no founding queen, and the digging rules cannot start a
+nest from a single cell, so `changeSite` puts an incipient nest there rather than digging one.
+It did that by driving a dead-straight vertical column of cells down from the entrance to the
+incipient depth, and then opening one chamber at its foot.
+
+Nothing else in this model produces such a shape. Every shaft here, the founding queen's
+included, descends at the measured angle for its depth — 20 to 30 degrees from horizontal near
+the surface, steepening to 45 to 60 by about 50 cm — and spirals as it goes, because
+`descentTurnsAtDepth` and `helixTurnsPerCm` say so and Tschinkel 2004 measured both. A colony
+moves about once a year **[A]**, so from its second year onward the nest a reader watches began
+as a 33 cm pipe, and the workers then built everything else around it.
+
+The cause was two copies of the same geometry: `stepFoundingQueen` had it right, and
+`relocation.ts` had its own. Only one of them was maintained.
+
+**What was changed.** The geometry moved into one exported function, `digIncipientNest` in
+`systems/excavation.ts`, beside the founding queen's rule it shares its angles with.
+`relocation.ts` calls it and keeps no copy. The shaft now walks down cell by cell at the angle
+for its depth, spiralling, exactly as the queen's does, and the chamber opens on the side the
+helix points to, a centimetre high and `foundingChamberRunCm` wide as before. The loop is
+bounded at four steps per cell of depth, because a sideways step does not deepen a shaft and an
+unlucky run of them must not be able to spin.
+
+**What it gives.** A forced move, seed 9, twenty days in:
+
+| | Before | After |
+|---|---|---|
+| Cells in the entrance column | 66 of 76 | 14 of 95 |
+| Columns the shaft occupies | 6 | 11 |
+| Greatest vertical clearance anywhere | 33.0 cm | 3.0 cm |
+| Depth reached | 32.8 cm | 33.3 cm |
+
+The depth is unchanged, which is the point: this is the shape of the shaft, not how deep it
+goes. The greatest clearance falling from 33 cm to 3 is the whole of it — the old shaft stood
+open in one straight line from the surface to the chamber.
+
+Held by `test/relocation.spec.ts`, which asserts the new nest reaches the incipient depth, puts
+fewer than half its cells in the entrance column, spans more than five columns, and stands open
+nowhere for more than half the incipient depth.
+
+**Determinism.** The draws come from the relocation stream, and no colony relocates inside the
+ten thousand ticks the committed digest is taken over, so the digest is unchanged and
+`test/determinism.spec.ts` passes untouched. No published run is invalidated.
+
+**What it does not fix.** Deep chamber spacing, branch depth and the surface-to-bottom width
+ratio are all still unmet, and the colony is still too small for the architecture to appear at
+all. See D48 and `VALIDATION.md` G1.

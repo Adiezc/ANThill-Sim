@@ -33,6 +33,7 @@ import { Burden, Caste, Domain, Task } from '../state/ants.js'
 import { cosTurns, headingFromTurns, headingOf, sinTurns, turnsFromHeading } from '../math/trig.js'
 import { RULE } from '../provenance/rules.js'
 import { countWorkers } from './demography.js'
+import { digIncipientNest } from './excavation.js'
 import { surfaceIsForageable } from './foraging.js'
 import { ln } from '../math/approx.js'
 import { Prng } from '../math/prng.js'
@@ -260,18 +261,12 @@ function changeSite(sim: Simulation, state: RelocationState): void {
   // The new nest starts as the shaft and chamber a founding queen digs, at the measured
   // incipient depth. The digging rules cannot start a nest from a single cell, which is also
   // why a founding queen has a rule of her own (D27); from here the workers enlarge it.
-  const cell = nest.cellSizeCm
-  const incipient = params.nest.incipientDepthCm
-  const shaftRows = Math.round((incipient.min + incipient.max) / 2 / cell)
-  const run = Math.max(1, Math.round(params.excavation.foundingChamberRunCm.value / cell))
-  const height = Math.max(1, Math.round(params.nest.chamberHeightCm.value / cell))
-  const dig = (col: number, row: number): void => {
-    if (nest.excavate(col, row)) soil.applyVoid(nest, col, row)
-  }
-  for (let row = 0; row < shaftRows; row += 1) dig(nest.entranceCol, row)
-  for (let k = 1; k < run; k += 1) {
-    for (let h = 0; h < height; h += 1) dig(nest.entranceCol + k, shaftRows - 1 - h)
-  }
+  //
+  // The geometry lives in `excavation.ts` beside the founding queen's, because it is the same
+  // geometry and keeping a second copy here is what produced the defect D49 records: this used
+  // to drive a dead-straight vertical column down from the entrance, which no rule in this
+  // model would ever dig.
+  digIncipientNest(nest, soil, params, prng)
 
   // Everyone underground starts again at the new entrance. Sand in mandibles is dropped;
   // brood is kept and set down in the new nest. Each ant's tally of sand dug is

@@ -57,9 +57,9 @@ different directions.
 
 **The gate is not what a reader watches.** These numbers come from a synthetic harness: 600
 workers, fixed ages, no births, no deaths, no interior system, no relocation, 70 days. A
-reader opening the page watches a colony grown from one queen, and those colonies hold 4 to
-about 700 workers over five simulated years — 4 to 24 of them at nine months, in seeds 1 to
-4. Their nests are 30 to 35 cm deep with a top-quarter chamber share of exactly 0, which is
+reader opening the page watches a colony grown from one queen. Four such colonies reached at
+most about 700 workers, followed for three to four simulated years, with one of the four
+dead in its fourth year and 6, 14, 4 and 16 workers between them at nine months. Their nests are 30 to 35 cm deep with a top-quarter chamber share of exactly 0, which is
 what an incipient nest is and is not architecture. The architecture here is downstream of
 worker number, as it is in the field, and worker number is the shortfall G3 declares. Nobody
 has measured the seed rain on those sandhills, so the standing crop is fitted (D43), and the
@@ -345,5 +345,5 @@ from the vacated one. Successive moves describe a random walk around the origina
 | Along a trail | Main trunk trail 78 percent of the time | **Met**, by construction |
 | Duration | 4 to 6 days | **Met**, by construction |
 | What is carried | A minority carry; seeds, then brood; the share rises through the move | **Met.** At most a tenth of workers on the trail, rising through the move; the brood is taken only once the seeds are gone. Charcoal is not modelled. The share is invented. DECISIONS.md D45 |
-| The new nest | Indistinguishable from the old | **Partly met.** The new nest is dug by the colony, from an incipient shaft, so its size follows the colony as it is. After five years on seeds 2 and 3 nests were 84 and 95 cm deep, 1.2 and 1.3 times Tschinkel's depth law, where copying the old nest gave 130 and 152 cm, about twice. Forty days after a forced move a colony of about 80 workers had dug 151 cells against 385 in the nest it left, so the new nest is smaller than the old for weeks. DECISIONS.md D36 |
+| The new nest | Indistinguishable from the old | **Partly met.** The new nest is dug by the colony, from an incipient shaft that now descends at the measured angle and spirals, as every other shaft in the model does, rather than dropping straight down from the entrance (D49). Its size follows the colony as it is. After five years on seeds 2 and 3 nests were 84 and 95 cm deep, 1.2 and 1.3 times Tschinkel's depth law, where copying the old nest gave 130 and 152 cm, about twice. Forty days after a forced move a colony of about 80 workers had dug 151 cells against 385 in the nest it left, so the new nest is smaller than the old for weeks. DECISIONS.md D36 |
 | Random walk around the origin | Successive moves wander around the first site | **Not measured.** The run does not track the entrance's position across moves |

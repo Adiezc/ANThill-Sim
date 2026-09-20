@@ -75,6 +75,79 @@ export interface ExcavationState {
 }
 
 /**
+ * Digs an incipient nest — a helical shaft to the species' incipient depth with one chamber a
+ * centimetre high at its foot — with no ant to dig it.
+ *
+ * This exists for one caller: a colony that has just moved house. The digging rules cannot
+ * start a nest from a single cell, which is why a founding queen has a rule of her own (D27),
+ * and a relocating colony has no founding queen.
+ *
+ * Until D49, `relocation.ts` did that by driving a dead-straight vertical column of cells down
+ * from the entrance. Nothing else in this model produces such a thing. Every other shaft here,
+ * the founding queen's included, descends at the measured angle for its depth and spirals as it
+ * goes (Tschinkel 2004), and the angle steepens from 20-30 degrees near the surface to 45-60 by
+ * about 50 cm. A colony moves about once a year, so from its second year onward the nest a
+ * reader watches began as a shaft unlike anything the species digs, and it kept that column
+ * through everything the workers built around it. Walter Tschinkel reported that the published
+ * build did not make cleanly stratified nests; this is one of the things behind that, and it is
+ * the geometry rather than the digging.
+ *
+ * The chamber at the foot follows `stepFoundingQueen`: `chamberHeightCm` high, which is [A],
+ * and `foundingChamberRunCm` wide, which is invented.
+ */
+export function digIncipientNest(
+  nest: NestGrid,
+  soil: SoilModel,
+  params: Params,
+  prng: Prng,
+): void {
+  const cell = nest.cellSizeCm
+  const incipient = params.nest.incipientDepthCm
+  const targetCm = (incipient.min + incipient.max) / 2
+
+  const dig = (col: number, row: number): void => {
+    if (!nest.inBounds(col, row)) return
+    if (nest.excavate(col, row)) soil.applyVoid(nest, col, row)
+  }
+
+  let col = nest.entranceCol
+  let row = 0
+  let phase = 0
+  dig(col, row)
+
+  // Bounded rather than open: a sideways step does not deepen the shaft, so an unlucky run of
+  // them must not be able to spin here forever, and a grid shallower than the incipient depth
+  // must not hang. Four steps per cell of depth is generous for angles this steep.
+  const maxSteps = Math.ceil(targetCm / cell) * 4
+  for (let step = 0; step < maxSteps && nest.depthOf(row) < targetCm; step += 1) {
+    const depthCm = nest.depthOf(row)
+    const descent = descentTurnsAtDepth(depthCm, params, prng)
+    const along = cosTurns(descent) * cosTurns(phase)
+    let dRow = prng.chance(Math.abs(sinTurns(descent))) ? 1 : 0
+    // At the surface she only goes down, or the shaft becomes a trench along the ground. The
+    // same guard as the founding queen's.
+    const dCol = row > 0 && prng.chance(Math.abs(along)) ? (along >= 0 ? 1 : -1) : 0
+    if (dCol === 0) dRow = 1
+    phase += helixTurnsPerCm(depthCm, params) * cell
+
+    const nextCol = col + dCol
+    const nextRow = row + dRow
+    // Against the wall of the grid, carry on straight down rather than stopping.
+    col = nest.inBounds(nextCol, nextRow) ? nextCol : col
+    row = nest.inBounds(nextCol, nextRow) ? nextRow : Math.min(row + 1, nest.rows - 1)
+    dig(col, row)
+  }
+
+  // The chamber, opened sideways from the foot of the shaft, on the side the helix points to.
+  const direction = cosTurns(phase) >= 0 ? 1 : -1
+  const run = Math.max(1, Math.round(params.excavation.foundingChamberRunCm.value / cell))
+  const height = Math.max(1, Math.round(params.nest.chamberHeightCm.value / cell))
+  for (let k = 1; k < run; k += 1) {
+    for (let h = 0; h < height; h += 1) dig(col + direction * k, row - h)
+  }
+}
+
+/**
  * Draws an individual's permanent digging propensity. Called once, at eclosion.
  *
  * See `AntStore.digger`. The value never changes; what changes is the participation rate it

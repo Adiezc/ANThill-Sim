@@ -183,6 +183,12 @@ he measured in the field, where the old statistic reported 1.58 cm. The model ha
 1 cm chambers and the measurement was hiding it. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D48
 for what this does and does not settle.
 
+A third thing turned up while checking the second. A colony that moves house has no founding
+queen to dig the new nest, so the model puts one there — and it was putting there a dead-straight
+vertical shaft, which is a shape nothing in the model digs and nothing in the field has. Since a
+colony moves about once a year, most of the nests anyone watches began that way. New nests now
+descend at the measured angle and spiral, like every other shaft here.
+
 Version 1.1.0 is what came of that. Neither of them is responsible for anything in this model, and
 every error in it is the author's.
 
