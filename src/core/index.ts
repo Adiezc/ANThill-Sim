@@ -6,8 +6,6 @@
  * Prng. See docs/ARCHITECTURE.md and docs/DETERMINISM.md.
  */
 
-export const CORE_VERSION = '0.1.0'
-
 export { Prng } from './math/prng.js'
 export { exp, exp2, ln, pow, decayOverInterval, decayFromLifetime } from './math/approx.js'
 export {

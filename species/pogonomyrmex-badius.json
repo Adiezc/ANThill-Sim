@@ -115,7 +115,7 @@
     "diggingParticipationYoung": { "value": 0.19, "tag": "A" },
     "diggingIsAPersistentTrait": { "value": true, "tag": "A", "note": "HARD RULE. Tschinkel 2004: a worker either digs consistently or does not dig at all. Digging must be a persistent individual state, never a per-tick coin flip." },
     "superficialChamberChance": { "value": 0.82, "tag": "C", "note": "Chance a dig above superficialChamberMaxDepthCm goes sideways rather than down. Superficial chambers are modified shafts, widened and lobed on both sides (Tschinkel 2004); the strength of that preference is invented." },
-    "ceilingRaiseChance": { "value": 0.15, "tag": "C", "note": "Chance a dig is aimed at the ceiling rather than sideways, while the ceiling is still below a body height. Invented." },
+    "ceilingRaiseChance": { "value": 0.15, "tag": "C", "note": "Chance a dig on a shaft wall is aimed at the ceiling rather than sideways, while the ceiling is still below a body height. In a chamber the ceiling is always raised first (docs/DECISIONS.md D50). Invented." },
     "geotaxisWeight": { "value": 1.2, "tag": "C", "note": "How strongly an unburdened digger heads downward. Gravity is the only reason a colony that starts at the surface reaches three metres. Invented." },
     "digFaceAttraction": { "value": 0.8, "tag": "C", "note": "How strongly an ant is drawn to a cell where there is soil to work. Invented." },
     "walkNoise": { "value": 0.6, "tag": "C", "note": "Randomness in an ant's choice of next cell, so it does not lock onto one gradient. Invented." },

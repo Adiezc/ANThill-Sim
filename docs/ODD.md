@@ -1,6 +1,6 @@
 # ODD description
 
-This describes Anthill 1.0.0 in the ODD protocol for agent-based models (Overview, Design
+This describes Anthill 1.2.0 in the ODD protocol for agent-based models (Overview, Design
 concepts, Details; Grimm et al. 2006, 2020). It is a map of the model, not a second copy of it.
 Every rule is set out with its source in [`SCIENCE.md`](SCIENCE.md), every value with its tag in
 [`species/pogonomyrmex-badius.json`](../species/pogonomyrmex-badius.json), and every choice with
@@ -141,12 +141,12 @@ Each is set out in full, with sources, in the SCIENCE.md section named.
 | Submodel | What it does | SCIENCE.md | Decisions |
 |---|---|---|---|
 | Founding | The queen digs her shaft and chamber and raises the first workers on her reserves | 1 | D27 |
-| Excavation | Digging under local pheromone and crowding rules and a per-ant digging budget | 2, 3 | D12 to D14, D17, D28 |
+| Excavation | Digging under local pheromone and crowding rules and a per-ant digging budget, chambers raised to a body height before they are widened | 2, 3 | D12 to D14, D17, D28, D50 |
 | Interior | Where ants, brood and seeds go inside the nest | 4, 6 | D20 |
 | Demography | Laying, brood cohorts, eclosion, the age schedule to foraging, mortality, winter | 4 | D15, D29, D31, D38, D40, D44, D47 |
 | Foraging | Trunk trails, search, site fidelity, recruitment trails, path integration, heat and rain | 5 | D18, D21, D30, D41 |
 | Seeds | Four measured size classes, opening, germination in the chambers, the larvae's food account | 6 | D22, D24, D43 |
-| Relocation | When and where a colony moves, digging the new nest, carrying the store and brood | 7 | D35, D36, D45 |
+| Relocation | When and where a colony moves, digging the new nest, carrying the store and brood | 7 | D35, D36, D45, D49 |
 | Pheromones and alarm | Digging scent, recruitment trails, alarm at a disturbance on the ground | 8 | D6, D41, D46 |
 | Climate | Daily weather from monthly normals, soil moisture and temperature, drought years | 9 | D25, D33, D42 |
 | Flights | Winged queens and males leaving after heavy rain in May to July | 10 | D34 |

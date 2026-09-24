@@ -88,9 +88,9 @@ export interface ExcavationState {
  * goes (Tschinkel 2004), and the angle steepens from 20-30 degrees near the surface to 45-60 by
  * about 50 cm. A colony moves about once a year, so from its second year onward the nest a
  * reader watches began as a shaft unlike anything the species digs, and it kept that column
- * through everything the workers built around it. Walter Tschinkel reported that the published
- * build did not make cleanly stratified nests; this is one of the things behind that, and it is
- * the geometry rather than the digging.
+ * through everything the workers built around it. Feedback on the published build was that it
+ * did not make cleanly stratified nests; this is one of the things behind that, and it is the
+ * geometry rather than the digging.
  *
  * The chamber at the foot follows `stepFoundingQueen`: `chamberHeightCm` high, which is [A],
  * and `foundingChamberRunCm` wide, which is invented.
@@ -568,7 +568,19 @@ function stepExcavator(sim: Simulation, state: ExcavationState, slot: number): v
       ? prng.chance(params.excavation.chamberInitiationChance.value * lateralPreference)
       : runHere > chamberThreshold && runHere < maxRun && prng.chance(lateralPreference)
 
-  if (wantsChamber && clearance <= roofHeight) {
+  // An ant in a chamber whose ceiling is still below a body height raises it before she
+  // widens the floor. A lateral dig opens one cell, half a body height in this grid, and
+  // until D50 the ceiling over it was raised only by chance, so most of every chamber a
+  // worker dug stayed one cell high: 0.6 cm in the gate harness, where the species builds
+  // 1 cm. The founding queen's chamber was the exception, because her rule digs it at the
+  // measured height outright.
+  const raiseCeilingFirst = runHere > chamberThreshold && canGrowUpward && nest.isSoil(col, row - 1)
+
+  if (raiseCeilingFirst) {
+    dRow = -1
+    ratePerTick = cellsPerTickAtFace(sim, slot)
+    ants.ruleId[slot] = RULE.digBodySizeTemplate
+  } else if (wantsChamber && clearance <= roofHeight) {
     // Lateral: open or widen a chamber. Chambers begin on the outside of the helix, which
     // in a vertical slice is the side the projected lateral component points to.
     dCol = cosTurns(phase) >= 0 ? 1 : -1

@@ -7,11 +7,11 @@ It runs in the browser, with nothing to install.
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22819793.svg)](https://doi.org/10.5281/zenodo.22819793)
 
-**Status: version 1.1.0, September 2026.** Version 1.0.0 was meant to be the end of it. The
-simulation was then sent to the two researchers whose field work almost every number in it comes
-from, both replied, and 1.1.0 is what their comments changed, see
-[Acknowledgements](#acknowledgements). It was built by Adrian Diez Cuadrado with Claude Code
-as an AI pair programmer, starting from a written build brief that is kept in the git history.
+**Status: version 1.2.0, September 2026.** Version 1.0.0 was meant to be the end of it. The
+simulation was then shown to researchers who work on this species, and versions 1.1.0 and 1.2.0
+are what their comments changed, see [What changed after 1.0.0](#what-changed-after-100). It was
+built by Adrian Diez Cuadrado with Claude Code as an AI pair programmer, starting from a written
+build brief that is kept in the git history.
 Every design choice, including the ones that were tried and undone, is recorded in
 [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
@@ -79,7 +79,9 @@ their size. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D43 and D47.
 
 **Smaller gaps.** Foraging begins in April and rises through spring, but it peaks in July where
 real colonies peak in May and June, and March is still about zero. Workers do not sort themselves by depth as cleanly as in real nests.
-Recruitment trails bring a colony only 3 to 7 percent more seed. The alarm scent is shorter-lived
+By their second or third year grown colonies dig out a cavern in the upper nest rather than
+stacking chambers along the shafts (D50). Recruitment trails bring a colony only 3 to 7 percent
+more seed. The alarm scent is shorter-lived
 and shorter-ranged than one step of the model, so how near a forager must be to respond is a
 labelled guess. [`docs/VALIDATION.md`](docs/VALIDATION.md) lists every
 acceptance test the model meets and fails, with the numbers.
@@ -142,58 +144,66 @@ If you use this software or its parameter data, please cite it. GitHub shows a "
 repository" button, generated from [`CITATION.cff`](CITATION.cff).
 
 > Diez Cuadrado, A. (2026) _Anthill: A harvester ant colony built from the published science._
-> Version 1.1.0. Zenodo. https://doi.org/10.5281/zenodo.22819793
+> Version 1.2.0. Zenodo. https://doi.org/10.5281/zenodo.22819793
 
-That DOI always points at the latest version. Each version also has its own:
-1.1.0 is [10.5281/zenodo.22861197](https://doi.org/10.5281/zenodo.22861197) and
+That DOI always points at the latest version. Each version also has its own, listed on the Zenodo
+record: 1.1.0 is [10.5281/zenodo.22861197](https://doi.org/10.5281/zenodo.22861197) and
 1.0.0 is [10.5281/zenodo.22819794](https://doi.org/10.5281/zenodo.22819794).
 
 The biology is not ours. It comes overwhelmingly from the field work of Walter R. Tschinkel and
 Christina L. Kwapich in the Apalachicola National Forest, north Florida, and from the other
 authors listed in `docs/SCIENCE.md`. Cite them for any claim about the ants.
 
-## Acknowledgements
+## What changed after 1.0.0
 
-In September 2026, after version 1.0.0 was published, the simulation was sent to
-**Walter R. Tschinkel** (Florida State University) and **Christina L. Kwapich** (University of
-Central Florida), whose field work in the Apalachicola National Forest supplies nearly every
-measured number in this model. Both replied, and both were generous with their time.
+In September 2026, after version 1.0.0 was published, the simulation was shown to researchers
+who work on _P. badius_. The sharpest comment was about what it does _not_ do: it does not build
+top-heavy nests, nor cleanly stratified nests with chambers a centimetre high. What was missing,
+the comment asked, and it expected something more subtle than counts, schedules, seasons, rates
+and rhythms.
 
-Christina Kwapich wrote that she had enjoyed watching a founding queen grow into a small colony,
-with workers ageing and changing colour and the seed and charcoal stores building up, and that she
-recognised her and Tschinkel's research on _P. badius_ in the design of it.
+Going and measuring it properly, rather than trusting the acceptance tests, found five things.
 
-Walter Tschinkel said the simulation was an impressive piece of work and fun to watch, and then
-pointed at what it does _not_ do: it does not build top-heavy nests, nor cleanly stratified nests
-with chambers a centimetre high. He asked what was missing, and expected it to be something more
-subtle than counts, schedules, seasons, rates and rhythms.
+The nests that were shown belonged to colonies too small to have architecture at all — a
+founding shaft with the queen's chamber at the bottom, which is what an incipient nest is. Colony
+growth in this model rests on the one number nobody has measured, the seed lying on the sandhill
+floor, and the colonies stall at tens to a few hundred workers. Handed 600 workers in a test
+harness, the same digging rules build a nest over two metres deep with more than half of its
+chamber area in the top quarter.
 
-Going and measuring it properly, rather than trusting the acceptance tests, found three things.
-
-The nests he was shown belonged to colonies too small to have architecture at all — a founding
-shaft with the queen's chamber at the bottom, which is what an incipient nest is. Colony growth in
-this model rests on the one number nobody has measured, the seed lying on the sandhill floor, and
-the colonies stall at tens to a few hundred workers. Handed 600 workers in a test harness, the same
-digging rules build a 230 cm nest with 0.55 of the chamber area in its top quarter.
-
-And the chamber-height statistic had been counting shafts. Where a chamber opens off a shaft, the
-shaft column passing through it was counted as chamber and its full height averaged into the
-chamber height. Measured the way Tschinkel distinguishes the two — a chamber is wider than it is
-tall, a shaft is taller than it is wide — the model's chambers come out at 0.97 cm against the 1 cm
-he measured in the field, where the old statistic reported 1.58 cm. The model had been building his
-1 cm chambers and the measurement was hiding it. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D48
-for what this does and does not settle.
-
-A third thing turned up while checking the second. A colony that moves house has no founding queen
-to dig the new nest, so the model puts an incipient one there instead — and what it was putting
-there was a dead-straight vertical shaft, thirty-three centimetres of open pipe down to a single
-chamber. Nothing else here digs that: every other shaft in the model descends at the measured angle
-and spirals as it goes, as Tschinkel found them to. Since a colony moves about once a year, most of
-the nests anyone watches had begun that way. New nests now descend and spiral like the rest. See
+A colony that moves house has no founding queen to dig the new nest, so the model puts an
+incipient one there instead — and what it was putting there was a dead-straight vertical shaft,
+thirty-three centimetres of open pipe down to a single chamber. Nothing else here digs that:
+every other shaft in the model descends at the measured angle and spirals as it goes, as
+Tschinkel (2004) found them to. Since a colony moves about once a year, most of the nests anyone
+watches had begun that way. From 1.1.0, new nests descend and spiral like the rest. See
 [`docs/DECISIONS.md`](docs/DECISIONS.md) D49.
 
-Version 1.1.0 is what came of that. Neither of them is responsible for anything in this model, and
-every error in it is the author's.
+The chamber-height statistic had been counting shafts. Where a shaft opens into a chamber, the
+shaft's height was averaged into the chamber's, and 1.0.0 reported 1.58 cm. Version 1.1.0 removed
+part of that and reported 0.97 cm, close to the 1 cm measured in the field, and said the model had
+been building the centimetre all along. It had not. Measured from each chamber's own floor to its
+own ceiling, the chambers the workers dug were mostly a single grid cell high, half a centimetre,
+and 0.97 was that half centimetre averaged with the shafts above the few chambers a shaft enters.
+In a growing colony the 1.1.0 figure kept climbing, to between 2.5 and 3.6 cm by the third year,
+and the last of these five things is why. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D48 and D50.
+
+Behind that was a real defect in the digging. A worker widening a chamber opened one cell at a
+time, and the ceiling over it was raised to a body height only by chance, so most of every chamber
+stayed half as high as the species builds. From 1.2.0 she raises the ceiling first, and the
+chambers come out about a centimetre high. See [`docs/DECISIONS.md`](docs/DECISIONS.md) D50, which
+also records what that cost.
+
+And following colonies for three years, to see where the drift went, found that by then they had
+dug out caverns in the upper nest, voids tens of centimetres tall where there should be chambers
+stacked along the shafts. That was true of 1.1.0 as well and is not fixed; with the 1.2.0 digging
+it appeared a year sooner in one colony of two. It is the clearest answer yet to why a grown
+colony's nest here is not cleanly stratified.
+
+## Acknowledgements
+
+Thanks to the researchers who looked at version 1.0.0 and said plainly what it gets wrong. None of
+them is responsible for anything in this model, and every error in it is the author's.
 
 ## Hosting
 
@@ -205,4 +215,4 @@ builds it and publishes it to GitHub Pages on every push to `main`.
 - Code: MIT ([`LICENSE`](LICENSE))
 - `docs/` and `species/`: CC BY 4.0 ([`LICENSE-docs`](LICENSE-docs))
 
-Author: Adrian Diez Cuadrado.
+Author: Adrian Diez Cuadrado ([LinkedIn](https://www.linkedin.com/in/adriandiez10/)).

@@ -59,6 +59,7 @@ says so. The current state of the model is summarised in the README and in `VALI
 - [D47. The overwintered cohort's foraging dates peak on 1 April](#d47-the-overwintered-cohorts-foraging-dates-peak-on-1-april)
 - [D48. Chamber height was measuring the shaft](#d48-chamber-height-was-measuring-the-shaft)
 - [D49. A moving colony seeded a straight pipe, not a shaft](#d49-a-moving-colony-seeded-a-straight-pipe-not-a-shaft)
+- [D50. Chambers were half a centimetre high, and the measurement said one](#d50-chambers-were-half-a-centimetre-high-and-the-measurement-said-one)
 
 ---
 
@@ -1586,12 +1587,12 @@ fell back the year after.
 
 **Date.** 2026-09-20.
 
-**Where it came from.** Version 1.0.0 was sent to Walter R. Tschinkel and Christina L. Kwapich.
-Tschinkel replied that the simulation was fun to watch and then said what it does not do: it does
-not build top-heavy nests, nor cleanly stratified nests with chambers a centimetre high. He asked
-what was missing, and expected something more subtle than counts, schedules, seasons, rates and
-rhythms. `VALIDATION.md` had recorded top-heaviness as **met** at 0.57 and chamber height as **met,
-barely** at 1.58 cm, so either the gate or the man who dug up the nests was wrong. This entry is
+**Where it came from.** Version 1.0.0 was shown to researchers who work on the species. The
+reply said what it does not do: it does not build top-heavy nests, nor cleanly stratified nests
+with chambers a centimetre high, and asked what was missing, expecting something more subtle
+than counts, schedules, seasons, rates and rhythms. `VALIDATION.md` had recorded top-heaviness as
+**met** at 0.57 and chamber height as **met, barely** at 1.58 cm, so either the gate or the
+people who have dug up these nests were wrong. This entry is
 what came of checking.
 
 **The gap.** Two separate things, and only one of them is a defect in the model.
@@ -1607,7 +1608,7 @@ share of exactly 0 — the queen's chamber sits at the bottom of the incipient s
 chamber in the top quarter at all. That is correct for an incipient nest and it is not
 architecture. The architecture in this model is downstream of worker number, as it is in the field,
 and the worker number is the shortfall the README already declares: the seed on the ground is the
-largest invented value in the model (D43) and colony growth rests on it. So the nest Tschinkel was
+largest invented value in the model (D43) and colony growth rests on it. So the nest that was
 shown failed for a demographic reason, not an architectural one.
 
 **Two: the chamber statistics were counting shafts.** `measureNest` called any void cell whose
@@ -1634,7 +1635,9 @@ and the committed determinism digest is untouched.
 | Counting chambers only | 0.97 | 0.95 | 0.94 | 0.94 | 0.94 cm |
 
 The measured value in real nests is 1 cm, independent of chamber area **[A]**. The model had been
-building it and the statistic was hiding it. The harness was also run five times longer than the
+building it and the statistic was hiding it. (Overturned by D50: measured from each chamber's own
+floor to its own ceiling, most chambers were half a centimetre high, and 0.97 cm was that averaged
+with the shafts above the few a shaft enters.) The harness was also run five times longer than the
 gate, to 350 days, to check that height does not drift once a nest is mature: it does not.
 
 **In a colony grown from a queen.** The same correction, on the thing a reader actually watches.
@@ -1667,7 +1670,7 @@ The colony form is slow, because a colony simulates foraging, weather and the su
 the digging. The harness form is what `test/nest-signature.spec.ts` drives.
 
 **What it does not fix.** Nothing here makes the watched colony bigger, and top-heaviness is still
-a colony-size phenomenon this model reaches only in a harness. The honest answer to Tschinkel's
+a colony-size phenomenon this model reaches only in a harness. The honest answer to the
 question — what is missing that would make them do those — is in `SCIENCE.md` section 3 and in the
 honesty panel: several digging rules read the ant's own depth, which no ant can know. The candidate
 template was the carbon dioxide gradient, and Tschinkel 2013 vented it away and reversed it and the
@@ -1681,7 +1684,7 @@ without any ant knowing anything about depth.
 
 **Date.** 2026-09-20.
 
-**Where it came from.** Found while checking D48. Walter Tschinkel's comment was that the
+**Where it came from.** Found while checking D48. The feedback on 1.0.0 was that the
 simulation does not make cleanly stratified nests; this is a second thing behind that, and
 unlike the chamber-height statistic it is a real defect in the model rather than in the
 measurement of it.
@@ -1733,3 +1736,138 @@ ten thousand ticks the committed digest is taken over, so the digest is unchange
 **What it does not fix.** Deep chamber spacing, branch depth and the surface-to-bottom width
 ratio are all still unmet, and the colony is still too small for the architecture to appear at
 all. See D48 and `VALIDATION.md` G1.
+
+## D50. Chambers were half a centimetre high, and the measurement said one
+
+**Date.** 2026-09-24. Overturns the conclusion of D48, that the model had been building the
+centimetre and the measurement was hiding it.
+
+**Where it came from.** D48 left one thing open: measured its own way, mean chamber height in a
+colony grown from a queen drifted upward, from 0.99 cm at six months to 1.24 cm at a year, and
+nobody had followed a colony further. Following two colonies for three years answered it, and
+the answer was not the one D48 expected.
+
+**The gap in the measurement.** D48 counted a wide cell as chamber when its horizontal run
+exceeded its vertical clearance, and took that clearance as its height. Where a shaft opens into
+a chamber, the clearance of the shaft column runs on up the shaft, and whenever the chamber was
+wider than that stretch of shaft was long, the cell passed the test and the shaft's height went
+into the chamber's. In a growing colony, whose shafts lengthen and whose chambers widen, the
+figure climbed with them. Seeds 2 and 4, measured as 1.1.0 measured them:
+
+| Day | 180 | 365 | 545 | 635 | 730 | 820 | 910 | 1000 |
+|---|---|---|---|---|---|---|---|---|
+| Seed 2 | 0.99 | 1.24 | 1.80 | 1.98 | 0.90 | 1.39 | 2.51 | 2.60 cm |
+| Seed 4 | 1.07 | 1.19 | 1.68 | 2.26 | 1.37 | 1.55 | 2.59 | 3.64 cm |
+
+The fall at day 730 is the colony moving house into a new, small nest; the climb then starts
+again, and faster, because by the third year the colony has hundreds of workers and a nest a metre
+deep: 2.51 and 2.60 cm for seed 2 at days 910 and 1000, 2.59 and 3.64 cm for seed 4. Measured as
+1.0.0 measured it, the same nests reach 20.8 and 20.0 cm by day 1000, which is the 25 cm D48 had
+seen by the third year.
+
+**The measurement now.** A chamber's height at a cell is read the way it would be read off a
+cast: from the chamber's own floor to its own ceiling, counting only cells that are themselves
+chamber-wide, and stopping where the void narrows into a shaft. The same height decides whether
+a wide cell is chamber at all, since a chamber is wider than it is tall and a shaft is taller
+than it is wide (Tschinkel 2004). `isChamberVoidCm` in `state/nest.ts`; the cheap width test the
+digging rules use on the hot path is untouched.
+
+**The gap in the model.** Measured that way, the chambers the workers dug were mostly one grid
+cell high: half a centimetre. In the gate harness the mean was 0.60 cm, and of the 311 cells
+1.1.0 counted as chamber, 183 were a single cell high. D48's 0.97 cm was that half centimetre averaged with the shafts above the few
+chambers a shaft enters. Only the founding queen's chamber was a true centimetre, because her
+rule digs it at `chamberHeightCm` outright. The cause was in the digging: a worker widening a
+chamber opens one cell at a time, and the ceiling over it was raised to a body height only when
+she happened not to want to dig sideways, with `ceilingRaiseChance`. So the floor ran out ahead
+and the ceiling stayed low. This is a defect in the model rather than in the measurement of it,
+and it is part of what was meant by nests that are not cleanly stratified with chambers a
+centimetre high.
+
+**What was changed.** An ant standing in a chamber whose ceiling is still below a body height,
+with soil above her, raises it before she does anything else. The body-size template already
+stopped a ceiling going higher than that; now it is also reached. `ceilingRaiseChance` still
+governs a dig on a bare shaft wall. No value was added or tuned.
+
+**What it gives.** The gate harness, 600 workers, seed 1:
+
+| | 1.1.0 digging | 1.2.0 digging |
+|---|---|---|
+| Mean chamber height, as 1.1.0 measured it | 0.97 cm | 1.26 cm |
+| Mean chamber height, floor to ceiling | 0.60 cm | **0.91 cm** |
+| Shallow / deep chamber height, floor to ceiling | 0.66 / 0.50 cm | 0.93 / 0.89 cm |
+| Top-quarter share | 0.570 | 0.659 |
+| Shallow / deep chamber spacing | 3.29 / 7.80 cm | 3.20 / **14.35 cm** |
+| Surface:bottom chamber width | 1.52x | 1.20x |
+| Depth at day 6 | 116.3 cm | 109.8 cm |
+| Depth at day 70 | 230.3 cm | 224.8 cm |
+
+The measured value is 1 cm, independent of chamber area **[A]**, and 0.91 cm is now what the
+chambers are rather than what an average of chambers and shafts comes to. The first column shows
+the new measurement moves nothing else much; the second column is the digging. Two criteria that
+were failing now pass without anything having been tuned for them: deep chamber spacing, which
+D28 had pushed down to 7.8 cm against a target of about 12, comes back to 14.4 cm, and the harness
+at 1200 workers builds 2 shaft series where it built 6, against at most 4 in the field. Why
+either moved as far as it did has not been worked out.
+
+**What it cost.** The same budget means less goes into depth in the first week. The nest reaches
+109.8 cm by day 6 where it reached 116, which is still about half of its day-70 depth but misses
+the build-time criterion's threshold of three founding depths, 111 cm, by 1.2 cm. That test is
+now skipped with its measured value, beside the other unmet criteria, rather than having its
+threshold moved. The surface-to-bottom width ratio, already unmet at 1.52x against about 2.4x,
+falls to 1.20x. Top-heaviness rises to 0.66, inside the criterion's band but further from the
+measured 0.5.
+
+**In a colony grown from a queen.** Less clear, and recorded as it came out. Through its first
+year a colony's nest is the founding chamber, a spiralling shaft and a few small chambers, and
+where turns of the shaft touch, the merged void reads as chamber, so the figure is not yet a
+measure of chambers, before this change or after it. With the change, floor to ceiling:
+
+| Day | 180 | 365 | 730 |
+|---|---|---|---|
+| Seed 2 | 1.15 | 1.34 | 0.86 cm |
+| Seed 4 | 0.75 | 0.75 | 2.04 cm |
+
+Seed 4 at day 730 had dug 821 cells where the same seed under 1.1.0 had dug 321, and most of the
+difference was a single void from about 16 cm down to 40 cm, 3 to 5 cm wide: a cavern. Seed 2 had
+none.
+
+**Caverns, before this change as well.** They are not new with D50. The two 1.1.0 colonies followed
+to day 1095, with about 800 workers and nests 112 and 116 cm deep, both had one by their third
+year. Seed 4's was more than 10 cm wide from about 20 cm down past 39 cm, and 1763 of its wide
+cells had more vertical clearance than horizontal run, 28 cm on average. That is the runaway
+digging `VALIDATION.md` G4 already blames for where the workforce sits, and it is what the old
+statistic's 20 to 25 cm in the third year was measuring. Under 1.1.0 it appeared in the third
+year; with this change it appeared in one colony of two in the second. It is open. D50 does not
+make a grown colony's nest cleanly stratified; it makes the chambers the workers do dig a
+centimetre high.
+
+**Tried and undone.** Raising a ceiling only where the raise itself would pass the body-size
+template. Where it would not, the template turns the ant downward instead, and raising there on
+every visit looked like what had dug seed 4's cavern. In the gate harness it left deep chambers
+at 0.50 cm against 0.88 shallow, failing the criterion that height is independent of depth, and
+cut the first week's depth to 101.8 cm. Its colonies were not followed. Not adopted.
+
+**Determinism.** The founding queen digs alone through the ten thousand ticks the committed
+digest is taken over, so the digest is unchanged. Any run that includes worker digging differs
+from 1.1.0, which is why this is 1.2.0 rather than a patch.
+
+**Tests that moved with it.** Daily rain is drawn from the one generator every system shares
+(`DETERMINISM.md`), so a change in how ants dig changes a run's weather from the first day a worker
+digs. Two tests had been written against one seed's trajectory. In the flight test, seed 31's
+first heavy rain moved from day 3 to day 17, after the young sexuals the test holds back were old
+enough to go; of seeds 31 to 40, five put the first flight early enough before D50 and five after,
+and the test now uses 33, which does both. The corpse test's seed 41 left one of three bodies
+behind for a week. Over seeds 41 to 50 it passes for eight before D50, failing on 42 and 46, and
+for eight after, failing on 41 and 42, so D50 did not change how well the dead are carried out,
+and carrying them out was never reliable: in one colony in five a body stays where it lies. That
+is recorded here and not fixed. The test now uses 43, which passes both before and after.
+
+**Reproducing these numbers.**
+
+```bash
+npm run measure:nest -- --harness 600 --days 6,70 --picture
+npm run measure:nest -- --colony --seed 2 --days 180,365,545,730
+```
+
+The tool prints the height as this version measures it beside the figures 1.1.0 and 1.0.0 would
+have given for the same nest.
