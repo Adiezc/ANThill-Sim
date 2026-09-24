@@ -45,7 +45,11 @@ describe('nuptial flights', () => {
   it('fly on a morning after heavy rain, taking only those old enough', () => {
     // Flights usually follow the first heavy summer rain, and colonies keep rearing sexuals
     // for later flights (Smith & Tschinkel 2006).
-    const c = colonyWithSexuals(31, 150)
+    // Seed 31 until 2026-09-24. D50 changed how the ants dig, the random draws behind the
+    // weather shifted with it, and with seed 31 the first heavy rain came on day 17, after the
+    // young ones were old enough. Of seeds 31 to 40, five have the first flight come first
+    // before and after D50; 33 is one of the three that do both.
+    const c = colonyWithSexuals(33, 150)
     const tpd = c.sim.clock.ticksPerDay
     const heavyDays: number[] = []
     for (let t = 0; t < tpd * 70 && c.flights.totalFlights === 0; t += 1) {

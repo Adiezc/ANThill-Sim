@@ -16,8 +16,8 @@
  *   manifest.json  what was run, with the hash of the parameter file it was run against
  *
  * Replicates are independent and are sharded by seed, so a study that is too large for one
- * machine splits across several with `--seed-from` and `--seed-to` and the shards can be
- * concatenated without any coordination.
+ * machine splits across several, each given its own range with `--seed-from` and
+ * `--replicates`, and the shards can be concatenated without any coordination.
  *
  *   npm run study -- --replicates 30 --years 12 --out out/my-study
  */
@@ -36,6 +36,16 @@ import {
 } from '../src/core/provenance/index.js'
 import type { TaggedEntry } from '../src/core/params/index.js'
 import type { ColonySummary } from '../src/core/sim/colony.js'
+
+/**
+ * The software version, read from `package.json` so that the report, the manifest and the
+ * citation cannot fall behind it. Until it was read from here, every report cited 1.0.0.
+ */
+const VERSION = (
+  JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as {
+    version: string
+  }
+).version
 
 interface Options {
   replicates: number
@@ -317,6 +327,7 @@ function report(
   L()
   L('| | |')
   L('|---|---|')
+  L(`| Software version | ${VERSION} |`)
   L(`| Replicates | ${options.replicates} |`)
   L(`| Seeds | ${options.seedFrom} to ${options.seedFrom + options.replicates - 1}, consecutive |`)
   L(`| Simulated years per replicate | ${options.years} |`)
@@ -433,6 +444,10 @@ function report(
   L('  droughts and disturbances come is invented; a drought’s effect on seed is fitted.')
   L('- **Path integration does not drift.** The homing vector is accumulated from the')
   L('  ant’s own steps rather than read off the world, but the accumulation is exact.')
+  L('- **Grown nests are dug out into caverns.** By their second or third year colonies dig')
+  L('  a void tens of centimetres tall in the upper nest rather than stacking chambers along')
+  L('  the shafts, so nest volume and chamber statistics from grown colonies are not the')
+  L('  species’. See docs/DECISIONS.md D50.')
   L('- Branch depth exceeds the 40 cm the papers report.')
   L()
   L('### Mechanics deliberately refused')
@@ -473,7 +488,7 @@ function report(
   L(
     '> Diez Cuadrado, A. (2026) *Anthill: A harvester ant colony built from the published science.*',
   )
-  L('> Version 1.0.0. Zenodo. https://doi.org/10.5281/zenodo.22819793')
+  L(`> Version ${VERSION}. Zenodo. https://doi.org/10.5281/zenodo.22819793`)
   L()
   L('A `CITATION.cff` accompanies the source. Code is MIT; `docs/` and `species/` are')
   L('CC BY 4.0.')
@@ -549,6 +564,7 @@ function main(): void {
     join(outDir, 'manifest.json'),
     `${JSON.stringify(
       {
+        version: VERSION,
         options,
         paramsSha256: paramsHash,
         commit: gitCommit(),
