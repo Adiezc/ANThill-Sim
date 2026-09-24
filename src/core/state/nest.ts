@@ -434,18 +434,18 @@ export interface NestMeasurement {
    */
   readonly chamberRunPerDecile: readonly number[]
   /**
-   * Void cells wide enough to look like chamber but taller than they are wide: the shaft
-   * where it passes through a chamber. Excluded from every chamber statistic here, and
-   * reported so that the exclusion is visible. See `isChamberVoidCm`.
+   * Void cells wide enough to look like chamber but taller than they are wide, where wide
+   * rows are stacked higher than they are long. Excluded from every chamber statistic here,
+   * and reported so that the exclusion is visible. See `isChamberVoidCm`.
    */
   readonly shaftCellsInChamberRuns: number
   /** Fraction of total chamber run lying in the shallowest quarter of the nest. */
   readonly topQuarterShare: number
   /** Proportional decrease in chamber run from each decile to the next. */
   readonly decileDecrease: readonly number[]
-  /** Mean vertical clearance of chamber cells, in centimetres. Should sit near 1 cm. */
+  /** Mean floor-to-ceiling height of chamber cells, in centimetres. Should sit near 1 cm. */
   readonly meanChamberHeightCm: number
-  /** Mean vertical clearance in the shallowest and deepest thirds, to check independence. */
+  /** Mean chamber height in the shallowest and deepest thirds, to check independence. */
   readonly chamberHeightShallowCm: number
   readonly chamberHeightDeepCm: number
   /** Mean vertical gap between successive chambers, shallow and deep. */
@@ -470,20 +470,40 @@ export function chamberThresholdCm(params: Params): number {
 }
 
 /**
+ * The height of the chamber at a cell: floor to ceiling, counting only cells that are
+ * themselves chamber-wide.
+ *
+ * The plain vertical clearance does not measure this wherever a shaft opens into the
+ * chamber, because the scan runs on up or down the shaft. Stopping where the void narrows to
+ * a shaft bore is how a chamber's height is read off a cast: from its floor to its ceiling,
+ * not to the top of the shaft that enters it. See docs/DECISIONS.md D50.
+ */
+function chamberHeightAtCm(nest: NestGrid, col: number, row: number, thresholdCm: number): number {
+  const wide = (r: number): boolean =>
+    nest.isVoid(col, r) && nest.horizontalRunCm(col, r, thresholdCm + nest.cellSizeCm) > thresholdCm
+  let count = 1
+  for (let r = row - 1; wide(r); r -= 1) count += 1
+  for (let r = row + 1; wide(r); r += 1) count += 1
+  return count * nest.cellSizeCm
+}
+
+/**
  * Whether a void cell belongs to a chamber rather than to a shaft, for measurement.
  *
- * Width alone is not enough, and getting this wrong cost the project its headline number.
- * Where a chamber opens off a shaft, the shaft column passing through it is part of the
- * chamber's wide horizontal run, so it was counted as a chamber cell — and its vertical
- * clearance, which runs the whole height of the shaft, was then averaged into the chamber
- * height. That is what reported 1.58 cm where the species builds 1 cm, and it flattered
- * nothing: it made the model look worse than it is.
+ * Width alone is not enough, and getting this wrong cost the project its headline number
+ * twice. Where a chamber opens off a shaft, the shaft column passing through it is part of the
+ * chamber's wide horizontal run, and until D48 the whole vertical clearance of that column,
+ * which runs the height of the shaft, was averaged into chamber height: 1.58 cm. D48 then
+ * dropped the cells that were taller than wide but kept the plain clearance for the rest, so
+ * a cell at the foot of a shaft still counted the shaft's height whenever the chamber was
+ * wider than the shaft was long. That reported 0.97 cm where most chambers were one grid cell,
+ * 0.5 cm, high, and in a growing colony it climbed with the shafts.
  *
  * Tschinkel's own distinction settles it. A chamber is horizontal-floored and much wider
  * than it is tall; a shaft is an elongated void of roughly constant small diameter. So a
- * cell counts as chamber when its horizontal run exceeds a shaft bore *and* exceeds its own
- * vertical clearance. Found after Walter Tschinkel reported that the published build did not
- * make 1 cm chambers. See docs/DECISIONS.md D48.
+ * cell counts as chamber when its horizontal run exceeds a shaft bore *and* exceeds the
+ * chamber's own height there, measured by `chamberHeightAtCm`. See docs/DECISIONS.md D48
+ * and D50.
  *
  * This is a measurement rule, not a rule an ant follows. `NestGrid.isChamberCell` is what
  * the digging rules use on the hot path and is deliberately left as the cheap width test.
@@ -493,12 +513,12 @@ export function isChamberVoidCm(
   col: number,
   row: number,
   thresholdCm: number,
-): { chamber: boolean; runCm: number; clearanceCm: number } {
-  if (!nest.isVoid(col, row)) return { chamber: false, runCm: 0, clearanceCm: 0 }
+): { chamber: boolean; runCm: number; heightCm: number } {
+  if (!nest.isVoid(col, row)) return { chamber: false, runCm: 0, heightCm: 0 }
   const runCm = nest.horizontalRunCm(col, row)
-  if (runCm <= thresholdCm) return { chamber: false, runCm, clearanceCm: 0 }
-  const clearanceCm = nest.verticalClearanceCm(col, row)
-  return { chamber: clearanceCm < runCm, runCm, clearanceCm }
+  if (runCm <= thresholdCm) return { chamber: false, runCm, heightCm: 0 }
+  const heightCm = chamberHeightAtCm(nest, col, row, thresholdCm)
+  return { chamber: heightCm < runCm, runCm, heightCm }
 }
 
 export function measureNest(nest: NestGrid, params: Params): NestMeasurement {
@@ -528,12 +548,11 @@ export function measureNest(nest: NestGrid, params: Params): NestMeasurement {
       const {
         chamber,
         runCm: run,
-        clearanceCm: clearance,
+        heightCm: clearance,
       } = isChamberVoidCm(nest, col, row, threshold)
       if (!chamber) {
-        // A cell wide enough to look like chamber but taller than it is wide is the shaft
-        // passing through. Counted, so the gap between this measurement and the old one is
-        // visible rather than silent.
+        // A cell wide enough to look like chamber but taller than it is wide. Counted, so
+        // that anything the measurement leaves out is visible rather than silent.
         if (run > threshold) shaftCellsInChamberRuns += 1
         continue
       }

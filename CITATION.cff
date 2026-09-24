@@ -2,8 +2,8 @@ cff-version: 1.2.0
 title: 'Anthill: A harvester ant colony built from the published science'
 message: 'If you use this software or its parameter data, please cite it as below.'
 type: software
-version: 1.1.0
-date-released: '2026-09-20'
+version: 1.2.0
+date-released: '2026-09-24'
 doi: 10.5281/zenodo.22819793
 identifiers:
   - type: doi

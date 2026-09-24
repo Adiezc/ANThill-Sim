@@ -93,35 +93,45 @@ function parseArgs(argv: readonly string[]): Options {
 }
 
 /**
- * The chamber cells the measurement keeps and the shaft cells it drops.
+ * Chamber height as each version of the statistic measured it, on the same nest.
  *
- * Reported side by side because the gap between them is what D48 is about: the old statistic
- * counted the second group as chamber and averaged the height of a whole shaft into the height
- * of a chamber.
+ * Reported side by side because the gaps between them are what D48 and D50 are about.
+ * Before D48 every cell wider than a shaft bore counted, at its full vertical clearance, so
+ * the height of every shaft entering a chamber was averaged into the chamber's. D48 dropped
+ * the cells taller than wide but kept the full clearance of the rest. Since D50 a chamber's
+ * height is read from its own floor to its own ceiling.
  */
-function classify(
+function heightsByVersion(
   nest: NestGrid,
   params: Params,
-): { chamberCells: number; shaftCells: number; shaftMeanClearanceCm: number } {
+): { v100: number; v110: number; chamberCells: number; excludedCells: number } {
   const threshold = chamberThresholdCm(params)
+  let wide = 0
+  let wideClearance = 0
+  let v110Cells = 0
+  let v110Clearance = 0
   let chamberCells = 0
-  let shaftCells = 0
-  let shaftClearance = 0
+  let excludedCells = 0
   for (let row = 0; row < nest.rows; row += 1) {
     for (let col = 0; col < nest.cols; col += 1) {
-      const { chamber, runCm, clearanceCm } = isChamberVoidCm(nest, col, row, threshold)
-      if (chamber) {
-        chamberCells += 1
-      } else if (runCm > threshold) {
-        shaftCells += 1
-        shaftClearance += clearanceCm
+      const { chamber, runCm } = isChamberVoidCm(nest, col, row, threshold)
+      if (runCm <= threshold) continue
+      if (chamber) chamberCells += 1
+      else excludedCells += 1
+      const clearanceCm = nest.verticalClearanceCm(col, row)
+      wide += 1
+      wideClearance += clearanceCm
+      if (clearanceCm < runCm) {
+        v110Cells += 1
+        v110Clearance += clearanceCm
       }
     }
   }
   return {
+    v100: wide === 0 ? 0 : wideClearance / wide,
+    v110: v110Cells === 0 ? 0 : v110Clearance / v110Cells,
     chamberCells,
-    shaftCells,
-    shaftMeanClearanceCm: shaftCells === 0 ? 0 : shaftClearance / shaftCells,
+    excludedCells,
   }
 }
 
@@ -171,7 +181,7 @@ function main(): void {
     subject.run((day - lastDay) * ticksPerDay)
     lastDay = day
     const m = measureNest(subject.nest, params)
-    const counts = classify(subject.nest, params)
+    const counts = heightsByVersion(subject.nest, params)
     const workers = options.colony ? (subject as Colony).summary().workers : options.harnessWorkers
     const deepestBranch =
       m.branchDepthsCm.length === 0 ? 0 : Math.max(...(m.branchDepthsCm as number[]))
@@ -181,13 +191,13 @@ function main(): void {
         `depth=${m.maxDepthCm.toFixed(1).padStart(6)}cm ` +
         `dug=${String(m.excavatedCells).padStart(5)} ` +
         `height=${m.meanChamberHeightCm.toFixed(2)}cm ` +
+        `(as 1.1.0 measured it ${counts.v110.toFixed(2)}, as 1.0.0 did ${counts.v100.toFixed(2)}) ` +
         `(shallow ${m.chamberHeightShallowCm.toFixed(2)} / deep ${m.chamberHeightDeepCm.toFixed(2)}) ` +
         `top-quarter=${m.topQuarterShare.toFixed(3)} ` +
         `spacing=${m.verticalSpacingShallowCm.toFixed(2)}/${m.verticalSpacingDeepCm.toFixed(2)}cm ` +
         `width-ratio=${m.chamberSizeSurfaceToBottomRatio.toFixed(2)} ` +
         `branch=${deepestBranch.toFixed(1)}cm series=${m.shaftSeriesCount} ` +
-        `| chamber-cells=${counts.chamberCells} ` +
-        `shaft-cells-excluded=${counts.shaftCells} at ${counts.shaftMeanClearanceCm.toFixed(1)}cm\n`,
+        `| chamber-cells=${counts.chamberCells} taller-than-wide=${counts.excludedCells}\n`,
     )
   }
 
