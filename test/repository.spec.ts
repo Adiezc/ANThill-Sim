@@ -62,3 +62,36 @@ describe('the papers are cited, not redistributed', () => {
     expect(ignore).toContain('docs/papers/*.pdf')
   })
 })
+
+/**
+ * One version number, everywhere a reader or a citation manager looks for it.
+ *
+ * GitHub's "Cite this repository" button and Zenodo both read `CITATION.cff`, and the README
+ * gives the citation by hand. A release that bumped one and not the others would archive a DOI
+ * whose metadata names the wrong version, and a Zenodo record cannot be corrected afterwards.
+ */
+describe('the version is the same everywhere it is stated', () => {
+  const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as { version: string }
+  const cff = readFileSync(join(ROOT, 'CITATION.cff'), 'utf8')
+  const readme = readFileSync(join(ROOT, 'README.md'), 'utf8')
+
+  it('in the citation file', () => {
+    expect(cff).toMatch(new RegExp(`^version: ${pkg.version.replaceAll('.', '\\.')}$`, 'm'))
+  })
+
+  it('in the README citation and status line', () => {
+    expect(readme).toContain(`Version ${pkg.version}. Zenodo.`)
+    expect(readme).toContain(`**Status: version ${pkg.version},`)
+  })
+
+  it('in the ODD description', () => {
+    const odd = readFileSync(join(ROOT, 'docs', 'ODD.md'), 'utf8')
+    expect(odd).toContain(`This describes Anthill ${pkg.version} `)
+  })
+
+  it('with the DOI that resolves to every version', () => {
+    const conceptDoi = /^doi: (\S+)$/m.exec(cff)?.[1]
+    expect(conceptDoi).toBeDefined()
+    expect(readme).toContain(`https://doi.org/${conceptDoi}`)
+  })
+})

@@ -129,7 +129,7 @@ export const RULE = {
   ),
   digBodySizeTemplate: rule(
     'excavation.bodySizeTemplate',
-    'Stopping when the ceiling is about one body height above the floor, which is what makes a chamber a chamber.',
+    'Raising the ceiling to about one body height above the floor before widening the chamber, and no higher, which is what makes a chamber a chamber.',
     'B',
     'Khuong et al. 2016',
     '2, 3',

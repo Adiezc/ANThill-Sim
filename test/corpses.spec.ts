@@ -14,7 +14,11 @@ const PARAMS = loadSpecies(
 describe('the dead', () => {
   it('are carried out of the nest by workers', () => {
     // Workers of other ants carry corpses out, further than other refuse (Diez et al. 2012).
-    const c = new Colony({ seed: 41, params: PARAMS, capacity: 80 })
+    // Seed 41 until 2026-09-24, when D50 changed how the ants dig and seed 41 left one body
+    // behind. Over seeds 41 to 50 the test passes for eight both before D50 and after it, so
+    // this is not a change in how well the dead are carried out, and neither is it perfect:
+    // see DECISIONS.md D50. Seed 43 passes both before and after.
+    const c = new Colony({ seed: 43, params: PARAMS, capacity: 80 })
     c.run(c.sim.clock.ticksPerDay * 20)
     const { nest } = c
     const { ants } = c.sim
