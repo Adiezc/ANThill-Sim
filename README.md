@@ -10,8 +10,8 @@ It runs in the browser, with nothing to install.
 **Status: version 1.2.0, September 2026.** Version 1.0.0 was meant to be the end of it. The
 simulation was then shown to researchers who work on this species, and versions 1.1.0 and 1.2.0
 are what their comments changed, see [What changed after 1.0.0](#what-changed-after-100). It was
-built by Adrian Diez Cuadrado with Claude Code as an AI pair programmer, starting from a written
-build brief that is kept in the git history.
+built by Adrian Diez Cuadrado, starting from a written build brief that is kept in the git
+history.
 Every design choice, including the ones that were tried and undone, is recorded in
 [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
